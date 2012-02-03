@@ -44,6 +44,94 @@ The code structure for each implementation follows original code structure and c
 * `core.scala` - evaluator and typer.
 * `demo.scala` - the main application for processing input files.
 
+## Start playing with me
+
+	sbt
+	> run
+	
+	Multiple main classes detected, select one to run:
+	
+	 [1] tapl.fullisorec.FullIsorecDemo
+	 [2] tapl.rcdsubbot.RcdSubBotDemo
+	 [3] tapl.arith.ArithDemo
+	 [4] tapl.simplebool.SimpleBoolDemo
+	 [5] tapl.equirec.EquirecDemo
+	 [6] tapl.tyarith.TyArithDemo
+	 [7] tapl.untyped.UntypedDemo
+	 [8] tapl.fullfsub.FullFSubDemo
+	 [9] tapl.fullpoly.FullPolyDemo
+	 [10] tapl.recon.ReconDemo
+	 [11] tapl.fullfomsub.FullFomSubDemo
+	 [12] tapl.fullerror.FullErrorDemo
+	 [13] tapl.fulluntyped.UntypedDemo
+	 [14] tapl.fullsub.FullSubDemo
+	 [15] tapl.fullequirec.FullEquirecDemo
+	 [16] tapl.fullrecon.FullReconDemo
+	 [17] tapl.fullref.FullRefDemo
+	 [18] tapl.fullomega.FullOmegaDemo
+	 [19] tapl.fullsimple.FullSimpleDemo
+	 [20] tapl.fullfomsubref.FullFomSubRefDemo
+	 [21] tapl.bot.BotDemo
+	 
+	Enter number: 21
+	
+	[info] Running tapl.bot.BotDemo 
+	====================
+	(lambda x: Top. x): Top -> Top;
+	||
+	\/
+	(lambda x: Top. x): Top -> Top;
+	====================
+	((lambda x: Top. x) (lambda x: Top. x)): Top;
+	||
+	\/
+	(lambda x: Top. x): Top -> Top;
+	====================
+	((lambda x: Top -> Top. x) (lambda x: Top. x)): Top -> Top;
+	||
+	\/
+	(lambda x: Top. x): Top -> Top;
+	====================
+	(lambda x: Bot. x): Bot -> Bot;
+	||
+	\/
+	(lambda x: Bot. x): Bot -> Bot;
+	====================
+	(lambda x: Bot. x x): Bot -> Bot;
+	||
+	\/
+	(lambda x: Bot. x x): Bot -> Bot;
+	
+	> run-main tapl.fulluntyped.UntypedDemo progs/fulluntyped.tapl
+	[info] Running tapl.fulluntyped.UntypedDemo progs/fulluntyped.tapl
+	====================
+	tru;
+	||
+	\/
+	(lambda t. lambda f. t);
+	====================
+	fls;
+	||
+	\/
+	(lambda t. lambda f. f);
+	====================
+	(tru tru);
+	||
+	\/
+	(lambda f. lambda t. lambda f'. t);
+	====================
+	(tru fls);
+	||
+	\/
+	(lambda f. lambda t. lambda f'. f');
+	====================
+	(test tru v w);
+	||
+	\/
+	((lambda m. lambda n. (lambda t. lambda f. t) m n) v w);
+	...
+
+
 ## Notes.
 
 There was some incompleteness in the original OCaml code that *was* ported into Scala code:
