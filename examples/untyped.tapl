@@ -1,0 +1,7 @@
+x/;
+(x) x x;
+(lambda a. a) x;
+lambda a. lambda b. a b;
+lambda a. lambda b. b a;
+(lambda a. lambda b. b a) x x;
+(lambda y. y) (lambda z. z);

@@ -1,0 +1,11 @@
+/.scala_dependencies
+/bin
+target/
+/.idea
+/.project
+/.classpath
+/.settings
+/.externalToolBuilders
+/.settings
+/.cache
+/todo

@@ -1,0 +1,163 @@
+// Examples from Chapter 5.
+
+tru = lambda t. lambda f. t; 
+fls = lambda t. lambda f. f;
+
+tru;
+fls;
+tru tru;
+tru fls;
+v/;
+w/;
+
+// if-operator
+test = lambda l. lambda m. lambda n.l m n;
+
+// will not reduce to v since v is not a value.
+// But we have call-by-value lang.
+test tru v w;
+
+// but this will work:
+test tru 1 0;
+test fls 1 0;
+
+and = lambda b. lambda c. b c fls;
+and tru tru;
+and tru fls;
+
+// exercise 5.2.1
+or = lambda b. lambda c. b tru c;
+not = lambda b. b fls tru;
+
+or tru tru;
+or fls fls;
+not tru;
+not fls;
+
+// Pairs
+pair = \f. \s. \b. b f s;
+// what is it?? interesting..
+pair 0 1;
+
+fst = \p. p tru;
+snd = \p. p fls;
+
+fst (pair 0 1);
+snd (pair 0 1);
+
+scc = \n. \s. \z. s (n s z);
+
+// NUMBRERS!!
+c0 = \s. \z. z;
+c1 = \s. \z. s z;
+c2 = scc c1;
+c3 = scc c2;
+c4 = scc c3;
+c5 = scc c4;
+
+c0;
+c1;
+
+// exercise 5.2.2
+// Find another way to define the successor function on Church numerals.
+scc2 = \n. \s. \z. n s (s z);
+
+scc c0;
+scc2 c0;
+scc c1;
+scc2 c1;
+
+plus = \m. \n. \s. \z. m s (n s z);
+times = \m. \n. m (plus n) c0;
+
+// 5.2.3
+// Is it possible to define multiplication on Church numerals without using plus?
+times2 = \m. \n. \s. \z. m (n s) z;
+times3 = \m. \n. \s. m (n s);
+
+// 5.2.4
+// Define a term for raising one number to the power of another.
+power1 = \m. \n. m (times n) c1;
+power2 = \m. \n. m n;
+
+iszro = \m. m (\x. fls) tru;
+
+iszro c1;
+iszro c0;
+
+iszro (times (plus c1 c1) (plus c1 c1));
+iszro (times (plus c1 c1) c0);
+
+// defining pred function
+zz = pair c0 c0;
+ss = \p. pair (snd p) (plus c1 (snd p)); 
+prd = \m. fst (m ss zz);
+
+prd c0;
+prd c1;
+prd (scc c1);
+c1;
+
+// 5.2.5
+// Use prd to define a subtraction function.
+subtract1 = \m. \n. n prd m;
+
+// 5.2.7
+// Write a function equal that tests two numbers for equality 
+// and returns a Church boolean
+equal = \m. \n. and (iszro (m prd n)) (iszro (n prd m));
+
+equal (c1) (prd (scc c1));
+
+// 5.2.8
+// List representation functions
+nil = \c. \n. n;
+cons= \h. \t. \c. \n.c h (t c n); 
+head = \l. l (\h. \t. h) fls;
+tail = \l. fst (l (\x. \p. pair (snd p) (cons x (snd p))) (pair nil nil));
+isnil = \l. l (\h. \t. fls) tru;
+
+// 5.2.8 - solution2
+nil1 = pair tru tru;
+cons1 = \h. \t. pair fls (pair h t); 
+head1 = \z. fst (snd z);
+tail1 = \z. snd (snd z);
+isnil1 = fst;
+
+// church2bool
+realbool = \b. b true false;
+// bool2church
+churchbool = \b. if b then tru else fls;
+// comparison of 2 church numbers, returns bool
+realeq = \m. \n. (equal m n) true false;
+// church to nat
+realnat = \m. m (\x. succ x) 0;
+// divergent combinator
+omega = (\x. x x)(\x. x x);
+
+// fix is reserved word, so using fix1
+fix = \f. (\x. f (\y. x x y)) (\x. f (\y. x x y));
+g = \fct. \n. if realeq n c0 then c1 else (times n (fct (prd n)));
+factorial = fix g;
+factorial (scc (scc (scc c0)));
+ 
+// 5.2.9
+// Show how to define the factorial function in terms of test rather than if.
+// factorial without if.
+ff = \f. \n. test (iszro n) (\x. c1) (\x. (times n (f (prd n)))) c0;
+factorial1 = fix ff;
+factorial1 (scc (scc (scc c0)));
+// 5.2.10
+// Define a function churchnat that converts a primitive natural number into 
+// the corresponding Church numeral.
+cn = \f. \m. if iszero m then c0 else scc (f (pred m)); 
+churchnat = fix cn;
+equal (churchnat 4) (scc (scc (scc (scc c0))));
+
+// 5.2.11
+// Use fix and the encoding of lists from Exercise 5.2.8 
+// to write a function that sums lists of Church numerals.
+ff1 = \f. \l. test (isnil l) (\x. c0) (\x. (plus (head l) (f (tail l)))) c0;
+sumlist = fix ff1;
+l = cons c2 (cons c3 nil);
+equal (sumlist l) c5;
