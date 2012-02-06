@@ -55,8 +55,12 @@ case class Context(l: List[(String, Binding)] = List()) {
   def index2Name(i: Int): String = l(i)._1
 
   def getBinding(i: Int): Binding = {
+    try {
     val bind = l(i)._2
     Syntax.bindingShift(i + 1, bind)
+    } catch {
+      case e => error("Variable lookup fail. Offset: " + i + " cl: " + l.length + " context:" + l)
+    }
   }
 
   def name2index(s: String): Int = l.indexWhere { _._1 == s } match {

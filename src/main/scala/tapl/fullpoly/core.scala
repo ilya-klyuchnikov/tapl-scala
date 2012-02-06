@@ -296,7 +296,7 @@ object Typer {
       }
     case TmTAbs(tyX, t2) =>
       val ctx1 = ctx.addBinding(tyX, TyVarBind)
-      val tyT2 = typeof(ctx, t2)
+      val tyT2 = typeof(ctx1, t2)
       TyAll(tyX, tyT2)
     case TmTApp(t1, tyT2) =>
       val tyT1 = typeof(ctx, t1)
