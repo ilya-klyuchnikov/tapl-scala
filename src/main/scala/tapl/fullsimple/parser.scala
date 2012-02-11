@@ -5,14 +5,12 @@ import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 
 object FullSimpleParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
-  lexical.reserved += ("lambda", "Bool", "true", "false", "if", "then", "else", 
-      "Nat", "String", "Unit", "Float", "unit", "case", "let", "in", "succ", "pred", 
-      "as", "of", "fix", "iszero", "letrec", "_")
-  lexical.delimiters += ("(", ")", ";", "/", ".", ":", "->", "=", "<", ">", "{", "}", "=>", "==>", ",", "|")
+  lexical.reserved += ("lambda", "Bool", "true", "false", "if", "then", "else",
+    "Nat", "String", "Unit", "Float", "unit", "case", "let", "in", "succ", "pred",
+    "as", "of", "fix", "iszero", "letrec", "_")
+  lexical.delimiters += ("(", ")", ";", "/", ".", ":", "->", "=", "<", ">", "{", "}", "=>", "==>", ",", "|", "\\")
 
-  // lower-case identifier
   lazy val lcid: PackratParser[String] = ident ^? { case id if id.charAt(0).isLowerCase => id }
-  // upper-case identifier
   lazy val ucid: PackratParser[String] = ident ^? { case id if id.charAt(0).isUpperCase => id }
   lazy val eof: PackratParser[String] = elem("<eof>", _ == lexical.EOF) ^^ { _.chars }
 
@@ -40,7 +38,6 @@ object FullSimpleParsers extends StandardTokenParsers with PackratParsers with I
     ("=" ~> `type`) ^^ { ty => ctx: Context => TyAbbBind(ty(ctx)) } |
       success({ ctx: Context => TyVarBind })
 
-  // TYPES
   lazy val `type`: PackratParser[Res[Ty]] = arrowType
   lazy val aType: PackratParser[Res[Ty]] =
     "(" ~> `type` <~ ")" |
@@ -50,7 +47,6 @@ object FullSimpleParsers extends StandardTokenParsers with PackratParsers with I
       "String" ^^ { _ => ctx: Context => TyString } |
       "Unit" ^^ { _ => ctx: Context => TyUnit } |
       "{" ~> fieldTypes <~ "}" ^^ { ft => ctx: Context => TyRecord(ft(ctx)) } |
-      "Float" ^^ { _ => ctx: Context => TyFloat } |
       "Nat" ^^ { _ => ctx: Context => TyNat }
 
   lazy val fieldTypes: PackratParser[Res[List[(String, Ty)]]] =
@@ -69,10 +65,8 @@ object FullSimpleParsers extends StandardTokenParsers with PackratParsers with I
     appTerm |
       ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ { case t1 ~ t2 ~ t3 => ctx: Context => TmIf(t1(ctx), t2(ctx), t3(ctx)) } |
       ("case" ~> term) ~ ("of" ~> cases) ^^ { case t ~ cs => ctx: Context => TmCase(t(ctx), cs(ctx)) } |
-      ("lambda" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => ctx: Context => TmAbs(v, ty(ctx), t(ctx.addName(v))) } |
-      ("lambda" ~ "_") ~> (":" ~> `type`) ~ ("." ~> term) ^^ { case ty ~ t => ctx: Context => TmAbs("_", ty(ctx), t(ctx.addName("_"))) } |
-      ("let" ~> lcid) ~ ("=" ~> term) ~ ("in" ~> term) ^^ { case id ~ t1 ~ t2 => ctx: Context => TmLet(id, t1(ctx), t2(ctx.addName(id))) } |
-      ("let" ~ "_") ~> ("=" ~> term) ~ ("in" ~> term) ^^ { case t1 ~ t2 => ctx: Context => TmLet("_", t1(ctx), t2(ctx.addName("_"))) } |
+      (("lambda" | "\\") ~> (lcid | "_")) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => ctx: Context => TmAbs(v, ty(ctx), t(ctx.addName(v))) } |
+      ("let" ~> (lcid | "_")) ~ ("=" ~> term) ~ ("in" ~> term) ^^ { case id ~ t1 ~ t2 => ctx: Context => TmLet(id, t1(ctx), t2(ctx.addName(id))) } |
       {
         ("letrec" ~> lcid) ~ (":" ~> `type`) ~ ("=" ~> term) ~ ("in" ~> term) ^^
           { case id ~ ty ~ t1 ~ t2 => ctx: Context => TmLet(id, TmFix(TmAbs(id, ty(ctx), t1(ctx.addName(id)))), t2(ctx.addName(id))) }
@@ -84,7 +78,7 @@ object FullSimpleParsers extends StandardTokenParsers with PackratParsers with I
       "succ" ~> pathTerm ^^ { t => ctx: Context => TmSucc(t(ctx)) } |
       "pred" ~> pathTerm ^^ { t => ctx: Context => TmPred(t(ctx)) } |
       "iszero" ~> pathTerm ^^ { t => ctx: Context => TmIsZero(t(ctx)) } |
-      pathTerm //| "timesfloat" ~> (pathTerm ~ pathTerm) ^^ { case t1 ~ t2 => ctx: Context => TmTimesfloat(t1(ctx), t2(ctx)) }
+      pathTerm
 
   lazy val ascribeTerm: PackratParser[Res[Term]] =
     aTerm ~ ("as" ~> `type`) ^^ { case t ~ ty => ctx: Context => TmAscribe(t(ctx), ty(ctx)) } |

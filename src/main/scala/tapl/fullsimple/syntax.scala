@@ -9,7 +9,6 @@ case class TyRecord(els: List[(String, Ty)]) extends Ty
 case class TyVariant(els: List[(String, Ty)]) extends Ty
 case object TyBool extends Ty
 case object TyString extends Ty
-case object TyFloat extends Ty
 case object TyNat extends Ty
 
 sealed trait Term
@@ -87,7 +86,6 @@ object Syntax {
       case TyString            => TyString
       case TyUnit              => TyUnit
       case TyRecord(fieldTys)  => TyRecord(fieldTys.map { case (li, tyi) => (li, walk(c, tyi)) })
-      case TyFloat             => TyFloat
       case TyBool              => TyBool
       case TyNat               => TyNat
       case TyArr(ty1, ty2)     => TyArr(walk(c, ty1), walk(c, ty2))
