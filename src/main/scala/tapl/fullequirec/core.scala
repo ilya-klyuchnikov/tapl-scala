@@ -41,7 +41,7 @@ object Evaluator {
     case TmAscribe(v1, tyT) if isVal(ctx, v1) =>
       v1
     case TmAscribe(t1, tyT) =>
-      TmAscribe(eval(ctx, t1), tyT)
+      TmAscribe(eval1(ctx, t1), tyT)
     case TmRecord(fields) =>
       def evalAField(l: List[(String, Term)]): List[(String, Term)] = l match {
         case Nil                               => throw new NoRuleApplies(t)
