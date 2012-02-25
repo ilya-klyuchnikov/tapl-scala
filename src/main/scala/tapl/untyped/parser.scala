@@ -10,8 +10,8 @@ import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 // The input text represents named terms. The module works with nameless terms 
 // So translation from named form into nameless form is done on the fly during parsing.
 object UntypedParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
-  lexical.reserved += ("lambda", "_")
-  lexical.delimiters += ("(", ")", ";", "/", ".")
+  lexical.reserved += ("_")
+  lexical.delimiters += ("(", ")", ";", "/", ".", "\\")
 
   // lower-case identifier
   lazy val lcid: PackratParser[String] = ident ^? { case id if id.charAt(0).isLowerCase => id }
@@ -40,8 +40,8 @@ object UntypedParsers extends StandardTokenParsers with PackratParsers with Impl
 
   lazy val term: PackratParser[Res[Term]] =
     appTerm |
-      ("lambda" ~> lcid) ~ ("." ~> term) ^^ { case v ~ t => ctx: Context => TmAbs(v, t(ctx.addName(v))) } |
-      ("lambda" ~ "_") ~> ("." ~> term) ^^ { t => ctx: Context => TmAbs("_", t(ctx.addName("_"))) }
+      ("\\" ~> lcid) ~ ("." ~> term) ^^ { case v ~ t => ctx: Context => TmAbs(v, t(ctx.addName(v))) } |
+      ("\\" ~ "_") ~> ("." ~> term) ^^ { t => ctx: Context => TmAbs("_", t(ctx.addName("_"))) }
 
   lazy val appTerm: PackratParser[Res[Term]] =
     (appTerm ~ aTerm) ^^ { case t1 ~ t2 => ctx: Context => TmApp(t1(ctx), t2(ctx)) } | aTerm

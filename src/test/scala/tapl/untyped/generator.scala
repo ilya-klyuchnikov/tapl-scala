@@ -24,10 +24,8 @@ object TermGen {
   }
 
   private def tm(depth: Int, ctx: Context): Gen[Term] =
-    if (depth == 1)
-      tmVar(ctx)
-    else
-      tmAbs(depth, ctx) | tmApp(depth, ctx)
+    if (depth == 1) tmVar(ctx)
+    else tmAbs(depth, ctx) | tmApp(depth, ctx)
 
   def terms: Gen[Term] =
     for {

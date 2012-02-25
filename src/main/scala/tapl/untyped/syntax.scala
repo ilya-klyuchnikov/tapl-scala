@@ -92,7 +92,7 @@ object PrettyPrinter {
   def ptmTerm(outer: Boolean, ctx: Context, t: Term): Document = t match {
     case TmAbs(x, t2) =>
       val (ctx1, x1) = ctx.pickFreshName(x)
-      val abs = g0("lambda" :/: x1 :: ".")
+      val abs = g0("\\" :: x1 :: ".")
       val body = ptmTerm(outer, ctx1, t2)
       g2(abs :/: body)
     case t => ptmAppTerm(outer, ctx, t)
