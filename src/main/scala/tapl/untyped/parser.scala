@@ -50,6 +50,11 @@ object UntypedParsers extends StandardTokenParsers with PackratParsers with Impl
     "(" ~> term <~ ")" |
       lcid ^^ { i => ctx: Context => TmVar(ctx.name2index(i), ctx.length) }
 
+  def inputTerm(s: String) = phrase(term)(new lexical.Scanner(s)) match {
+    case t if t.successful => t.get
+    case t                 => error(t.toString)
+  }
+
   def input(s: String) = phrase(topLevel)(new lexical.Scanner(s)) match {
     case t if t.successful => t.get
     case t                 => error(t.toString)

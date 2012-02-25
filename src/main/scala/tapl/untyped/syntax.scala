@@ -1,6 +1,9 @@
 package tapl.untyped
 
-sealed trait Term
+sealed trait Term {
+  final def prettyString(ctx: Context = Context()): String =
+    util.Print.print(PrettyPrinter.ptm(ctx, this), 60)
+}
 // i - index, cl - context length
 case class TmVar(i: Int, cl: Int) extends Term
 case class TmAbs(v: String, t: Term) extends Term
@@ -28,10 +31,10 @@ case class Context(l: List[(String, Binding)] = List()) {
 
   def pickFreshName(n: String): (Context, String) =
     if (isNameBound(n))
-      pickFreshName(n + "'")
+      pickFreshName(n + "_")
     else
       (Context((n, NameBind) :: l), n)
-      
+
   def index2Name(i: Int): String =
     l(i)._1
 
@@ -43,7 +46,6 @@ case class Context(l: List[(String, Binding)] = List()) {
 
   def getBinding(i: Int): Binding =
     l(i)._2
-
 
 }
 
