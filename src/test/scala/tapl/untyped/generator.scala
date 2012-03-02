@@ -9,23 +9,30 @@ object TermGen {
     ctx.pickFreshName("v" + ctx.length)
 
   private def tmVar(ctx: Context): Gen[Term] =
-    for { i <- Gen.oneOf(0 until ctx.length) } yield TmVar(i, ctx.length)
+    for { i <- Gen.choose(1, ctx.length) } yield TmVar(i - 1, ctx.length)
 
   private def tmApp(depth: Int, ctx: Context): Gen[Term] =
     for {
-      i <- Gen.choose(1, depth - 1);
-      t1 <- tm(i, ctx);
-      t2 <- tm(depth - i, ctx)
+      i1 <- Gen.choose(1, depth - 1);
+      i2 <- Gen.choose(1, depth - 1);
+      t1 <- tm(i1, ctx);
+      t2 <- tm(i2, ctx)
     } yield TmApp(t1, t2)
 
   private def tmAbs(depth: Int, ctx: Context): Gen[Term] = {
     val (ctx1, v) = freshName(ctx)
-    for { t1 <- tm(depth - 1, ctx1) } yield TmAbs(v, t1)
+    for {
+      i <- Gen.choose(1, depth - 1);
+      t1 <- tm(i, ctx1)
+    } yield TmAbs(v, t1)
   }
 
-  private def tm(depth: Int, ctx: Context): Gen[Term] =
-    if (depth == 1) tmVar(ctx)
-    else tmAbs(depth, ctx) | tmApp(depth, ctx)
+  private def tm(depth: Int, ctx: Context): Gen[Term] = depth match {
+    case d if d <= 0 => Gen.fail
+    case 1           => tmVar(ctx)
+    case 2           => tmVar(ctx)
+    case _           => tmApp(depth, ctx) | tmAbs(depth, ctx)
+  }
 
   def terms: Gen[Term] =
     for {

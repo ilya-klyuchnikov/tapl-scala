@@ -10,26 +10,25 @@ object TermGen {
     ctx.pickFreshName("v" + ctx.length)
 
   private def tmVar(ctx: Context): Gen[Term] =
-    for { i <- Gen.oneOf(0 until ctx.length) } yield TmVar(i, ctx.length)
+    for { i <- Gen.choose(1, ctx.length) } yield TmVar(i - 1, ctx.length)
 
   private def tmApp(depth: Int, ctx: Context): Gen[Term] =
     for {
       i <- Gen.choose(1, depth - 1)
       t1 <- tm(i, ctx)
-      t2 <- tm(i, ctx)
+      t2 <- tm(depth - i, ctx)
     } yield TmApp(t1, t2)
 
   private def tmAbs(depth: Int, ctx: Context): Gen[Term] =
     for {
-      i <- Gen.choose(1, depth - 1)
-      (ctx1, v) = freshName(ctx)
-      t1 <- tm(i, ctx1)
       ty <- `type`
+      (ctx1, v) = freshName(ctx)
+      t1 <- tm(depth - 1, ctx1)
     } yield TmAbs(v, ty, t1)
 
   private def tmIf(depth: Int, ctx: Context): Gen[Term] =
     for {
-      i <- Gen.choose(1, depth - 1)
+      i <- Gen.choose(1, depth - 2)
       t1 <- tm(i, ctx)
       t2 <- tm(i, ctx)
       t3 <- tm(i, ctx)
@@ -41,23 +40,23 @@ object TermGen {
 
   private def `type`(): Gen[Ty] =
     for {
-      i <- Gen.choose(1, 10)
-      ty <- arrowType(i)
+      i <- Gen.choose(1, 3)
+      ty <- ty(i)
     } yield ty
 
-  private def arrowType(depth: Int): Gen[Ty] =
-    if (depth == 1)
+  private def ty(depth: Int): Gen[Ty] =
+    if (depth == 1 | depth == 2)
       TyBool
     else
       for {
-        i <- Gen.choose(1, depth - 1)
-        from <- arrowType(i)
-        to <- arrowType(depth - i)
+        i <- Gen.choose(1, depth - 2)
+        from <- ty(i)
+        to <- ty(depth - i - 1)
       } yield TyArr(from, to)
 
   def terms: Gen[Term] =
     for {
-      size <- Gen.choose(1, 3);
+      size <- Gen.choose(1, 30);
       t <- tm(size, Context())
     } yield t
 
