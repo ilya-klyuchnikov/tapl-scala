@@ -357,6 +357,8 @@ object Typer {
             TyRef(ty1)
           } else {
             // TODO (* Warning: this is incomplete... *)
+            // The alternative here is:
+            // TySink(join(ctx, tyT1, tyT2))
             TySource(meet(ctx, tyT1, tyT2))
           }
         case (TySource(tyT1), TySource(tyT2)) =>
