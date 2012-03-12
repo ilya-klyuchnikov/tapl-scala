@@ -2,7 +2,7 @@ package tapl.fulluntyped
 
 import scala.io.Source
 
-object UntypedDemo extends App {
+object FullUntypedDemo extends App {
   import Evaluator._
   import util.Print._
   import PrettyPrinter._
