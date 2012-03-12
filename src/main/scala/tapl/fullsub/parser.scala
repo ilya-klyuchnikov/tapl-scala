@@ -49,7 +49,6 @@ object FullSubParsers extends StandardTokenParsers with PackratParsers with Impl
       "String" ^^ { _ => ctx: Context => TyString } |
       "Unit" ^^ { _ => ctx: Context => TyUnit } |
       "{" ~> fieldTypes <~ "}" ^^ { ft => ctx: Context => TyRecord(ft(ctx)) } |
-      "Float" ^^ { _ => ctx: Context => TyFloat } |
       "Nat" ^^ { _ => ctx: Context => TyNat } |
       "Top" ^^ { _ => ctx: Context => TyTop }
 
