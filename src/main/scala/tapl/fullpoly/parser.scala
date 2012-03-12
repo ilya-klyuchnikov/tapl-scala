@@ -8,7 +8,7 @@ object FullPolyParsers extends StandardTokenParsers with PackratParsers with Imp
   lexical.reserved += ("lambda", "Bool", "true", "false", "if", "then", "else",
     "Nat", "String", "Unit", "Float", "unit", "case", "let", "in", "succ", "pred",
     "as", "of", "fix", "iszero", "letrec", "_", "All", "Some")
-  lexical.delimiters += ("(", ")", ";", "/", ".", ":", "->", "=", "<", ">", "{", "}", "=>", "==>", ",", "|", "*", "[", "]")
+  lexical.delimiters += ("(", ")", ";", "/", ".", ":", "->", "=", "<", ">", "{", "}", "=>", "==>", ",", "|", "*", "[", "]", "\\")
 
   // lower-case identifier
   lazy val lcid: PackratParser[String] = ident ^? { case id if id.charAt(0).isLowerCase => id }
@@ -71,10 +71,8 @@ object FullPolyParsers extends StandardTokenParsers with PackratParsers with Imp
   lazy val term: PackratParser[Res[Term]] =
     appTerm |
       ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ { case t1 ~ t2 ~ t3 => ctx: Context => TmIf(t1(ctx), t2(ctx), t3(ctx)) } |
-      ("lambda" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => ctx: Context => TmAbs(v, ty(ctx), t(ctx.addName(v))) } |
-      ("lambda" ~ "_") ~> (":" ~> `type`) ~ ("." ~> term) ^^ { case ty ~ t => ctx: Context => TmAbs("_", ty(ctx), t(ctx.addName("_"))) } |
-      ("let" ~> lcid) ~ ("=" ~> term) ~ ("in" ~> term) ^^ { case id ~ t1 ~ t2 => ctx: Context => TmLet(id, t1(ctx), t2(ctx.addName(id))) } |
-      ("let" ~ "_") ~> ("=" ~> term) ~ ("in" ~> term) ^^ { case t1 ~ t2 => ctx: Context => TmLet("_", t1(ctx), t2(ctx.addName("_"))) } |
+      (("lambda" | "\\") ~> (lcid | "_")) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => ctx: Context => TmAbs(v, ty(ctx), t(ctx.addName(v))) } |
+      ("let" ~> (lcid | "_")) ~ ("=" ~> term) ~ ("in" ~> term) ^^ { case id ~ t1 ~ t2 => ctx: Context => TmLet(id, t1(ctx), t2(ctx.addName(id))) } |
       {
         ("letrec" ~> lcid) ~ (":" ~> `type`) ~ ("=" ~> term) ~ ("in" ~> term) ^^
           { case id ~ ty ~ t1 ~ t2 => ctx: Context => TmLet(id, TmFix(TmAbs(id, ty(ctx), t1(ctx.addName(id)))), t2(ctx.addName(id))) }
@@ -83,7 +81,7 @@ object FullPolyParsers extends StandardTokenParsers with PackratParsers with Imp
         (("let" ~ "{") ~> ucid) ~ ("," ~> lcid <~ "}") ~ ("=" ~> term) ~ ("in" ~> term) ^^
           { case id1 ~ id2 ~ t1 ~ t2 => ctx: Context => TmUnPack(id1, id2, t1(ctx), t2(ctx.addName(id1).addName(id2))) }
       } |
-      ("lambda" ~> ucid) ~ ("." ~> term) ^^ { case id ~ t => ctx: Context => TmTAbs(id, t(ctx.addName(id))) }
+      (("lambda" | "\\") ~> ucid) ~ ("." ~> term) ^^ { case id ~ t => ctx: Context => TmTAbs(id, t(ctx.addName(id))) }
 
   lazy val appTerm: PackratParser[Res[Term]] =
     (appTerm <~ "[") ~ (`type` <~ "]") ^^ { case t ~ ty => ctx: Context => TmTApp(t(ctx), ty(ctx)) } |
