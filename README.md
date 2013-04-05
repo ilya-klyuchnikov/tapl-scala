@@ -24,7 +24,7 @@ Almost all implementations are ported. Not yet ported implementations will be po
 17. `tapl.fullrecon` (Chapter 22).
 18. `tapl.fullpoly` (Chapters 23, 24).
 19. `tapl.fullomega` (Chapters 23, 29, 30).
-20. `tapl.fullfsub` (Chapters 26, 28) - based on `tapl.fullpoly` (additions: Top type and subtyping).
+20. `tapl.fullfsub` (Chapters 26, 28) - based on `tapl.fullsimple` (additions: Top type and subtyping).
 21. `tapl.fullfomsub` (Chapters 26, 31).
 22. `tapl.fullfsubref` (Chapter 27) - original (a bit wrong) implementation. Not yet ported.
 23. `tapl.fullfomsubref` (Chapter 27) combination of all systems from the book.

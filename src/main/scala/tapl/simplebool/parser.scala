@@ -6,7 +6,7 @@ import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 
 object SimpleBoolParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
   lexical.reserved += ("lambda", "Bool", "true", "false", "if", "then", "else", "_")
-  lexical.delimiters += ("(", ")", ";", "/", ".", ":", "->")
+  lexical.delimiters += ("(", ")", ";", "/", ".", ":", "->", "\\")
 
   // lower-case identifier
   lazy val lcid: PackratParser[String] = ident ^? { case id if id.charAt(0).isLowerCase => id }
@@ -43,8 +43,8 @@ object SimpleBoolParsers extends StandardTokenParsers with PackratParsers with I
 
   lazy val term: PackratParser[Res[Term]] =
     appTerm |
-      ("lambda" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => ctx: Context => TmAbs(v, ty(ctx), t(ctx.addName(v))) } |
-      ("lambda" ~ "_") ~> (":" ~> `type`) ~ ("." ~> term) ^^ { case ty ~ t => ctx: Context => TmAbs("_", ty(ctx), t(ctx.addName("_"))) } |
+      ("\\" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => ctx: Context => TmAbs(v, ty(ctx), t(ctx.addName(v))) } |
+      ("\\" ~ "_") ~> (":" ~> `type`) ~ ("." ~> term) ^^ { case ty ~ t => ctx: Context => TmAbs("_", ty(ctx), t(ctx.addName("_"))) } |
       ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ { case t1 ~ t2 ~ t3 => ctx: Context => TmIf(t1(ctx), t2(ctx), t3(ctx)) }
 
   lazy val appTerm: PackratParser[Res[Term]] =
@@ -56,6 +56,11 @@ object SimpleBoolParsers extends StandardTokenParsers with PackratParsers with I
       lcid ^^ { i => ctx: Context => TmVar(ctx.name2index(i), ctx.length) } |
       "true" ^^ { _ => ctx: Context => TmTrue } |
       "false" ^^ { _ => ctx: Context => TmFalse }
+
+  def inputTerm(s: String) = phrase(term)(new lexical.Scanner(s)) match {
+    case t if t.successful => t.get
+    case t                 => error(t.toString)
+  }
 
   def input(s: String) = phrase(topLevel)(new lexical.Scanner(s)) match {
     case t if t.successful => t.get

@@ -7,11 +7,11 @@ y: Bool -> Bool;
 y true;
 
 // simple lambda
-lambda z: Bool. y z;
+\z: Bool. y z;
 
 // simple lambda
-lambda x: Bool. x;
+\x: Bool. x;
 
-(lambda x: Bool -> Bool. if x false then true else false);
+(\x: Bool -> Bool. if x false then true else false);
 // lambda application
-(lambda x: Bool -> Bool. if x false then true else false) (lambda x: Bool. if x then false else true);
+(\x: Bool -> Bool. if x false then true else false) (\x: Bool. if x then false else true);

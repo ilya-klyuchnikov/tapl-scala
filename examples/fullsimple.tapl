@@ -41,3 +41,9 @@ addr2 = <virtual=va> as Addr;
 
 getName addr1;
 getName addr2;
+
+lambda _: Unit. 5;
+\_: Unit. 5;
+
+let x = 5 in 7;
+let _ = 5 in 7;

@@ -1,6 +1,6 @@
 # Taxonomy of interpreters
 
-## Simple + Subtyping (01-12)
+## Simple Types
 
 * arith (01)
 	* tyarith (04)
@@ -8,14 +8,17 @@
 	* fulluntyped (03)
 * simplebool (05)
 	* fullsimple (06)
-		* fullsub (10) (+TyTop) + subtyping
-			* fullref(07) (+ TyRef, TySource, TySource, TySink, TyTop, TyBot), subtyping, meet, join 
-	* fullerror (08) (+ Try, Error, Bot) + subtype
-	* rcdsubbot(09) (+ Record, + Top, + Bottom)
-	* bot (12) (+Top, +Bot, +Subtype, -Bool, -If)
-		* (11) joinsub (+ Boolean, + If, + Bool => join/meet?) - simplification of fullsub
 
-## Recursive types	
+## Subtypes
+* bot (12) (+Top, +Bot, +Subtype, -Bool, -If)
+	* rcdsubbot(09) (+ Record, + Top, + Bottom)
+		* (11) joinsub (+ Boolean, + If, + Bool => join/meet?)
+			* fullsub (10) (+TyTop) + subtyping
+				* fullref(07) (+ TyRef, TySource, TySource, TySink, TyTop, TyBot), subtyping, meet, join 
+					* fullerror (08) (+ Try, Error, Bot) + subtype
+
+
+## Recursive types
 
 * FullPoly (System F)
 	* FullSub

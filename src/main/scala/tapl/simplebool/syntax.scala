@@ -1,6 +1,9 @@
 package tapl.simplebool
 
-sealed trait Term
+sealed trait Term {
+  final def prettyString(ctx: Context = Context()): String =
+    util.Print.print(PrettyPrinter.ptm(ctx, this), 60)
+}
 // i - index, cl - context length
 case class TmVar(i: Int, cl: Int) extends Term
 case class TmAbs(v: String, ty: Ty, t: Term) extends Term
@@ -18,7 +21,10 @@ case class Eval(t: Term) extends Command
 case class Bind(n: String, b: Binding) extends Command
 
 sealed trait Binding
+// Binds variable and a name. Used during parsing
+// propagate names.
 case object NameBind extends Binding
+// Binds a variable to a type. Used during typechecking.
 case class VarBind(t: Ty) extends Binding
 
 case class Context(l: List[(String, Binding)] = List()) {
@@ -125,13 +131,13 @@ object PrettyPrinter {
   def ptmTerm(outer: Boolean, ctx: Context, t: Term): Document = t match {
     case TmAbs(x, tyT1, t2) =>
       val (ctx1, x1) = ctx.pickFreshName(x)
-      val abs = g0("lambda" :/: x1 :: ":" :/: ptyType(false, tyT1) :: ".")
+      val abs = g0("\\" :: x1 :: ":" :: ptyType(false, tyT1) :: ".")
       val body = ptmTerm(outer, ctx1, t2)
       g2(abs :/: body)
     case TmIf(t1, t2, t3) =>
       val ifB = g2("if" :/: ptmTerm(outer, ctx, t1))
       val thenB = g2("then" :/: ptmTerm(outer, ctx, t2))
-      val elseB = g2("else" :/: ptmTerm(outer, ctx, t2))
+      val elseB = g2("else" :/: ptmTerm(outer, ctx, t3))
       g0(ifB :/: thenB :/: elseB)
     case t => ptmAppTerm(outer, ctx, t)
 
