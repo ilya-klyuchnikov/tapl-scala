@@ -1,5 +1,5 @@
-scalaVersion := "2.9.1"
+scalaVersion := "2.10.1"
 
 name := "tapl-scala"
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "1.7.1" % "test"
+libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.10.1" % "test"

@@ -1,7 +1,8 @@
 /.scala_dependencies
 /bin
 target/
-/.idea
+.idea/
+.idea_modules
 /.project
 /.classpath
 /.settings

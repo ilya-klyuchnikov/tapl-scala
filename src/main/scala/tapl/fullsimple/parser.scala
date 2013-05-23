@@ -10,8 +10,8 @@ object FullSimpleParsers extends StandardTokenParsers with PackratParsers with I
     "as", "of", "fix", "iszero", "letrec", "_")
   lexical.delimiters += ("(", ")", ";", "/", ".", ":", "->", "=", "<", ">", "{", "}", "=>", "==>", ",", "|", "\\")
 
-  lazy val lcid: PackratParser[String] = ident ^? { case id if id.charAt(0).isLowerCase => id }
-  lazy val ucid: PackratParser[String] = ident ^? { case id if id.charAt(0).isUpperCase => id }
+  lazy val lcid: PackratParser[String] = ident ^? { case id if id.charAt(0).isLower => id }
+  lazy val ucid: PackratParser[String] = ident ^? { case id if id.charAt(0).isUpper => id }
   lazy val eof: PackratParser[String] = elem("<eof>", _ == lexical.EOF) ^^ { _.chars }
 
   type Res[A] = Context => A
