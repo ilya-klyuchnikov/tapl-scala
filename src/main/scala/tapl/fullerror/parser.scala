@@ -9,9 +9,9 @@ object FullErrorParsers extends StandardTokenParsers with PackratParsers with Im
   lexical.delimiters += ("(", ")", ";", "/", ".", ":", "->")
 
   // lower-case identifier
-  lazy val lcid: PackratParser[String] = ident ^? { case id if id.charAt(0).isLowerCase => id }
+  lazy val lcid: PackratParser[String] = ident ^? { case id if id.charAt(0).isLower => id }
   // upper-case identifier
-  lazy val ucid: PackratParser[String] = ident ^? { case id if id.charAt(0).isUpperCase => id }
+  lazy val ucid: PackratParser[String] = ident ^? { case id if id.charAt(0).isUpper => id }
 
   type Res[A] = Context => A
   type Res1[A] = Context => (A, Context)
