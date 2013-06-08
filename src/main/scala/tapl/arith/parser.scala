@@ -2,15 +2,14 @@ package tapl.arith
 
 import scala.util.parsing.combinator.ImplicitConversions
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
-import scala.util.parsing.input.{ CharSequenceReader => Reader }
 
 object ArithParsers extends StandardTokenParsers with ImplicitConversions {
   lexical.reserved += ("true", "false", "if", "then", "else", "iszero", "succ", "pred")
   lexical.delimiters += ("(", ")", ";")
 
   private def topLevel: Parser[List[Command]] =
-    eof ^^ { _ => List() } |
-      (command <~ ";") ~ topLevel ^^ { case c ~ cs => c :: cs }
+    (command <~ ";") ~ topLevel ^^ { case c ~ cs => c :: cs } |
+      success(List())
 
   private def command: Parser[Command] =
     term ^^ Eval
