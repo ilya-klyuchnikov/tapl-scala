@@ -1,6 +1,7 @@
 package tapl.untyped
 
-import org.scalacheck.{ Arbitrary, Gen }
+import org.scalacheck.Gen
+import Gen._
 
 // naive generator or terms
 object TermGen {
@@ -13,16 +14,16 @@ object TermGen {
 
   private def tmApp(depth: Int, ctx: Context): Gen[Term] =
     for {
-      i1 <- Gen.choose(1, depth - 1);
-      i2 <- Gen.choose(1, depth - 1);
-      t1 <- tm(i1, ctx);
+      i1 <- Gen.choose(1, depth - 1)
+      i2 <- Gen.choose(1, depth - 1)
+      t1 <- tm(i1, ctx)
       t2 <- tm(i2, ctx)
     } yield TmApp(t1, t2)
 
   private def tmAbs(depth: Int, ctx: Context): Gen[Term] = {
     val (ctx1, v) = freshName(ctx)
     for {
-      i <- Gen.choose(1, depth - 1);
+      i <- Gen.choose(1, depth - 1)
       t1 <- tm(i, ctx1)
     } yield TmAbs(v, t1)
   }
@@ -31,12 +32,12 @@ object TermGen {
     case d if d <= 0 => Gen.fail
     case 1           => tmVar(ctx)
     case 2           => tmVar(ctx)
-    case _           => tmApp(depth, ctx) | tmAbs(depth, ctx)
+    case _           => oneOf(tmApp(depth, ctx), tmAbs(depth, ctx))
   }
 
   def terms: Gen[Term] =
     for {
-      size <- Gen.choose(1, 10);
+      size <- Gen.choose(1, 10)
       t <- tm(size, Context())
     } yield t
 

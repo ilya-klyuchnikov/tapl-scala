@@ -1,6 +1,6 @@
 package tapl.simplebool
 
-import org.scalacheck.{ Arbitrary, Gen }
+import org.scalacheck.Gen
 import Gen._
 
 // naive generator or terms which are possibly not well-typed
@@ -14,8 +14,8 @@ object TermGen {
     } yield t
 
   private def tm(depth: Int, ctx: Context): Gen[Term] =
-    if (depth == 1) tmVar(ctx) | TmTrue | TmFalse
-    else tmAbs(depth, ctx) | tmApp(depth, ctx) | tmIf(depth, ctx)
+    if (depth == 1) oneOf(tmVar(ctx), oneOf(TmTrue, TmFalse))
+    else oneOf(tmAbs(depth, ctx), tmApp(depth, ctx), tmIf(depth, ctx))
 
   private def tmVar(ctx: Context): Gen[Term] = for {
     i <- choose(1, ctx.length)
