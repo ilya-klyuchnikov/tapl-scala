@@ -72,6 +72,7 @@ object Typer {
   import Util._
 
   type Constr = List[(Ty, Ty)]
+  type Subst = List[(TyId, Ty)]
   type UVarGenerator = Unit => NextUVar
   case class NextUVar(n: String, gen: UVarGenerator)
 
@@ -136,7 +137,7 @@ object Typer {
     f(tyS)
   }
 
-  def applySub(ctr: Constr, tyT: Ty): Ty = {
+  def applySub(ctr: Subst, tyT: Ty): Ty = {
     ctr.reverse.foldLeft(tyT)((tyS, ctr) => ctr match { case (TyId(tyX), tyC2) => substInTy(tyX, tyC2, tyS) })
   }
 
@@ -154,8 +155,8 @@ object Typer {
   }
 
   // why do we need ctx here?
-  def unify(ctx: Context, msg: String, constr: Constr): Constr = {
-    def u(constr: Constr): Constr = constr match {
+  def unify(ctx: Context, msg: String, constr: Constr): Subst = {
+    def u(constr: Constr): Subst = constr match {
       case Nil =>
         Nil
       case (tyS, TyId(tyX)) :: rest =>
