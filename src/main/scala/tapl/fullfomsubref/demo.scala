@@ -28,7 +28,7 @@ object FullFomSubRefDemo extends App {
       if (subtype(ctx, tyT1, tyT))
         TmAbbBind(t, Some(tyT))
       else
-        error("type of binding doesn't match declared type in " + bind)
+        sys.error("type of binding doesn't match declared type in " + bind)
     case TyAbbBind(tyT, Some(knK)) =>
       val knK1 = kindof(ctx, tyT)
       if (knK == knK1) TyAbbBind(tyT, Some(knK))
@@ -83,7 +83,7 @@ object FullFomSubRefDemo extends App {
             println(doc2)
             (ctx2, store1)
           case _ =>
-            error("existential type expected")
+            sys.error("existential type expected")
         }
     }
   }

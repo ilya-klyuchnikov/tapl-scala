@@ -59,7 +59,7 @@ case class Context(l: List[(String, Binding)] = List()) {
     val bind = l(i)._2
     Syntax.bindingShift(i + 1, bind)
     } catch {
-      case e => error("Variable lookup fail. Offset: " + i + " cl: " + l.length + " context:" + l)
+      case e: Throwable => sys.error("Variable lookup fail. Offset: " + i + " cl: " + l.length + " context:" + l)
     }
   }
 

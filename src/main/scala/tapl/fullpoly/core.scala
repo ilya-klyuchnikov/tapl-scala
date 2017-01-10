@@ -279,9 +279,9 @@ object Typer {
           val tyU = typeof(ctx, t2)
           val tyU1 = typeSubstTop(tyT1, tyT2)
           if (tyEqv(ctx, tyU, tyU1)) tyT
-          else error("doesn't match declared type")
+          else sys.error("doesn't match declared type")
         case _ =>
-          error("existential type expected")
+          sys.error("existential type expected")
       }
     case TmUnPack(tyX, x, t1, t2) =>
       val tyT1 = typeof(ctx, t1)
@@ -292,7 +292,7 @@ object Typer {
           val tyT2 = typeof(ctx2, t2)
           typeShift(-2, tyT2)
         case _ =>
-          error("existential type expected")
+          sys.error("existential type expected")
       }
     case TmTAbs(tyX, t2) =>
       val ctx1 = ctx.addBinding(tyX, TyVarBind)
@@ -304,7 +304,7 @@ object Typer {
         case TyAll(_, tyT12) =>
           typeSubstTop(tyT2, tyT12)
         case _ =>
-          error("universal type expected")
+          sys.error("universal type expected")
       }
   }
 }

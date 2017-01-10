@@ -495,13 +495,13 @@ object Typer {
     case TmRef(t1) =>
       TyRef(typeof(ctx, t1))
     case TmLoc(l) =>
-      error("locations are not supposed to occur in source programs!")
+      sys.error("locations are not supposed to occur in source programs!")
     case TmDeref(t1) =>
       simplifyTy(ctx, typeof(ctx, t1)) match {
         case TyRef(tyT1)    => tyT1
         case TyBot          => TyBot
         case TySource(tyT1) => tyT1
-        case _              => error("argument of ! is not a Ref")
+        case _              => sys.error("argument of ! is not a Ref")
       }
     case TmAssign(t1, t2) =>
       simplifyTy(ctx, typeof(ctx, t1)) match {
@@ -509,17 +509,17 @@ object Typer {
           if (subtype(ctx, typeof(ctx, t2), tyT1))
             TyUnit
           else
-            error("arguments of := are incompatible")
+            sys.error("arguments of := are incompatible")
         case TySink(tyT1) =>
           if (subtype(ctx, typeof(ctx, t2), tyT1))
             TyUnit
           else
-            error("arguments of := are incompatible")
+            sys.error("arguments of := are incompatible")
         case TyBot =>
           val _ = typeof(ctx, t2)
           TyBot
         case _ =>
-          error("argument of ! is not a Ref")
+          sys.error("argument of ! is not a Ref")
       }
     case TmZero =>
       TyNat

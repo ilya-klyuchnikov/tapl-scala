@@ -10,6 +10,7 @@ object TermGen {
     ctx.pickFreshName("v" + ctx.length)
 
   private def tmVar(ctx: Context): Gen[Term] =
+    if (ctx.length == 0) Gen.fail else
     for { i <- Gen.choose(1, ctx.length) } yield TmVar(i - 1, ctx.length)
 
   private def tmApp(depth: Int, ctx: Context): Gen[Term] =

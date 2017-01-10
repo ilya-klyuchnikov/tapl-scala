@@ -212,8 +212,8 @@ object Typer {
   def getKind(ctx: Context, i: Int): Kind = ctx.getBinding(i) match {
     case TyVarBind(tyT)          => kindof(ctx, tyT)
     case TyAbbBind(_, Some(knK)) => knK
-    case TyAbbBind(_, None)      => error("No kind recorded for var " + ctx.index2Name(i))
-    case _                       => error("Wrong kind of binding for var " + ctx.index2Name(i))
+    case TyAbbBind(_, None)      => sys.error("No kind recorded for var " + ctx.index2Name(i))
+    case _                       => sys.error("Wrong kind of binding for var " + ctx.index2Name(i))
   }
 
   def kindof(ctx: Context, tyT: Ty): Kind = tyT match {
@@ -241,8 +241,8 @@ object Typer {
         case KnArr(knK11, knK12) =>
           if (knK2 == knK11)
             knK12
-          else error("parameter kind mismatch")
-        case _ => error("arrow type expected here")
+          else sys.error("parameter kind mismatch")
+        case _ => sys.error("arrow type expected here")
       }
     case TySome(tyX, knK, tyT2) =>
       val ctx1 = ctx.addBinding(tyX, TyVarBind(knK))
@@ -254,7 +254,7 @@ object Typer {
 
   def checkKindStar(ctx: Context, tyT: Ty): Unit = kindof(ctx, tyT) match {
     case KnStar => ()
-    case _      => error("kind * expected")
+    case _      => sys.error("kind * expected")
   }
 
   def subtype(ctx: Context, ty1: Ty, ty2: Ty): Boolean = {
@@ -456,14 +456,14 @@ object Typer {
       simplifyTy(ctx, tyT) match {
         case TySome(tyY, tyBound, tyT2) =>
           if (!subtype(ctx, tyT1, tyBound)) {
-            error("hidden type not a subtype of bound")
+            sys.error("hidden type not a subtype of bound")
           }
           val tyU = typeof(ctx, t2)
           val tyU1 = typeSubstTop(tyT1, tyT2)
           if (tyEqv(ctx, tyU, tyU1)) tyT
-          else error("doesn't match declared type")
+          else sys.error("doesn't match declared type")
         case _ =>
-          error("existential type expected")
+          sys.error("existential type expected")
       }
     case TmUnPack(tyX, x, t1, t2) =>
       val tyT1 = typeof(ctx, t1)
@@ -474,7 +474,7 @@ object Typer {
           val tyT2 = typeof(ctx2, t2)
           typeShift(-2, tyT2)
         case _ =>
-          error("existential type expected")
+          sys.error("existential type expected")
       }
     case TmTAbs(tyX, tyT1, t2) =>
       val ctx1 = ctx.addBinding(tyX, TyVarBind(tyT1))
@@ -485,11 +485,11 @@ object Typer {
       lcst(ctx, tyT1) match {
         case TyAll(_, tyT11, tyT12) =>
           if (!subtype(ctx, tyT2, tyT11)) {
-            error("hidden type not a subtype of bound")
+            sys.error("hidden type not a subtype of bound")
           }
           typeSubstTop(tyT2, tyT12)
         case _ =>
-          error("universal type expected")
+          sys.error("universal type expected")
       }
   }
 }

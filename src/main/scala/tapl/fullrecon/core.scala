@@ -175,14 +175,14 @@ object Typer {
         if (tyS == TyId(tyX))
           u(rest)
         else if (occursIn(tyX, tyS))
-          error(msg + ": circular constraints")
+          sys.error(msg + ": circular constraints")
         else
           u(substInConstr(tyX, tyS, rest)) ++ List((TyId(tyX), tyS))
       case (TyId(tyX), tyT) :: rest =>
         if (tyT == TyId(tyX))
           u(rest)
         else if (occursIn(tyX, tyT))
-          error(msg + ": circular constraints")
+          sys.error(msg + ": circular constraints")
         else
           u(substInConstr(tyX, tyT, rest)) ++ List((TyId(tyX), tyT))
       case (TyNat, TyNat) :: rest =>
@@ -193,7 +193,7 @@ object Typer {
         u((tyS1, tyT1) :: (tyS2, tyT2) :: rest)
       case (tyS, tyT) :: rest =>
         println(tyS, tyT)
-        error("unsolvable constraints")
+        sys.error("unsolvable constraints")
     }
     u(constr)
   }

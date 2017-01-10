@@ -14,7 +14,9 @@ object TermGen {
     } yield t
 
   private def tm(depth: Int, ctx: Context): Gen[Term] =
-    if (depth == 1) oneOf(tmVar(ctx), oneOf(TmTrue, TmFalse))
+    if (depth == 1 && ctx.length > 0) oneOf(tmVar(ctx), oneOf(TmTrue, TmFalse))
+    else if (depth == 1) oneOf(TmTrue, TmFalse)
+    else if (depth == 2) oneOf(tmAbs(depth, ctx), tmApp(depth, ctx))
     else oneOf(tmAbs(depth, ctx), tmApp(depth, ctx), tmIf(depth, ctx))
 
   private def tmVar(ctx: Context): Gen[Term] = for {

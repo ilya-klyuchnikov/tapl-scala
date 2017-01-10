@@ -73,7 +73,7 @@ object FullFSubDemo extends App {
           println(doc2)
           ctx2
         case _ =>
-          error("existential type expected")
+          sys.error("existential type expected")
       }
   }
 

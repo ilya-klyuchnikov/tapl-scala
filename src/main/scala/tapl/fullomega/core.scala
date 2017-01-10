@@ -254,8 +254,8 @@ object Typer {
   def getKind(ctx: Context, i: Int) = ctx.getBinding(i) match {
     case TyVarBind(knK)          => knK
     case TyAbbBind(_, Some(knK)) => knK
-    case TyAbbBind(_, None)      => error("No kind recorded for var " + ctx.index2Name(i))
-    case _                       => error("Wrong kind of binding for var " + ctx.index2Name(i))
+    case TyAbbBind(_, None)      => sys.error("No kind recorded for var " + ctx.index2Name(i))
+    case _                       => sys.error("Wrong kind of binding for var " + ctx.index2Name(i))
   }
 
   def kindof(ctx: Context, tyT: Ty): Kind = tyT match {
@@ -283,8 +283,8 @@ object Typer {
         case KnArr(knK11, knK12) =>
           if (knK2 == knK11)
             knK12
-          else error("parameter kind mismatch")
-        case _ => error("arrow type expected here")
+          else sys.error("parameter kind mismatch")
+        case _ => sys.error("arrow type expected here")
       }
     case TySome(tyX, knK, tyT2) =>
       val ctx1 = ctx.addBinding(tyX, TyVarBind(knK))
@@ -296,7 +296,7 @@ object Typer {
 
   def checkKindStar(ctx: Context, tyT: Ty): Unit = kindof(ctx, tyT) match {
     case KnStar => ()
-    case _      => error("kind * expected")
+    case _      => sys.error("kind * expected")
   }
 
   def typeof(ctx: Context, t: Term): Ty = t match {
@@ -334,11 +334,11 @@ object Typer {
     case TmRef(t1) =>
       TyRef(typeof(ctx, t1))
     case TmLoc(l) =>
-      error("locations are not supposed to occur in source programs!")
+      sys.error("locations are not supposed to occur in source programs!")
     case TmDeref(t1) =>
       simplifyTy(ctx, typeof(ctx, t1)) match {
         case TyRef(tyT1) => tyT1
-        case _           => error("argument of ! is not a Ref")
+        case _           => sys.error("argument of ! is not a Ref")
       }
     case TmAssign(t1, t2) =>
       simplifyTy(ctx, typeof(ctx, t1)) match {
@@ -346,9 +346,9 @@ object Typer {
           if (tyEqv(ctx, typeof(ctx, t2), tyT1))
             TyUnit
           else
-            error("arguments of := are incompatible")
+            sys.error("arguments of := are incompatible")
         case _ =>
-          error("argument of ! is not a Ref")
+          sys.error("argument of ! is not a Ref")
       }
     case TmRecord(fields) =>
       val fieldTys = fields.map { case (li, ti) => (li, typeof(ctx, ti)) }
@@ -402,14 +402,14 @@ object Typer {
       simplifyTy(ctx, tyT1) match {
         case TyAll(_, knK11, tyT12) =>
           if (knK11 != knKT2)
-            error("type argument has wrong kind")
+            sys.error("type argument has wrong kind")
           else
             typeSubstTop(tyT2, tyT12)
         case z =>
           println(TmTApp(t1, tyT2))
           println(Print.print(PrettyPrinter.ptmATerm(true, ctx, tt), 60))
           println(z)
-          error("universal type expected")
+          sys.error("universal type expected")
       }
     case TmZero =>
       TyNat
@@ -436,14 +436,14 @@ object Typer {
       simplifyTy(ctx, tyT) match {
         case TySome(tyY, k, tyT2) =>
           if (kindof(ctx, tyT1) != k) {
-            error("type component doesn't have expected kind")
+            sys.error("type component doesn't have expected kind")
           }
           val tyU = typeof(ctx, t2)
           val tyU1 = typeSubstTop(tyT1, tyT2)
           if (tyEqv(ctx, tyU, tyU1)) tyT
-          else error("doesn't match declared type")
+          else sys.error("doesn't match declared type")
         case _ =>
-          error("existential type expected")
+          sys.error("existential type expected")
       }
     case TmUnPack(tyX, x, t1, t2) =>
       val tyT1 = typeof(ctx, t1)
@@ -454,7 +454,7 @@ object Typer {
           val tyT2 = typeof(ctx2, t2)
           typeShift(-2, tyT2)
         case _ =>
-          error("existential type expected")
+          sys.error("existential type expected")
       }
   }
 }

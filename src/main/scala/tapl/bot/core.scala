@@ -59,9 +59,9 @@ object Typer {
       tyT1 match {
         case TyArr(tyT11, tyT12) =>
           if (subtype(tyT2, tyT11)) tyT12
-          else error("parameter mismatch in " + t + " : " + tyT2 + " != " + tyT11)
+          else sys.error("parameter mismatch in " + t + " : " + tyT2 + " != " + tyT11)
         case TyBot => TyBot
-        case z     => error("arrow type expected in " + t1)
+        case z     => sys.error("arrow type expected in " + t1)
       }
   }
 }
