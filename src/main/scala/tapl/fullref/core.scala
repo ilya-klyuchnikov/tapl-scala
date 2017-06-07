@@ -339,14 +339,16 @@ object Typer {
           val labelT = fT.map { _._1 }
           val allLabels = (labelS union labelT).distinct
           // there was an error by Pierce!!
-          val allFs = allLabels.map { li =>
+          val allFs = allLabels.flatMap { li =>
             (fS.find { _._1 == li }, fT.find { _._1 == li }) match {
               case (Some((_, tySi)), Some((_, tyTi))) =>
-                (li, meet(ctx, tySi, tyTi))
+                Some(li -> meet(ctx, tySi, tyTi))
               case (Some((_, tySi)), _) =>
-                (li, tySi)
+                Some(li -> tySi)
               case (_, Some((_, tySi))) =>
-                (li, tySi)
+                Some(li -> tySi)
+              case (None, None) =>
+                None
             }
           }
           TyRecord(allFs)

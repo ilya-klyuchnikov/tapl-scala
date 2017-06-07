@@ -10,7 +10,7 @@ object FullReconDemo extends App {
 
   val width = 60
 
-  def processCommand(in: (Context, UVarGenerator, Constr), cmd: Command): (Context, UVarGenerator, Constr) = in match {
+  def processCommand(in: (Context, UVarGenerator, IdConstr), cmd: Command): (Context, UVarGenerator, IdConstr) = in match {
     case (ctx, nextuvar, constr) => cmd match {
       case Eval(t1) =>
 
@@ -44,7 +44,7 @@ object FullReconDemo extends App {
 
   def demo(s: String): Unit = {
     val (commands, _) = FullReconParsers.input(s)(Context())
-    commands.foldLeft((Context(), uvargen, emptyConstr))(processCommand)
+    commands.foldLeft((Context(), uvargen, emptyIdConstr))(processCommand)
   }
 
   val inFile = if (args.isEmpty) "examples/fullrecon.tapl" else args(0)
