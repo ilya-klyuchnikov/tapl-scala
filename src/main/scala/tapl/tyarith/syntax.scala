@@ -16,8 +16,8 @@ case class TmIsZero(t: Term) extends Term
 sealed trait Command
 case class Eval(t: Term) extends Command
 
-import scala.text.Document
-import scala.text.Document._
+import util.Document
+import util.Document._
 
 object PrettyPrinter {
   import util.Print._

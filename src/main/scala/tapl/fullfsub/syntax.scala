@@ -193,8 +193,8 @@ object Syntax {
 
 }
 
-import scala.text.Document
-import scala.text.Document._
+import util.Document
+import util.Document._
 
 object PrettyPrinter {
   import util.Print._

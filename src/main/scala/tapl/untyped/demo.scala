@@ -6,7 +6,7 @@ object UntypedDemo extends App {
   import Evaluator._
   import util.Print._
   import PrettyPrinter._
-  import scala.text.Document._
+  import util.Document._
 
   val width = 60
 

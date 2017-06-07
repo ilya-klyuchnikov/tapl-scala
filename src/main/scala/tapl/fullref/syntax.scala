@@ -202,8 +202,8 @@ object Syntax {
 
 }
 
-import scala.text.Document
-import scala.text.Document._
+import util.Document
+import util.Document._
 
 // outer means that the term is the top-level term
 object PrettyPrinter {
