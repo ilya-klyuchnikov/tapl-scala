@@ -22,6 +22,6 @@ object SyntaxSpec extends Properties("SimpleBool") {
       val t = Typer.typeof(Context(), term)
       true
     } catch {
-      case _ => false
+      case _: Throwable => false
     }
 }
