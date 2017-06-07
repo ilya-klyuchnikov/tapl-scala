@@ -1,15 +1,19 @@
 package tapl.fullsub
 
-import scala.io.Source
-
 // This demo shows that types (inferred ones) are not preserved!!
-object FullSubDemo extends App {
+object FullSubDemo extends util.Demo[Context, Command] {
   import Evaluator._
   import Typer._
   import util.Print._
   import PrettyPrinter._
   
   val width = 60
+
+  override val initialContext: Context = Context()
+  override val defaultExample: String = "examples/fullsub.tapl"
+
+  override def parseInput(s: String): List[Command] =
+    FullSubParsers.input(s)(Context())._1
 
   private def checkBinding(ctx: Context, bind: Binding): Binding = bind match {
     case NameBind =>
@@ -56,15 +60,5 @@ object FullSubDemo extends App {
 
       ctx.addBinding(x, bind2)
   }
-
-  def demo(s: String): Unit = {
-    val (commands, _) = FullSubParsers.input(s)(Context())
-    commands.foldLeft(Context())(processCommand)
-  }
-
-  val inFile = if (args.isEmpty) "examples/fullsub.tapl" else args(0)
-  val input = Source.fromFile(inFile).mkString("")
-
-  demo(input)
 
 }

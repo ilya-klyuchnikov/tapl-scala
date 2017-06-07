@@ -1,14 +1,19 @@
 package tapl.fullrecon
 
-import scala.io.Source
+import tapl.fullrecon.Typer._
 
-object FullReconDemo extends App {
+object FullReconDemo extends util.Demo[(Context, UVarGenerator, IdConstr), Command] {
   import Evaluator._
-  import Typer._
   import util.Print._
   import PrettyPrinter._
 
   val width = 60
+
+  override val initialContext: (Context, UVarGenerator, IdConstr) = (Context(), uvargen, emptyIdConstr)
+  override val defaultExample: String = "examples/fullrecon.tapl"
+
+  override def parseInput(s: String): List[Command] =
+    FullReconParsers.input(s)(Context())._1
 
   def processCommand(in: (Context, UVarGenerator, IdConstr), cmd: Command): (Context, UVarGenerator, IdConstr) = in match {
     case (ctx, nextuvar, constr) => cmd match {
@@ -41,15 +46,5 @@ object FullReconDemo extends App {
         (ctx.addBinding(x, bind), nextuvar, constr)
     }
   }
-
-  def demo(s: String): Unit = {
-    val (commands, _) = FullReconParsers.input(s)(Context())
-    commands.foldLeft((Context(), uvargen, emptyIdConstr))(processCommand)
-  }
-
-  val inFile = if (args.isEmpty) "examples/fullrecon.tapl" else args(0)
-  val input = Source.fromFile(inFile).mkString("")
-
-  demo(input)
 
 }

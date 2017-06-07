@@ -1,14 +1,17 @@
 package tapl.bot
 
-import scala.io.Source
-
-object BotDemo extends App {
+object BotDemo extends util.Demo[Context, Command] {
   import Evaluator._
-  import Typer._
   import util.Print._
   import PrettyPrinter._
 
   val width = 60
+
+  override val initialContext: Context = Context()
+  override val defaultExample: String = "examples/bot.tapl"
+
+  override def parseInput(s: String): List[Command] =
+    BotParsers.input(s)(Context())._1
 
   def processCommand(ctx: Context, cmd: Command): Context = cmd match {
     case Eval(t1) =>
@@ -33,15 +36,5 @@ object BotDemo extends App {
       println(print(doc1, width))
       ctx.addBinding(x, bind)
   }
-
-  def demo(s: String): Unit = {
-    val (commands, _) = BotParsers.input(s)(Context())
-    commands.foldLeft(Context())(processCommand)
-  }
-
-  val inFile = if (args.isEmpty) "examples/bot.tapl" else args(0)
-  val input = Source.fromFile(inFile).mkString("")
-
-  demo(input)
 
 }

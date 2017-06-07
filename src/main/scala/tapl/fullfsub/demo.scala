@@ -1,8 +1,6 @@
 package tapl.fullfsub
 
-import scala.io.Source
-
-object FullFSubDemo extends App {
+object FullFSubDemo extends util.Demo[Context, Command] {
   import Evaluator._
   import Typer._
   import Syntax._
@@ -10,6 +8,12 @@ object FullFSubDemo extends App {
   import PrettyPrinter._
 
   val width = 60
+
+  override val initialContext: Context = Context()
+  override val defaultExample: String = "examples/fullfsub.tapl"
+
+  override def parseInput(s: String): List[Command] =
+    FullFSubParsers.input(s)(Context())._1
 
   private def checkBinding(ctx: Context, bind: Binding): Binding = bind match {
     case NameBind =>
@@ -76,15 +80,5 @@ object FullFSubDemo extends App {
           sys.error("existential type expected")
       }
   }
-
-  def demo(s: String): Unit = {
-    val (commands, _) = FullFSubParsers.input(s)(Context())
-    commands.foldLeft(Context())(processCommand)
-  }
-
-  val inFile = if (args.isEmpty) "examples/fullfsub.tapl" else args(0)
-  val input = Source.fromFile(inFile).mkString("")
-
-  demo(input)
 
 }

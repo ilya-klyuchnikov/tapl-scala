@@ -1,14 +1,17 @@
 package tapl.equirec
 
-import scala.io.Source
-
-object EquirecDemo extends App {
+object EquirecDemo extends util.Demo[Context, Command] {
   import Evaluator._
-  import Typer._
   import util.Print._
   import PrettyPrinter._
   
   val width = 60
+
+  override val initialContext: Context = Context()
+  override val defaultExample: String = "examples/equirec.tapl"
+
+  override def parseInput(s: String): List[Command] =
+    EquirecParsers.input(s)(Context())._1
 
   def processCommand(ctx: Context, cmd: Command): Context = cmd match {
     case Eval(t1) =>
@@ -31,18 +34,7 @@ object EquirecDemo extends App {
       val doc1 = x :: pBindingTy(ctx, bind) :: ";"
       println("====================")
       println(print(doc1, width))
-
       ctx.addBinding(x, bind)
   }
-
-  def demo(s: String): Unit = {
-    val (commands, _) = EquirecParsers.input(s)(Context())
-    commands.foldLeft(Context())(processCommand)
-  }
-
-  val inFile = if (args.isEmpty) "examples/equirec.tapl" else args(0)
-  val input = Source.fromFile(inFile).mkString("")
-
-  demo(input)
 
 }

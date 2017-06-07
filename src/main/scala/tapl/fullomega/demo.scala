@@ -1,8 +1,6 @@
 package tapl.fullomega
 
-import scala.io.Source
-
-object FullOmegaDemo extends App {
+object FullOmegaDemo extends util.Demo[(Context, Store), Command] {
   import Evaluator._
   import Typer._
   import Syntax._
@@ -10,6 +8,12 @@ object FullOmegaDemo extends App {
   import PrettyPrinter._
 
   val width = 60
+
+  override val initialContext: (Context, Store) = (Context(), Store())
+  override val defaultExample: String = "examples/fullomega.tapl"
+
+  override def parseInput(s: String): List[Command] =
+    FullOmegaParsers.input(s)(Context())._1
 
   private def checkBinding(ctx: Context, bind: Binding): Binding = bind match {
     case NameBind =>
@@ -85,15 +89,5 @@ object FullOmegaDemo extends App {
         }
     }
   }
-
-  def demo(s: String): Unit = {
-    val (commands, _) = FullOmegaParsers.input(s)(Context())
-    commands.foldLeft(Context(), Store())(processCommand)
-  }
-
-  val inFile = if (args.isEmpty) "examples/fullomega.tapl" else args(0)
-  val input = Source.fromFile(inFile).mkString("")
-
-  demo(input)
 
 }

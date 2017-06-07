@@ -1,14 +1,18 @@
 package tapl.fullequirec
 
-import scala.io.Source
-
-object FullEquirecDemo extends App {
+object FullEquirecDemo extends util.Demo[Context, Command] {
   import Evaluator._
   import Typer._
   import util.Print._
   import PrettyPrinter._
   
   val width = 60
+
+  override val initialContext: Context = Context()
+  override val defaultExample: String = "examples/fullequirec.tapl"
+
+  override def parseInput(s: String): List[Command] =
+    FullEquirecParsers.input(s)(Context())._1
 
   private def checkBinding(ctx: Context, bind: Binding): Binding = bind match {
     case NameBind =>
@@ -55,15 +59,5 @@ object FullEquirecDemo extends App {
 
       ctx.addBinding(x, bind2)
   }
-
-  def demo(s: String): Unit = {
-    val (commands, _) = FullEquirecParsers.input(s)(Context())
-    commands.foldLeft(Context())(processCommand)
-  }
-
-  val inFile = if (args.isEmpty) "examples/fullequirec.tapl" else args(0)
-  val input = Source.fromFile(inFile).mkString("")
-
-  demo(input)
 
 }

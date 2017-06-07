@@ -1,14 +1,19 @@
 package tapl.recon
 
-import scala.io.Source
+import Typer._
 
-object ReconDemo extends App {
+object ReconDemo extends util.Demo[(Context, UVarGenerator, Constr), Command] {
   import Evaluator._
-  import Typer._
   import util.Print._
   import PrettyPrinter._
 
   val width = 60
+
+  override val initialContext: (Context, UVarGenerator, Constr) = (Context(), uvargen, emptyConstr)
+  override val defaultExample: String = "examples/recon.tapl"
+
+  override def parseInput(s: String): List[Command] =
+    ReconParsers.input(s)(Context())._1
 
   def processCommand(in: (Context, UVarGenerator, Constr), cmd: Command): (Context, UVarGenerator, Constr) = in match {
     case (ctx, nextuvar, constr) => cmd match {
@@ -41,15 +46,5 @@ object ReconDemo extends App {
         (ctx.addBinding(x, bind), nextuvar, constr)
     }
   }
-
-  def demo(s: String): Unit = {
-    val (commands, _) = ReconParsers.input(s)(Context())
-    commands.foldLeft((Context(), uvargen, emptyConstr))(processCommand)
-  }
-
-  val inFile = if (args.isEmpty) "examples/recon.tapl" else args(0)
-  val input = Source.fromFile(inFile).mkString("")
-
-  demo(input)
 
 }

@@ -1,8 +1,6 @@
 package tapl.fullpoly
 
-import scala.io.Source
-
-object FullPolyDemo extends App {
+object FullPolyDemo extends util.Demo[Context, Command] {
   import Evaluator._
   import Typer._
   import Syntax._
@@ -10,6 +8,12 @@ object FullPolyDemo extends App {
   import PrettyPrinter._
 
   val width = 60
+
+  override val initialContext: Context = Context()
+  override val defaultExample: String = "examples/fullpoly.tapl"
+
+  override def parseInput(s: String): List[Command] =
+    FullPolyParsers.input(s)(Context())._1
 
   private def checkBinding(ctx: Context, bind: Binding): Binding = bind match {
     case NameBind =>
@@ -76,15 +80,5 @@ object FullPolyDemo extends App {
           sys.error("existential type expected")
       }
   }
-
-  def demo(s: String): Unit = {
-    val (commands, _) = FullPolyParsers.input(s)(Context())
-    commands.foldLeft(Context())(processCommand)
-  }
-
-  val inFile = if (args.isEmpty) "examples/fullpoly.tapl" else args(0)
-  val input = Source.fromFile(inFile).mkString("")
-
-  demo(input)
 
 }

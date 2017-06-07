@@ -1,14 +1,18 @@
 package tapl.rcdsubbot
 
-import scala.io.Source
-
-object RcdSubBotDemo extends App {
+object RcdSubBotDemo extends util.Demo[Context, Command] {
   import Evaluator._
   import Typer._
   import util.Print._
   import PrettyPrinter._
 
   val width = 60
+
+  override val initialContext: Context = Context()
+  override val defaultExample: String = "examples/rcdsubbot.tapl"
+
+  override def parseInput(s: String): List[Command] =
+    RcdSubBotParsers.input(s)(Context())._1
 
   def processCommand(ctx: Context, cmd: Command): Context = cmd match {
     case Eval(t1) =>
@@ -33,15 +37,5 @@ object RcdSubBotDemo extends App {
       println(print(doc1, width))
       ctx.addBinding(x, bind)
   }
-
-  def demo(s: String): Unit = {
-    val (commands, _) = RcdSubBotParsers.input(s)(Context())
-    commands.foldLeft(Context())(processCommand)
-  }
-
-  val inFile = if (args.isEmpty) "examples/rcdsubbot.tapl" else args(0)
-  val input = Source.fromFile(inFile).mkString("")
-
-  demo(input)
 
 }

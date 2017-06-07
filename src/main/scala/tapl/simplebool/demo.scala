@@ -1,15 +1,17 @@
 package tapl.simplebool
 
-import scala.io.Source
-
-object SimpleBoolDemo extends App {
+object SimpleBoolDemo extends util.Demo[Context, Command] {
   import Evaluator._
   import util.Print._
   import PrettyPrinter._
 
-  import util.Document._
-
   val width = 60
+
+  override val initialContext: Context = Context()
+  override val defaultExample: String = "examples/simplebool.tapl"
+
+  override def parseInput(s: String): List[Command] =
+    SimpleBoolParsers.input(s)(Context())._1
 
   def processCommand(ctx: Context, cmd: Command): Context = cmd match {
     case Eval(t1) =>
@@ -37,13 +39,4 @@ object SimpleBoolDemo extends App {
       ctx.addBinding(n, b)
   }
 
-  def demo(s: String): Unit = {
-    val (commands, _) = SimpleBoolParsers.input(s)(Context())
-    commands.foldLeft(Context())(processCommand)
-  }
-
-  val inFile = if (args.isEmpty) "examples/simplebool.tapl" else args(0)
-  val input = Source.fromFile(inFile).mkString("")
-
-  demo(input)
 }
