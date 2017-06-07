@@ -92,7 +92,7 @@ object Typer {
       val (tyT2, nextUVar2, constr2) = recon(ctx1, nextUVar, t2)
       (TyArr(tyT1, tyT2), nextUVar2, constr2)
     case TmAbs(x, None, t2) =>
-      val NextUVar(u, nextUVar0) = nextUVar()
+      val NextUVar(u, nextUVar0) = nextUVar(())
       val tyX = TyId(u)
       val ctx1 = ctx.addBinding(x, VarBind(tyX))
       val (tyT2, nextUVar2, constr2) = recon(ctx1, nextUVar0, t2)
@@ -100,7 +100,7 @@ object Typer {
     case TmApp(t1, t2) =>
       val (tyT1, nextuvar1, constr1) = recon(ctx, nextUVar, t1)
       val (tyT2, nextuvar2, constr2) = recon(ctx, nextuvar1, t2)
-      val NextUVar(tyX, nextuvar3) = nextuvar2()
+      val NextUVar(tyX, nextuvar3) = nextuvar2(())
       val newconstr = List((tyT1, TyArr(tyT2, TyId(tyX))))
       (TyId(tyX), nextuvar3, newconstr ++ constr1 ++ constr2)
     case TmZero =>
