@@ -65,7 +65,9 @@ object FullErrorParsers extends StandardTokenParsers with PackratParsers with Im
       "false" ^^ { _ => ctx: Context => TmFalse } |
       "error" ^^ { _ => ctx: Context => TmError }
 
-  def input(s: String) = phrase(topLevel)(new lexical.Scanner(s)) match {
+  lazy val phraseTopLevel: PackratParser[Res1[List[Command]]] = phrase(topLevel)
+
+  def input(s: String): Res1[List[Command]] = phraseTopLevel(new lexical.Scanner(s)) match {
     case t if t.successful => t.get
     case t                 => sys.error(t.toString)
   }

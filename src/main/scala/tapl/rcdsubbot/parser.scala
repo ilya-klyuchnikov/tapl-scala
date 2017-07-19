@@ -77,7 +77,9 @@ object RcdSubBotParsers extends StandardTokenParsers with PackratParsers with Im
     lcid ~ ("=" ~> term) ^^ { case id ~ t => (ctx: Context, i: Int) => (id, t(ctx)) } |
       term ^^ { t => (ctx: Context, i: Int) => (i.toString, t(ctx)) }
 
-  def input(s: String) = phrase(topLevel)(new lexical.Scanner(s)) match {
+  lazy val phraseTopLevel: PackratParser[Res1[List[Command]]] = phrase(topLevel)
+
+  def input(s: String): Res1[List[Command]] = phraseTopLevel(new lexical.Scanner(s)) match {
     case t if t.successful => t.get
     case t                 => sys.error(t.toString)
   }

@@ -73,12 +73,14 @@ object ReconParsers extends StandardTokenParsers with PackratParsers with Implic
       lcid ^^ { i => ctx: Context => TmVar(ctx.name2index(i), ctx.length) } |
       numericLit ^^ { x => ctx: Context => num(x.toInt) }
 
+  lazy val phraseTopLevel: PackratParser[Res1[List[Command]]] = phrase(topLevel)
+
   private def num(x: Int): Term = x match {
     case 0 => TmZero
     case _ => TmSucc(num(x - 1))
   }
 
-  def input(s: String) = phrase(topLevel)(new lexical.Scanner(s)) match {
+  def input(s: String): Res1[List[Command]] = phraseTopLevel(new lexical.Scanner(s)) match {
     case t if t.successful => t.get
     case t                 => sys.error(t.toString)
   }

@@ -37,7 +37,7 @@ object ArithParsers extends StandardTokenParsers with ImplicitConversions {
 
   private def eof: Parser[String] = elem("<eof>", _ == lexical.EOF) ^^ { _.chars }
 
-  def input(s: String) = phrase(topLevel)(new lexical.Scanner(s)) match {
+  def input(s: String): List[Command] = phrase(topLevel)(new lexical.Scanner(s)) match {
     case t if t.successful => t.get
     case t                 => sys.error(t.toString)
   }

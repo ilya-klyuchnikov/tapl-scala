@@ -64,7 +64,9 @@ object BotParsers extends StandardTokenParsers with PackratParsers with Implicit
     "(" ~> term <~ ")" |
       lcid ^^ { i => ctx: Context => TmVar(ctx.name2index(i), ctx.length) }
 
-  def input(s: String) = phrase(topLevel)(new lexical.Scanner(s)) match {
+  lazy val phraseTopLevel: PackratParser[Res1[List[Command]]] = phrase(topLevel)
+
+  def input(s: String) = phraseTopLevel(new lexical.Scanner(s)) match {
     case t if t.successful => t.get
     case t                 => sys.error(t.toString)
   }
