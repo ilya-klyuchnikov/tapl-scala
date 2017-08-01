@@ -2,20 +2,25 @@ package tapl.fullrecon
 
 import tapl.fullrecon.Typer._
 
-object FullReconDemo extends util.Demo[(Context, UVarGenerator, IdConstr), Command] {
+class FullReconDemo extends util.Demo {
+
+  override type Ctx = (Context, UVarGenerator, IdConstr)
+  override type Cmd = Command
+
   import Evaluator._
   import util.Print._
   import PrettyPrinter._
 
   val width = 60
 
-  override val initialContext: (Context, UVarGenerator, IdConstr) = (Context(), uvargen, emptyIdConstr)
+  override val initialContext: Ctx = (Context(), uvargen, emptyIdConstr)
   override val defaultExample: String = "examples/fullrecon.tapl"
+  override val name: String = "FullRecon"
 
-  override def parseInput(s: String): List[Command] =
+  override def parseInput(s: String): List[Cmd] =
     FullReconParsers.input(s)(Context())._1
 
-  def processCommand(in: (Context, UVarGenerator, IdConstr), cmd: Command): (Context, UVarGenerator, IdConstr) = in match {
+  def processCommand(in: Ctx, cmd: Cmd): Ctx = in match {
     case (ctx, nextuvar, constr) => cmd match {
       case Eval(t1) =>
 
@@ -33,18 +38,21 @@ object FullReconDemo extends util.Demo[(Context, UVarGenerator, IdConstr), Comma
         val ty2 = applySub(constr22, tyT2)
         val doc2 = g2(ptmATerm(true, ctx, t2) :: ":" :/: ptyTy(ctx, ty1) :: ";")
 
-        println("====================")
-        println(print(doc1, width))
-        println("""||""")
-        println("""\/""")
-        println(print(doc2, width))
+        output("====================")
+        output(print(doc1, width))
+        output("""||""")
+        output("""\/""")
+        output(print(doc2, width))
         (ctx, nextuvar1, constr12)
       case Bind(x, bind) =>
         val doc1 = x :: pBindingTy(ctx, bind) :: ";"
-        println("====================")
-        println(print(doc1, width))
+        output("====================")
+        output(print(doc1, width))
         (ctx.addBinding(x, bind), nextuvar, constr)
     }
   }
 
 }
+
+object FullReconDemo extends FullReconDemo with util.DemoCL
+object FullReconDemoJS extends FullReconDemo with util.DemoJS

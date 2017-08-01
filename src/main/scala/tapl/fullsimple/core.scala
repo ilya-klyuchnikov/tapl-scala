@@ -236,7 +236,7 @@ object Typer {
             case None => throw new Exception("label " + li + " not found " + t)
           }
         case z =>
-          println(z)
+          //output(z)
           throw new Exception("annotation is not a variant type: " + t)
       }
     case TmVar(i, _) =>
@@ -255,7 +255,7 @@ object Typer {
           else
             throw new Exception("parameter mismatch in " + t + " : " + tyT2 + " != " + tyT11)
         case z =>
-          println(z)
+          //output(z)
           throw new Exception("arrow type expected in " + t1)
       }
     case TmLet(x, t1, t2) =>

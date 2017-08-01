@@ -1,6 +1,10 @@
 package tapl.fullfomsub
 
-object FullFomSubDemo extends util.Demo[Context, Command] {
+class FullFomSubDemo extends util.Demo {
+
+  override type Ctx = Context
+  override type Cmd = Command
+
   import Evaluator._
   import Typer._
   import Syntax._
@@ -9,13 +13,14 @@ object FullFomSubDemo extends util.Demo[Context, Command] {
 
   val width = 60
 
-  override val initialContext: Context = Context()
+  override val initialContext: Ctx = Context()
   override val defaultExample: String = "examples/fullfomsub.tapl"
+  override val name: String = "FullFomSub"
 
-  override def parseInput(s: String): List[Command] =
+  override def parseInput(s: String): List[Cmd] =
     FullFomSubParsers.input(s)(Context())._1
 
-  private def checkBinding(ctx: Context, bind: Binding): Binding = bind match {
+  private def checkBinding(ctx: Ctx, bind: Binding): Binding = bind match {
     case NameBind =>
       NameBind
     case VarBind(tyT) =>
@@ -38,7 +43,7 @@ object FullFomSubDemo extends util.Demo[Context, Command] {
       else throw new Exception("type of binding doesn't match declared type in " + bind)
   }
 
-  def processCommand(ctx: Context, cmd: Command): Context = cmd match {
+  def processCommand(ctx: Ctx, cmd: Cmd): Ctx = cmd match {
     case Eval(t1) =>
       val ty1 = Typer.typeof(ctx, t1)
       val doc1 = g2(ptmATerm(true, ctx, t1) :: ":" :/: ptyTy(ctx, ty1) :: ";")
@@ -47,11 +52,11 @@ object FullFomSubDemo extends util.Demo[Context, Command] {
       val ty2 = Typer.typeof(ctx, t2)
       val doc2 = g2(ptmATerm(true, ctx, t2) :: ":" :/: ptyTy(ctx, ty2) :: ";")
 
-      println("====================")
-      println(print(doc1, width))
-      println("""||""")
-      println("""\/""")
-      println(print(doc2, width))
+      output("====================")
+      output(print(doc1, width))
+      output("""||""")
+      output("""\/""")
+      output(print(doc2, width))
 
       ctx
 
@@ -59,8 +64,8 @@ object FullFomSubDemo extends util.Demo[Context, Command] {
       val bind1 = checkBinding(ctx, bind)
       val bind2 = evalBinding(ctx, bind1)
       val doc1 = x :: pBindingTy(ctx, bind2) :: ";"
-      println("====================")
-      println(print(doc1, width))
+      output("====================")
+      output(print(doc1, width))
 
       ctx.addBinding(x, bind2)
 
@@ -76,9 +81,9 @@ object FullFomSubDemo extends util.Demo[Context, Command] {
           val ctx1 = ctx.addBinding(tyX, TyVarBind(tyBound))
           val ctx2 = ctx1.addBinding(x, b)
 
-          println(tyX)
+          output(tyX)
           val doc2 = x :/: ":" :/: ptyTy(ctx1, tyBody)
-          println(doc2)
+          output(print(doc2, width))
           ctx2
         case _ =>
           sys.error("existential type expected")
@@ -86,3 +91,6 @@ object FullFomSubDemo extends util.Demo[Context, Command] {
   }
 
 }
+
+object FullFomSubDemo extends FullFomSubDemo with util.DemoCL
+object FullFomSubDemoJS extends FullFomSubDemo with util.DemoJS

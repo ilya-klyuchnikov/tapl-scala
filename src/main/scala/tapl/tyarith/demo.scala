@@ -1,6 +1,9 @@
 package tapl.tyarith
 
-object TyArithDemo extends util.Demo[Unit, Command] {
+class TyArithDemo extends util.Demo {
+
+  override type Ctx = Unit
+  override type Cmd = Command
 
   import Evaluator._
   import util.Print._
@@ -8,13 +11,14 @@ object TyArithDemo extends util.Demo[Unit, Command] {
 
   val width = 60
 
-  override val initialContext: Unit = ()
+  override val initialContext: Ctx = ()
   override val defaultExample: String = "examples/tyarith.tapl"
+  override val name: String = "TyArith"
 
-  override def parseInput(s: String): List[Command] =
+  override def parseInput(s: String): List[Cmd] =
     ArithParsers.input(s)
 
-  def processCommand(ctx: Unit, cmd: Command): Unit = cmd match {
+  def processCommand(ctx: Unit, cmd: Cmd): Unit = cmd match {
     case Eval(t1) =>
       val ty1 = Typer.typeof(t1)
       val doc1 = g2(ptmATerm(true, t1) :: ":" :/: ptyTy(ty1) :: ";")
@@ -23,12 +27,15 @@ object TyArithDemo extends util.Demo[Unit, Command] {
       val ty2 = Typer.typeof(t2)
       val doc2 = g2(ptmATerm(true, t2) :: ":" :/: ptyTy(ty2) :: ";")
 
-      println("====================")
-      println(print(doc1, width))
-      println("""||""")
-      println("""\/""")
-      println(print(doc2, width))
+      output("====================")
+      output(print(doc1, width))
+      output("""||""")
+      output("""\/""")
+      output(print(doc2, width))
 
   }
 
 }
+
+object TyArithDemo extends TyArithDemo with util.DemoCL
+object TyArithDemoJS extends TyArithDemo with util.DemoJS

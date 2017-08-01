@@ -396,17 +396,17 @@ object Typer {
           if (subtype(ctx, tyT2, tyT11))
             tyT12
           else {
-            println(tyT1)
-            println(tyT2)
-            println(simplifyTy(ctx, tyT1))
+            //output(tyT1)
+            //output(tyT2)
+            //output(simplifyTy(ctx, tyT1))
             throw new Exception("parameter mismatch in " + t + " : " + tyT2 + " != " + tyT11)
           }
         case TyBot => TyBot
         case z =>
           {
-            println(tyT1)
-            println(tyT2)
-            println(simplifyTy(ctx, tyT1))
+            //output(tyT1)
+            //output(tyT2)
+            //output(simplifyTy(ctx, tyT1))
             throw new Exception("arrow type expected in " + t1)
           }
       }
@@ -482,7 +482,7 @@ object Typer {
             case None => throw new Exception("label " + li + " not found " + t)
           }
         case z =>
-          println(z)
+          //output(z)
           throw new Exception("annotation is not a variant type: " + t)
       }
     case TmAscribe(t1, tyT) =>

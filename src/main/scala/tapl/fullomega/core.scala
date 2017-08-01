@@ -406,9 +406,9 @@ object Typer {
           else
             typeSubstTop(tyT2, tyT12)
         case z =>
-          println(TmTApp(t1, tyT2))
-          println(Print.print(PrettyPrinter.ptmATerm(true, ctx, tt), 60))
-          println(z)
+          //output(TmTApp(t1, tyT2))
+          //output(Print.print(PrettyPrinter.ptmATerm(true, ctx, tt), 60))
+          //output(z)
           sys.error("universal type expected")
       }
     case TmZero =>

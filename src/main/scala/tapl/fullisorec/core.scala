@@ -229,7 +229,7 @@ object Typer {
           else
             throw new Exception("parameter mismatch in " + t + " : " + tyT2 + " != " + tyT11)
         case z =>
-          println(z)
+          //output(z)
           throw new Exception("arrow type expected in " + t1)
       }
     case TmTrue =>
@@ -305,7 +305,7 @@ object Typer {
             case None => throw new Exception("label " + li + " not found " + t)
           }
         case z =>
-          println(z)
+          //output(z)
           throw new Exception("annotation is not a variant type: " + t)
       }
     case TmLet(x, t1, t2) =>
@@ -329,14 +329,14 @@ object Typer {
       case TyRec(_, tyT) =>
         TyArr(typeSubstTop(tyS, tyT), tyS)
       case z =>
-        println(z)
+        //output(z)
         throw new Exception("recursive type expected " + tyS)
     }
     case TmUnfold(tyS) => simplifyTy(ctx, tyS) match {
       case TyRec(_, tyT) =>
         TyArr(tyS, typeSubstTop(tyS, tyT))
       case z =>
-        println(z)
+        //output(z)
         throw new Exception("recursive type expected " + tyS)
     }
   }

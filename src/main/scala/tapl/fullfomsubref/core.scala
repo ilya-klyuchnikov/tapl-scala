@@ -610,7 +610,7 @@ object Typer {
             case None => throw new Exception("label " + li + " not found " + t)
           }
         case z =>
-          println(z)
+          //output(z)
           throw new Exception("annotation is not a variant type: " + t)
       }
 
@@ -683,9 +683,9 @@ object Typer {
           else
             typeSubstTop(tyT2, tyT12)
         case z =>
-          println(TmTApp(t1, tyT2))
-          println(Print.print(PrettyPrinter.ptmATerm(true, ctx, tt), 60))
-          println(z)
+          //output(TmTApp(t1, tyT2))
+          //output(Print.print(PrettyPrinter.ptmATerm(true, ctx, tt), 60))
+          //output(z)
           sys.error("universal type expected")
       }
     case TmTry(t1, t2) =>

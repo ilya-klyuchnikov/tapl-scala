@@ -180,7 +180,7 @@ object Typer {
       case (TyArr(tyS1, tyS2), TyArr(tyT1, tyT2)) :: rest =>
         u((tyS1, tyT1) :: (tyS2, tyT2) :: rest)
       case (tyS, tyT) :: rest =>
-        println(tyS, tyT)
+        //output(tyS, tyT)
         sys.error("unsolvable constraints")
     }
     u(constr)

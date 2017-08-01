@@ -383,7 +383,7 @@ object Typer {
           else
             throw new Exception("parameter mismatch in " + t + " : " + tyT2 + " != " + tyT11)
         case z =>
-          println(z)
+          //output(z)
           throw new Exception("arrow type expected in " + t1)
       }
     case TmLet(x, t1, t2) =>

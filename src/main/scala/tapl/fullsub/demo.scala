@@ -1,7 +1,11 @@
 package tapl.fullsub
 
 // This demo shows that types (inferred ones) are not preserved!!
-object FullSubDemo extends util.Demo[Context, Command] {
+class FullSubDemo extends util.Demo {
+
+  override type Ctx = Context
+  override type Cmd = Command
+
   import Evaluator._
   import Typer._
   import util.Print._
@@ -9,13 +13,14 @@ object FullSubDemo extends util.Demo[Context, Command] {
   
   val width = 60
 
-  override val initialContext: Context = Context()
+  override val initialContext: Ctx = Context()
   override val defaultExample: String = "examples/fullsub.tapl"
+  override val name: String = "FullSub"
 
-  override def parseInput(s: String): List[Command] =
+  override def parseInput(s: String): List[Cmd] =
     FullSubParsers.input(s)(Context())._1
 
-  private def checkBinding(ctx: Context, bind: Binding): Binding = bind match {
+  private def checkBinding(ctx: Ctx, bind: Binding): Binding = bind match {
     case NameBind =>
       NameBind
     case VarBind(tyT) =>
@@ -34,7 +39,7 @@ object FullSubDemo extends util.Demo[Context, Command] {
       TyAbbBind(tyT)
   }
 
-  def processCommand(ctx: Context, cmd: Command): Context = cmd match {
+  def processCommand(ctx: Ctx, cmd: Cmd): Ctx = cmd match {
     case Eval(t1) =>
       val ty1 = Typer.typeof(ctx, t1)
       val doc1 = g2(ptmATerm(true, ctx, t1) :: ":" :/: ptyTy(ctx, ty1) :: ";")
@@ -43,11 +48,11 @@ object FullSubDemo extends util.Demo[Context, Command] {
       val ty2 = Typer.typeof(ctx, t2)
       val doc2 = g2(ptmATerm(true, ctx, t2) :: ":" :/: ptyTy(ctx, ty2) :: ";")
 
-      println("====================")
-      println(print(doc1, width))
-      println("""||""")
-      println("""\/""")
-      println(print(doc2, width))
+      output("====================")
+      output(print(doc1, width))
+      output("""||""")
+      output("""\/""")
+      output(print(doc2, width))
 
       ctx
 
@@ -55,10 +60,13 @@ object FullSubDemo extends util.Demo[Context, Command] {
       val bind1 = checkBinding(ctx, bind)
       val bind2 = evalBinding(ctx, bind1)
       val doc1 = x :: pBindingTy(ctx, bind2) :: ";"
-      println("====================")
-      println(print(doc1, width))
+      output("====================")
+      output(print(doc1, width))
 
       ctx.addBinding(x, bind2)
   }
 
 }
+
+object FullSubDemo extends FullSubDemo with util.DemoCL
+object FullSubDemoJS extends FullSubDemo with util.DemoJS

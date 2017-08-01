@@ -1,30 +1,35 @@
 package tapl.untyped
 
-object UntypedDemo extends util.Demo[Context, Command] {
+class UntypedDemo extends util.Demo {
+
+  override type Ctx = Context
+  override type Cmd = Command
+
   import Evaluator._
   import util.Print._
   import PrettyPrinter._
 
   val width = 60
 
-  override val initialContext: Context = Context()
+  override val initialContext: Ctx = Context()
   override val defaultExample: String = "examples/untyped.tapl"
+  override val name: String = "Untyped"
 
-  override def parseInput(s: String): List[Command] =
+  override def parseInput(s: String): List[Cmd] =
     UntypedParsers.input(s)(Context())._1
 
 
-  def processCommand(ctx: Context, cmd: Command): Context = cmd match {
+  def processCommand(ctx: Ctx, cmd: Cmd): Ctx = cmd match {
     case Eval(t1) =>
       val doc1 = g2(ptmATerm(true, ctx, t1) :: ";")
       val t2 = eval(ctx, t1)
       val doc2 = g2(ptmATerm(true, ctx, t2) :: ";")
 
-      println("====================")
-      println(print(doc1, width))
-      println("""||""")
-      println("""\/""")
-      println(print(doc2, width))
+      output("====================")
+      output(print(doc1, width))
+      output("""||""")
+      output("""\/""")
+      output(print(doc2, width))
 
       ctx
 
@@ -33,3 +38,6 @@ object UntypedDemo extends util.Demo[Context, Command] {
   }
 
 }
+
+object UntypedDemo extends UntypedDemo with util.DemoCL
+object UntypedDemoJS extends UntypedDemo with util.DemoJS
