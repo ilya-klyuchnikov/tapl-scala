@@ -1,0 +1,17 @@
+// Every term in this mini-language is normalizable. 
+
+// declaration of a free var - it is added to context
+y: Bool -> Bool;
+
+// application
+y true;
+
+// simple lambda
+\z: Bool. y z;
+
+// simple lambda
+\x: Bool. x;
+
+(\x: Bool -> Bool. if x false then true else false);
+// lambda application
+(\x: Bool -> Bool. if x false then true else false) (\x: Bool. if x then false else true);
