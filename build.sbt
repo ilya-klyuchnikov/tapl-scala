@@ -1,11 +1,21 @@
-enablePlugins(ScalaJSPlugin)
+import sbt.Keys.libraryDependencies
+import sbtcrossproject.{CrossType, crossProject}
 
-scalaVersion := "2.12.3"
+lazy val taplScala =
+  crossProject(JSPlatform, JVMPlatform)
+    .crossType(CrossType.Full)
+    .in(file("."))
+    .settings(
+      scalaVersion := "2.12.4",
+    )
+    .jsSettings(
+      libraryDependencies += "org.scala-lang.modules" %%% "scala-parser-combinators" % "1.0.5",
+      libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.4",
+    )
+    .jvmSettings(
+      libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.5",
+      libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
+    )
 
-name := "tapl-scala"
-
-libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.13.4" % "test"
-
-libraryDependencies += "org.scala-lang.modules" %%% "scala-parser-combinators" % "1.0.5"
-
-libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.3"
+lazy val taplScalaJVM = taplScala.jvm
+lazy val taplScalaJS = taplScala.js
