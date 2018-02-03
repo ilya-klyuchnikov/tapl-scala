@@ -1,4 +1,3 @@
-import sbt.Keys.libraryDependencies
 import sbtcrossproject.{CrossType, crossProject}
 
 lazy val taplScala =
