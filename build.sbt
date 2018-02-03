@@ -9,11 +9,11 @@ lazy val taplScala =
       scalaVersion := "2.12.4",
     )
     .jsSettings(
-      libraryDependencies += "org.scala-lang.modules" %%% "scala-parser-combinators" % "1.0.5",
+      libraryDependencies += "org.scala-lang.modules" %%% "scala-parser-combinators" % "1.1.0",
       libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.4",
     )
     .jvmSettings(
-      libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.5",
+      libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.0",
       libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
     )
 
