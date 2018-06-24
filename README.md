@@ -1,6 +1,6 @@
 # TAPL in Scala
 
-This project is an attempt to port very nice companion code (written by Pierce in OCaml) 
+This project is an attempt to port very nice companion code (written by Pierce in OCaml)
 for the book "Types and Programming Languages" by Benjamin C. Pierce into Scala.
 
 Live demo: http://ilya-klyuchnikov.github.io/tapl-scala/
@@ -50,9 +50,9 @@ The code structure for each implementation follows original code structure and c
 
 	sbt
 	> taplScalaJVM/run
-	
+
 	Multiple main classes detected, select one to run:
-	
+
      [1] tapl.ArithDemo
      [2] tapl.BotDemo
      [3] tapl.EquirecDemo
@@ -75,7 +75,7 @@ The code structure for each implementation follows original code structure and c
      [20] tapl.TyArithDemo
      [21] tapl.UntypedDemo
 	Enter number: 2
-	
+
 	[info] Running tapl.BotDemo
 	====================
 	(lambda x: Top. x): Top -> Top;
@@ -102,7 +102,7 @@ The code structure for each implementation follows original code structure and c
 	||
 	\/
 	(lambda x: Bot. x x): Bot -> Bot;
-	
+
 	> taplScalaJVM/runMain tapl.FullUntypedDemo progs/fulluntyped.tapl
 	[info] Running tapl.FullUntypedDemo progs/fulluntyped.tapl
 	====================
@@ -137,9 +137,14 @@ The code structure for each implementation follows original code structure and c
 
 There was some incompleteness in the original OCaml code that *was* ported into Scala code:
 
-1. `tapl.equirec` - subtyping was not implemented 
-2. For subtyping for References, Sources and Sinks (scattered across many implementations) there is a comment in the original code that implementation is incomplete. 
-See code for calculation of `meet` and `join` of two references. 
-3. It will be interesting to add implementation of dependent types from the sequel book "Advanced Topics in Types and Programming Languages". 
+1. `tapl.equirec` - subtyping was not implemented
+2. For subtyping for References, Sources and Sinks (scattered across many implementations) there is a comment in the original code that implementation is incomplete.
+See code for calculation of `meet` and `join` of two references.
+3. It will be interesting to add implementation of dependent types from the sequel book "Advanced Topics in Types and Programming Languages".
 The book mentions OCaml implementation `deptypes` but I did not find this implementation on the web.
 4. I have noticed that some cases (in typers and evaluators) were omitted in the original code.
+
+## Building
+
+- JVM Scala: `sbt compile`
+- JS: `sbt fastOptJS`
