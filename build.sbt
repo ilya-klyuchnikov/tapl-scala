@@ -1,19 +1,20 @@
-import sbtcrossproject.{CrossType, crossProject}
+import sbtcrossproject.CrossPlugin.autoImport.crossProject
+import sbtcrossproject.CrossType
 
 lazy val taplScala =
   crossProject(JSPlatform, JVMPlatform)
     .crossType(CrossType.Full)
     .in(file("."))
     .settings(
-      scalaVersion := "2.12.4",
+      scalaVersion := "2.12.6",
     )
     .jsSettings(
-      libraryDependencies += "org.scala-lang.modules" %%% "scala-parser-combinators" % "1.1.0",
-      libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.4",
+      libraryDependencies += "org.scala-lang.modules" %%% "scala-parser-combinators" % "1.1.1",
+      libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.6",
     )
     .jvmSettings(
-      libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.0",
-      libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
+      libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.1",
+      libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
     )
 
 lazy val taplScalaJVM = taplScala.jvm
