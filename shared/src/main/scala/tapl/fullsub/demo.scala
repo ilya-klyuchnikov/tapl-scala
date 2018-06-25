@@ -67,5 +67,3 @@ class FullSubDemo extends util.Demo {
   }
 
 }
-
-object FullSubDemoJS extends FullSubDemo with util.DemoJS

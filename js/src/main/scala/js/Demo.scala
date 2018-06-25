@@ -3,9 +3,22 @@ package js
 import org.scalajs.dom
 import org.scalajs.dom.html.{Button, Option, Select, TextArea}
 import org.scalajs.dom.{Event, XMLHttpRequest}
-import util.DemoJS
 
 import scala.scalajs.js.annotation.JSExportTopLevel
+
+trait DemoJS extends util.Demo {
+  var output: String = ""
+
+  override def output(s: String): Unit = {
+    output += s + "\n"
+  }
+
+  override def demo(s: String): Unit = {
+    output = ""
+    super.demo(s)
+  }
+}
+
 
 object Demo {
   @JSExportTopLevel("js.Demo.main")
