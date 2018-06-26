@@ -10,6 +10,9 @@ lazy val taplScala =
     )
     .jvmSettings(
       libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.1",
+      libraryDependencies += "io.circe" %% "circe-core" % "0.9.3",
+      libraryDependencies += "io.circe" %% "circe-generic" % "0.9.3",
+      libraryDependencies += "io.circe" %% "circe-parser" % "0.9.3",
       libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
     )
     .jsSettings(
