@@ -4,14 +4,14 @@ sealed trait Term
 
 case object TmTrue extends Term
 case object TmFalse extends Term
-case class TmIf(cond: Term, t1: Term, t2: Term) extends Term
+case class TmIf(condition: Term, term1: Term, term2: Term) extends Term
 case object TmZero extends Term
-case class TmSucc(t: Term) extends Term
-case class TmPred(t: Term) extends Term
-case class TmIsZero(t: Term) extends Term
+case class TmSucc(term: Term) extends Term
+case class TmPred(term: Term) extends Term
+case class TmIsZero(term: Term) extends Term
 
 sealed trait Command
-case class Eval(t: Term) extends Command
+case class EvalCommand(term: Term) extends Command
 
 import util.Document
 import util.Document._

@@ -18,7 +18,7 @@ class ArithDemo extends util.Demo {
     ArithParsers.input(s)
 
   override def processCommand(ctx: Unit, cmd: Cmd): Unit = cmd match {
-    case Eval(t1) =>
+    case EvalCommand(t1) =>
       val doc1 = g2(ptmATerm(true, t1) :: ";")
       val t2 = eval(t1)
       val doc2 = g2(ptmATerm(true, t2) :: ";")

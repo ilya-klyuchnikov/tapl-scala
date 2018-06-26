@@ -12,7 +12,7 @@ object ArithParsers extends StandardTokenParsers with ImplicitConversions {
       success(List())
 
   private def command: Parser[Command] =
-    term ^^ Eval
+    term ^^ EvalCommand
 
   private def term: Parser[Term] = appTerm |
     ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ TmIf
