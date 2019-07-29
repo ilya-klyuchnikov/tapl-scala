@@ -15,6 +15,11 @@ trait Demo[Context, Command] {
   def main(args: Array[String]) = {
     val inFile = if (args.isEmpty) defaultExample else args(0)
     val input = Source.fromFile(inFile).mkString("")
+    val taplPackage = this.getClass.getPackage.getName.split("\\.").toList.last
+    println()
+    println()
+    println("====================")
+    println(s">> $taplPackage $inFile")
     demo(input)
   }
 
