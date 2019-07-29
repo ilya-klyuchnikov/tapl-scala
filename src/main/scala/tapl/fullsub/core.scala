@@ -227,7 +227,7 @@ object Typer {
         case (TyRecord(fS), TyRecord(fT)) =>
           val labelS = fS.map { _._1 }
           val labelT = fT.map { _._1 }
-          val allLabels = (labelS union labelT).distinct
+          val allLabels = (labelS concat labelT).distinct
           // there was an error by Pierce!!
           val allFs = allLabels.flatMap { li =>
             (fS.find { _._1 == li }, fT.find { _._1 == li }) match {
