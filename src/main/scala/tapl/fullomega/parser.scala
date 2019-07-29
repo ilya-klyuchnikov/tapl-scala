@@ -5,10 +5,10 @@ import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 
 object FullOmegaParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
-  lexical.reserved += ("lambda", "Bool", "true", "false", "if", "then", "else",
+  lexical.reserved ++= Seq("lambda", "Bool", "true", "false", "if", "then", "else",
     "Nat", "String", "Unit", "Float", "unit", "case", "let", "in", "succ", "pred",
     "as", "of", "fix", "iszero", "letrec", "_", "All", "Some", "Ref", "ref")
-  lexical.delimiters += ("(", ")", ";", "/", ".", ":", "->", "=",
+  lexical.delimiters ++= Seq("(", ")", ";", "/", ".", ":", "->", "=",
     "<", ">", "{", "}", "=>", "==>", ",", "|", "*", "[", "]")
 
   // lower-case identifier

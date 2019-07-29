@@ -6,10 +6,10 @@ import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 import Syntax._
 
 object FullFomSubRefParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
-  lexical.reserved += ("lambda", "Bool", "true", "false", "if", "then", "else",
+  lexical.reserved ++= Seq("lambda", "Bool", "true", "false", "if", "then", "else",
     "Nat", "String", "Unit", "Float", "unit", "case", "let", "in", "succ", "pred",
     "as", "of", "fix", "iszero", "letrec", "_", "All", "Some", "Ref", "ref", "Source", "Sink", "Bot", "Top", "try", "with", "error")
-  lexical.delimiters += ("(", ")", ";", "/", ".", ":", "->", "=",
+  lexical.delimiters ++= Seq("(", ")", ";", "/", ".", ":", "->", "=",
     "<", ">", "{", "}", "=>", "==>", ",", "|", "*", "[", "]", "<:", "::", "!", ":=")
 
   // lower-case identifier

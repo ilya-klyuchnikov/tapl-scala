@@ -10,8 +10,8 @@ import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 // The input text represents named terms. The module works with nameless terms 
 // So translation from named form into nameless form is done on the fly during parsing.
 object UntypedParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
-  lexical.reserved += ("_")
-  lexical.delimiters += ("(", ")", ";", "/", ".", "\\")
+  lexical.reserved ++= Seq("_")
+  lexical.delimiters ++= Seq("(", ")", ";", "/", ".", "\\")
 
   // lower-case identifier
   lazy val lcid: PackratParser[String] = ident ^? { case id if id.charAt(0).isLower => id }

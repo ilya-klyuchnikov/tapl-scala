@@ -4,8 +4,8 @@ import scala.util.parsing.combinator.ImplicitConversions
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 
 object ArithParsers extends StandardTokenParsers with ImplicitConversions {
-  lexical.reserved += ("true", "false", "if", "then", "else", "iszero", "succ", "pred")
-  lexical.delimiters += ("(", ")", ";")
+  lexical.reserved ++= Seq("true", "false", "if", "then", "else", "iszero", "succ", "pred")
+  lexical.delimiters ++= Seq("(", ")", ";")
 
   private def topLevel: Parser[List[Command]] =
     (command <~ ";") ~ topLevel ^^ { case c ~ cs => c :: cs } | success(List())

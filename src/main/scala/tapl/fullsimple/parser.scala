@@ -5,10 +5,10 @@ import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 
 object FullSimpleParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
-  lexical.reserved += ("lambda", "Bool", "true", "false", "if", "then", "else",
+  lexical.reserved ++= Seq("lambda", "Bool", "true", "false", "if", "then", "else",
     "Nat", "String", "Unit", "Float", "unit", "case", "let", "in", "succ", "pred",
     "as", "of", "fix", "iszero", "letrec", "_")
-  lexical.delimiters += ("(", ")", ";", "/", ".", ":", "->", "=", "<", ">", "{", "}", "=>", "==>", ",", "|", "\\")
+  lexical.delimiters ++= Seq("(", ")", ";", "/", ".", ":", "->", "=", "<", ">", "{", "}", "=>", "==>", ",", "|", "\\")
 
   lazy val lcid: PackratParser[String] = ident ^? { case id if id.charAt(0).isLower => id }
   lazy val ucid: PackratParser[String] = ident ^? { case id if id.charAt(0).isUpper => id }

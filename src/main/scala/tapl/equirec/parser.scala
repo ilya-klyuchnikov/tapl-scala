@@ -5,8 +5,8 @@ import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 
 object EquirecParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
-  lexical.reserved += ("lambda", "Rec", "_")
-  lexical.delimiters += ("(", ")", ";", ".", ":", "->", "=")
+  lexical.reserved ++= Seq("lambda", "Rec", "_")
+  lexical.delimiters ++= Seq("(", ")", ";", ".", ":", "->", "=")
 
   // lower-case identifier
   lazy val lcid: PackratParser[String] = ident ^? { case id if id.charAt(0).isLower => id }
