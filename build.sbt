@@ -1,7 +1,7 @@
-scalaVersion := "2.12.2"
+scalaVersion := "2.13.0"
 
 name := "tapl-scala"
 
-libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.13.4" % "test"
+libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2"
 
-libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.6"
+libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.0" % "test"
