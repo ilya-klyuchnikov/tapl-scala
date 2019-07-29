@@ -182,8 +182,8 @@ object Typer {
           }
         }
       case (TyVariant(fields1), TyVariant(fields2)) =>
-        fields1.length == fields2.length && (fields1, fields2).zipped.forall {
-          (f1, f2) => (f1._1 == f2._1) && tyEqv(ctx, f1._2, f2._2)
+        fields1.length == fields2.length && (fields1 zip fields2).forall {
+          case (f1, f2) => (f1._1 == f2._1) && tyEqv(ctx, f1._2, f2._2)
         }
       case (TyRec(x1, tyS2), TyRec(_, tyT2)) =>
         tyEqv(ctx.addName(x1), tyS2, tyT2)
