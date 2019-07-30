@@ -624,8 +624,6 @@ object Typer {
       TyString
     case TmUnit =>
       TyUnit
-    case TmInert(ty) =>
-      ty
     case TmFix(t1) =>
       val tyT1 = typeof(ctx, t1)
       lcst(ctx, tyT1) match {

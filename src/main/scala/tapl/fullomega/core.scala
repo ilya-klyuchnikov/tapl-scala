@@ -300,8 +300,6 @@ object Typer {
   }
 
   def typeof(ctx: Context, t: Term): Ty = t match {
-    case TmInert(ty) =>
-      ty
     case TmAscribe(t1, tyT) =>
       checkKindStar(ctx, tyT)
       if (tyEqv(ctx, typeof(ctx, t1), tyT))

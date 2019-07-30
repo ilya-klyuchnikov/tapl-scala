@@ -150,7 +150,6 @@ object FullOmegaParsers extends StandardTokenParsers with PackratParsers with Im
 
   lazy val aTerm: PackratParser[Res[Term]] =
     "(" ~> termSeq <~ ")" |
-      ("inert" ~ "[") ~> `type` <~ "]" ^^ { ty => ctx: Context => TmInert(ty(ctx)) } |
       "true" ^^ { _ => ctx: Context => TmTrue } |
       "false" ^^ { _ => ctx: Context => TmFalse } |
       lcid ^^ { i => ctx: Context => TmVar(ctx.name2index(i), ctx.length) } |

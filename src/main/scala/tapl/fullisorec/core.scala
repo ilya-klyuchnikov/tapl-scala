@@ -192,8 +192,6 @@ object Typer {
   }
 
   def typeof(ctx: Context, t: Term): Ty = t match {
-    case TmInert(ty) =>
-      ty
     case TmString(_) =>
       TyString
     case TmVar(i, _) =>

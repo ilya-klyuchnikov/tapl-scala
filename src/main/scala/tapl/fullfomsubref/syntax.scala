@@ -58,7 +58,6 @@ case object TmZero extends Term
 case class TmSucc(t: Term) extends Term
 case class TmPred(t: Term) extends Term
 case class TmIsZero(t: Term) extends Term
-case class TmInert(ty: Ty) extends Term
 case class TmPack(ty: Ty, t: Term, as: Ty) extends Term
 case class TmUnPack(n1: String, n2: String, t1: Term, t2: Term) extends Term
 
@@ -145,7 +144,6 @@ object Syntax {
       case TmRecord(fields)         => TmRecord(fields.map { case (l, t) => (l, walk(c, t)) })
       case TmLet(x, t1, t2)         => TmLet(x, walk(c, t1), walk(c + 1, t2))
       case TmAscribe(t1, tyT1)      => TmAscribe(walk(c, t1), onType(c, tyT1))
-      case TmInert(ty)              => TmInert(onType(c, ty))
       case TmFix(t1)                => TmFix(walk(c, t1))
       case TmTag(lbl, t1, tyT)      => TmTag(lbl, walk(c, t1), onType(c, tyT))
       case TmCase(t, cases)         => TmCase(walk(c, t), cases.map { case (li, xi, ti) => (li, xi, walk(c + 1, ti)) })
@@ -444,8 +442,6 @@ object PrettyPrinter {
       "\"" :: s :: "\""
     case TmUnit =>
       "unit"
-    case TmInert(tyT) =>
-      "inert[" :: ptyType(false, ctx, tyT) :: "]"
     case TmLoc(l) =>
       "<loc #" + l + ">"
     case TmError =>

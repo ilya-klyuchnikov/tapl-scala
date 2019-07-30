@@ -380,8 +380,6 @@ object Typer {
     }
 
   def typeof(ctx: Context, t: Term): Ty = t match {
-    case TmInert(ty) =>
-      ty
     case TmVar(i, _) =>
       ctx.getType(i)
     case TmAbs(v, tyT1, t2) =>

@@ -31,7 +31,6 @@ case object TmZero extends Term
 case class TmSucc(t: Term) extends Term
 case class TmPred(t: Term) extends Term
 case class TmIsZero(t: Term) extends Term
-case class TmInert(ty: Ty) extends Term
 
 sealed trait Binding
 case object NameBind extends Binding
@@ -97,7 +96,6 @@ object Syntax {
   // see chapter 23 for explanation about onType
   private def tmMap(onVar: (Int, TmVar) => Term, onType: (Int, Ty) => Ty, c: Int, t: Term): Term = {
     def walk(c: Int, t: Term): Term = t match {
-      case TmInert(ty)         => TmInert(onType(c, ty))
       case v: TmVar            => onVar(c, v)
       case TmAbs(x, ty1, t2)   => TmAbs(x, onType(c, ty1), walk(c + 1, t2))
       case TmApp(t1, t2)       => TmApp(walk(c, t1), walk(c, t2))
@@ -294,8 +292,6 @@ object PrettyPrinter {
   }
 
   def ptmATerm(outer: Boolean, ctx: Context, t: Term): Document = t match {
-    case TmInert(tyT) =>
-      "inert[" :: ptyType(false, ctx, tyT) :: "]"
     case TmTrue =>
       "true"
     case TmFalse =>

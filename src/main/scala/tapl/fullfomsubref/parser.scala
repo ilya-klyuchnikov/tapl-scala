@@ -160,7 +160,6 @@ object FullFomSubRefParsers extends StandardTokenParsers with PackratParsers wit
 
   lazy val aTerm: PackratParser[Res[Term]] =
     "(" ~> termSeq <~ ")" |
-      ("inert" ~ "[") ~> `type` <~ "]" ^^ { ty => ctx: Context => TmInert(ty(ctx)) } |
       lcid ^^ { i => ctx: Context => TmVar(ctx.name2index(i), ctx.length) } |
       "true" ^^ { _ => ctx: Context => TmTrue } |
       "false" ^^ { _ => ctx: Context => TmFalse } |

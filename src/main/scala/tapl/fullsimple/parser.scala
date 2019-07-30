@@ -94,7 +94,6 @@ object FullSimpleParsers extends StandardTokenParsers with PackratParsers with I
 
   lazy val aTerm: PackratParser[Res[Term]] =
     "(" ~> termSeq <~ ")" |
-      ("inert" ~ "[") ~> `type` <~ "]" ^^ { ty => ctx: Context => TmInert(ty(ctx)) } |
       "true" ^^ { _ => ctx: Context => TmTrue } |
       "false" ^^ { _ => ctx: Context => TmFalse } |
       ("<" ~> lcid) ~ ("=" ~> term <~ ">") ~ ("as" ~> `type`) ^^ { case l ~ t ~ ty => ctx: Context => TmTag(l, t(ctx), ty(ctx)) } |
