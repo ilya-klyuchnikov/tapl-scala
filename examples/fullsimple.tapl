@@ -47,3 +47,15 @@ lambda _: Unit. 5;
 
 let x = 5 in 7;
 let _ = 5 in 7;
+
+ff = lambda ieio : {iseven: Nat -> Bool, isodd: Nat -> Bool}.
+    {
+        iseven = lambda x : Nat.
+                    if iszero x then true
+                    else ieio.isodd (pred x),
+        isodd  = lambda x : Nat.
+                    if iszero x then false
+                    else ieio.iseven (pred x)
+    };
+
+r = fix ff;
