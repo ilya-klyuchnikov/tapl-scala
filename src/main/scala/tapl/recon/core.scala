@@ -82,6 +82,7 @@ object Typer {
   }
 
   val emptyConstr: Constr = List()
+  val emptySubst: Subst = List()
 
   def recon(ctx: Context, nextUVar: UVarGenerator, t: Term): (Ty, UVarGenerator, Constr) = t match {
     case TmVar(i, _) =>
