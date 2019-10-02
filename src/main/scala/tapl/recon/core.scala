@@ -68,11 +68,8 @@ object Evaluator {
 }
 
 object Typer {
-  import Syntax._
-  import Util._
-
   type Constr = List[(Ty, Ty)]
-  type Subst = List[(TyId, Ty)]
+  type IdConstr = List[(TyId, Ty)]
   type UVarGenerator = Unit => NextUVar
   case class NextUVar(n: String, gen: UVarGenerator)
 
@@ -82,7 +79,7 @@ object Typer {
   }
 
   val emptyConstr: Constr = List()
-  val emptySubst: Subst = List()
+  val emptyIdConstr: IdConstr = List()
 
   def recon(ctx: Context, nextUVar: UVarGenerator, t: Term): (Ty, UVarGenerator, Constr) = t match {
     case TmVar(i, _) =>
@@ -138,7 +135,7 @@ object Typer {
     f(tyS)
   }
 
-  def applySub(ctr: Subst, tyT: Ty): Ty = {
+  def applySub(ctr: IdConstr, tyT: Ty): Ty = {
     ctr.reverse.foldLeft(tyT)((tyS, ctr) => ctr match { case (TyId(tyX), tyC2) => substInTy(tyX, tyC2, tyS) })
   }
 
@@ -156,8 +153,8 @@ object Typer {
   }
 
   // why do we need ctx here?
-  def unify(ctx: Context, msg: String, constr: Constr): Subst = {
-    def u(constr: Constr): Subst = constr match {
+  def unify(ctx: Context, msg: String, constr: Constr): IdConstr = {
+    def u(constr: Constr): IdConstr = constr match {
       case Nil =>
         Nil
       case (tyS, TyId(tyX)) :: rest =>

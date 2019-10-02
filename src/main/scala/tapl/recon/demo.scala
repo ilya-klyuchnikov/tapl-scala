@@ -2,26 +2,26 @@ package tapl.recon
 
 import Typer._
 
-object ReconDemo extends util.Demo[(Context, UVarGenerator, Subst), Command] {
+object ReconDemo extends util.Demo[(Context, UVarGenerator, IdConstr), Command] {
   import Evaluator._
   import util.Print._
   import PrettyPrinter._
 
   val width = 60
 
-  override val initialContext: (Context, UVarGenerator, Subst) = (Context(), uvargen, emptySubst)
+  override val initialContext: (Context, UVarGenerator, IdConstr) = (Context(), uvargen, emptyIdConstr)
   override val defaultExample: String = "examples/recon.tapl"
 
   override def parseInput(s: String): List[Command] =
     ReconParsers.input(s)(Context())._1
 
-  def processCommand(in: (Context, UVarGenerator, Subst), cmd: Command): (Context, UVarGenerator, Subst) = in match {
+  def processCommand(in: (Context, UVarGenerator, IdConstr), cmd: Command): (Context, UVarGenerator, IdConstr) = in match {
     case (ctx, nextuvar, constr) => cmd match {
       case Eval(t1) =>
 
         val (tyT, nextuvar1, constrT: Constr) = recon(ctx, nextuvar, t1)
         val constr11: Constr = constr ++ constrT
-        val constr12: Subst = unify(ctx, "Could not simplify constraints", constr11)
+        val constr12: IdConstr = unify(ctx, "Could not simplify constraints", constr11)
         
         val ty1 = applySub(constr12, tyT)
         val doc1 = g2(ptmATerm(true, ctx, t1) :: ":" :/: ptyTy(ctx, ty1) :: ";")
