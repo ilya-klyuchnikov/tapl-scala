@@ -112,4 +112,19 @@ if isnil l then 0 else plus (hd l) (s (tl l)));
 
 mylist = cons 2 (cons 3 (cons 5 nil));
 
+NatList1 = Rec X. <nil:Unit, cons:{Nat,X}>;
+
+/* NatList1 and NatList are structurally the same =>
+so, they can be "translated" into each other. */
+mylist1 = mylist as NatList1;
+
+
 sumlist mylist;
+
+/* 20.1. Examples/Streams */
+Stream = Rec X. Unit -> {Nat, X};
+
+stream_hd = lambda s:Stream. (s unit).1;
+stream_tl = lambda s:Stream. ((s unit).2) as Stream;
+
+
