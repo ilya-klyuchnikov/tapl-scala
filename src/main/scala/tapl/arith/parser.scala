@@ -41,4 +41,9 @@ object ArithParsers extends StandardTokenParsers with ImplicitConversions {
     case t if t.successful => t.get
     case t                 => sys.error(t.toString)
   }
+
+  def parseTerm(s: String): Term = phrase(term)(new lexical.Scanner(s)) match {
+    case t if t.successful => t.get
+    case t                 => sys.error(t.toString)
+  }
 }
