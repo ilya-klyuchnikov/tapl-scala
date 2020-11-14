@@ -1,13 +1,3 @@
-/.scala_dependencies
-/bin
 target/
-.idea/
-.idea_modules
-/.project
-/.classpath
-/.settings
-/.externalToolBuilders
-/.settings
-/.cache
-/todo
-.history
+/.idea/
+/.bsp/

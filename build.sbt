@@ -1,4 +1,4 @@
-scalaVersion := "2.13.1"
+scalaVersion := "2.13.3"
 
 name := "tapl-scala"
 
