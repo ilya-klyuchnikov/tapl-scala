@@ -1,14 +1,10 @@
 package tapl.arith
 
-import org.scalatest._
-
-import Evaluator._
-
-class ArithTest extends FlatSpec with org.scalatest.matchers.should.Matchers {
+class ArithTest
+    extends org.scalatest.flatspec.AnyFlatSpec
+    with org.scalatest.matchers.should.Matchers {
   def testInterpreter(name: String, eval: String => Term): Unit = {
-    "A %s interpreter for arithmetic expressions".format(
-      name
-    ) should "not reduce values any further" in {
+    s"A $name interpreter for arithmetic expressions" should "not reduce values any further" in {
       val progs = List("0", "succ 0", "succ (succ 0)", "true", "false")
       for (prog <- progs)
         eval(prog) should be(parse(prog))
@@ -38,5 +34,5 @@ class ArithTest extends FlatSpec with org.scalatest.matchers.should.Matchers {
   testInterpreter("small-step", Evaluator.eval)
   testInterpreter("big-step", BigStepEvaluator.eval)
 
-  private def parse(prog: String) = ArithParsers.parseTerm(prog)
+  private def parse(prog: String): Term = ArithParsers.parseTerm(prog)
 }
