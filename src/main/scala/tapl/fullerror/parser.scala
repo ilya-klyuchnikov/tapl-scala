@@ -50,28 +50,28 @@ object FullErrorParsers extends StandardTokenParsers with PackratParsers with Im
 
   lazy val eof: PackratParser[String] = elem("<eof>", _ == lexical.EOF) ^^ { _.chars }
   lazy val binder: Parser[Context => Binding] =
-    ":" ~> `type` ^^ { ty => c => VarBind(ty(c)) }
+    ":" ~> typ ^^ { ty => c => VarBind(ty(c)) }
 
   lazy val tyBinder: Parser[Context => Binding] =
-    ("=" ~> `type`) ^^ { ty => ctx: Context => TyAbbBind(ty(ctx)) } |
+    ("=" ~> typ) ^^ { ty => ctx: Context => TyAbbBind(ty(ctx)) } |
       success({ ctx: Context => TyVarBind })
 
-  lazy val `type`: PackratParser[Res[Ty]] = arrowType
+  lazy val typ: PackratParser[Res[Ty]] = arrowType
   lazy val arrowType: PackratParser[Res[Ty]] =
     (aType <~ "->") ~ arrowType ^^ { case t1 ~ t2 => ctx: Context => TyArr(t1(ctx), t2(ctx)) } |
       aType
   lazy val aType: PackratParser[Res[Ty]] =
-    "(" ~> `type` <~ ")" |
+    "(" ~> typ <~ ")" |
       "Bool" ^^ { _ => ctx: Context => TyBool } |
       "Top" ^^ { _ => ctx: Context => TyTop } |
       "Bot" ^^ { _ => ctx: Context => TyBot }
 
   lazy val term: PackratParser[Res[Term]] =
     appTerm |
-      ("lambda" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ {
+      ("lambda" ~> lcid) ~ (":" ~> typ) ~ ("." ~> term) ^^ {
         case v ~ ty ~ t => ctx: Context => TmAbs(v, ty(ctx), t(ctx.addName(v)))
       } |
-      ("lambda" ~ "_") ~> (":" ~> `type`) ~ ("." ~> term) ^^ {
+      ("lambda" ~ "_") ~> (":" ~> typ) ~ ("." ~> term) ^^ {
         case ty ~ t => ctx: Context => TmAbs("_", ty(ctx), t(ctx.addName("_")))
       } |
       ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ {

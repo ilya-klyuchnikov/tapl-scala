@@ -36,19 +36,19 @@ object EquirecParsers extends StandardTokenParsers with PackratParsers with Impl
       }
 
   lazy val binder: Parser[Context => Binding] =
-    ":" ~> `type` ^^ { t => ctx: Context => VarBind(t(ctx)) }
+    ":" ~> typ ^^ { t => ctx: Context => VarBind(t(ctx)) }
   lazy val tyBinder: Parser[Context => Binding] =
     success({ ctx: Context => TyVarBind })
 
   // TYPES
-  lazy val `type`: PackratParser[Res[Ty]] =
+  lazy val typ: PackratParser[Res[Ty]] =
     arrowType |
-      ("Rec" ~> ucid) ~ ("." ~> `type`) ^^ {
+      ("Rec" ~> ucid) ~ ("." ~> typ) ^^ {
         case id ~ ty => ctx: Context => TyRec(id, ty(ctx.addName(id)))
       }
 
   lazy val aType: PackratParser[Res[Ty]] =
-    "(" ~> `type` <~ ")" |
+    "(" ~> typ <~ ")" |
       ucid ^^ { tn => ctx: Context =>
         if (ctx.isNameBound(tn)) TyVar(ctx.name2index(tn), ctx.length) else TyId(tn)
       }
@@ -60,10 +60,10 @@ object EquirecParsers extends StandardTokenParsers with PackratParsers with Impl
   // TERMS
   lazy val term: PackratParser[Res[Term]] =
     appTerm |
-      (("lambda" ~ "_") ~> (":" ~> `type`)) ~ ("." ~> term) ^^ {
+      (("lambda" ~ "_") ~> (":" ~> typ)) ~ ("." ~> term) ^^ {
         case ty ~ t => ctx: Context => TmAbs("_", ty(ctx), t(ctx.addName("_")))
       } |
-      ("lambda" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ {
+      ("lambda" ~> lcid) ~ (":" ~> typ) ~ ("." ~> term) ^^ {
         case v ~ ty ~ t => ctx: Context => TmAbs(v, ty(ctx), t(ctx.addName(v)))
       }
 

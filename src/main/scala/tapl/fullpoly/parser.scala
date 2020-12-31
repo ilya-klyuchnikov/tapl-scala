@@ -86,21 +86,21 @@ object FullPolyParsers extends StandardTokenParsers with PackratParsers with Imp
       }
 
   lazy val binder: Parser[Context => Binding] =
-    ":" ~> `type` ^^ { t => ctx: Context => VarBind(t(ctx)) } |
+    ":" ~> typ ^^ { t => ctx: Context => VarBind(t(ctx)) } |
       "=" ~> term ^^ { t => ctx: Context => TmAbbBind(t(ctx), None) }
 
   lazy val tyBinder: Parser[Context => Binding] =
-    ("=" ~> `type`) ^^ { ty => ctx: Context => TyAbbBind(ty(ctx)) } |
+    ("=" ~> typ) ^^ { ty => ctx: Context => TyAbbBind(ty(ctx)) } |
       success({ ctx: Context => TyVarBind })
 
   // TYPES
-  lazy val `type`: PackratParser[Res[Ty]] =
+  lazy val typ: PackratParser[Res[Ty]] =
     arrowType |
-      ("All" ~> ucid) ~ ("." ~> `type`) ^^ {
+      ("All" ~> ucid) ~ ("." ~> typ) ^^ {
         case id ~ ty => ctx: Context => TyAll(id, ty(ctx.addName(id)))
       }
   lazy val aType: PackratParser[Res[Ty]] =
-    "(" ~> `type` <~ ")" |
+    "(" ~> typ <~ ")" |
       ucid ^^ { tn => ctx: Context =>
         if (ctx.isNameBound(tn)) TyVar(ctx.name2index(tn), ctx.length) else TyId(tn)
       } |
@@ -109,7 +109,7 @@ object FullPolyParsers extends StandardTokenParsers with PackratParsers with Imp
       "Unit" ^^ { _ => ctx: Context => TyUnit } |
       "{" ~> fieldTypes <~ "}" ^^ { ft => ctx: Context => TyRecord(ft(ctx)) } |
       "Nat" ^^ { _ => ctx: Context => TyNat } |
-      (("{" ~ "Some") ~> ucid) ~ ("," ~> `type` <~ "}") ^^ {
+      (("{" ~ "Some") ~> ucid) ~ ("," ~> typ <~ "}") ^^ {
         case id ~ ty => ctx: Context => TySome(id, ty(ctx.addName(id)))
       }
 
@@ -119,8 +119,8 @@ object FullPolyParsers extends StandardTokenParsers with PackratParsers with Imp
     }
 
   lazy val fieldType: PackratParser[(Context, Int) => (String, Ty)] =
-    lcid ~ (":" ~> `type`) ^^ { case id ~ ty => (ctx: Context, i: Int) => (id, ty(ctx)) } |
-      `type` ^^ { ty => (ctx: Context, i: Int) => (i.toString, ty(ctx)) }
+    lcid ~ (":" ~> typ) ^^ { case id ~ ty => (ctx: Context, i: Int) => (id, ty(ctx)) } |
+      typ ^^ { ty => (ctx: Context, i: Int) => (i.toString, ty(ctx)) }
 
   lazy val arrowType: PackratParser[Res[Ty]] =
     (aType <~ "->") ~ arrowType ^^ { case t1 ~ t2 => ctx: Context => TyArr(t1(ctx), t2(ctx)) } |
@@ -132,13 +132,13 @@ object FullPolyParsers extends StandardTokenParsers with PackratParsers with Imp
       ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ {
         case t1 ~ t2 ~ t3 => ctx: Context => TmIf(t1(ctx), t2(ctx), t3(ctx))
       } |
-      (("lambda" | "\\") ~> (lcid | "_")) ~ (":" ~> `type`) ~ ("." ~> term) ^^ {
+      (("lambda" | "\\") ~> (lcid | "_")) ~ (":" ~> typ) ~ ("." ~> term) ^^ {
         case v ~ ty ~ t => ctx: Context => TmAbs(v, ty(ctx), t(ctx.addName(v)))
       } |
       ("let" ~> (lcid | "_")) ~ ("=" ~> term) ~ ("in" ~> term) ^^ {
         case id ~ t1 ~ t2 => ctx: Context => TmLet(id, t1(ctx), t2(ctx.addName(id)))
       } | {
-      ("letrec" ~> lcid) ~ (":" ~> `type`) ~ ("=" ~> term) ~ ("in" ~> term) ^^ {
+      ("letrec" ~> lcid) ~ (":" ~> typ) ~ ("=" ~> term) ~ ("in" ~> term) ^^ {
         case id ~ ty ~ t1 ~ t2 =>
           ctx: Context =>
             TmLet(id, TmFix(TmAbs(id, ty(ctx), t1(ctx.addName(id)))), t2(ctx.addName(id)))
@@ -154,7 +154,7 @@ object FullPolyParsers extends StandardTokenParsers with PackratParsers with Imp
       }
 
   lazy val appTerm: PackratParser[Res[Term]] =
-    (appTerm <~ "[") ~ (`type` <~ "]") ^^ {
+    (appTerm <~ "[") ~ (typ <~ "]") ^^ {
       case t ~ ty => ctx: Context => TmTApp(t(ctx), ty(ctx))
     } |
       appTerm ~ pathTerm ^^ { case t1 ~ t2 => ctx: Context => TmApp(t1(ctx), t2(ctx)) } |
@@ -165,7 +165,7 @@ object FullPolyParsers extends StandardTokenParsers with PackratParsers with Imp
       pathTerm
 
   lazy val ascribeTerm: PackratParser[Res[Term]] =
-    aTerm ~ ("as" ~> `type`) ^^ { case t ~ ty => ctx: Context => TmAscribe(t(ctx), ty(ctx)) } |
+    aTerm ~ ("as" ~> typ) ^^ { case t ~ ty => ctx: Context => TmAscribe(t(ctx), ty(ctx)) } |
       aTerm
 
   lazy val pathTerm: PackratParser[Res[Term]] =
@@ -188,7 +188,7 @@ object FullPolyParsers extends StandardTokenParsers with PackratParsers with Imp
       "unit" ^^ { _ => ctx: Context => TmUnit } |
       "{" ~> fields <~ "}" ^^ { fs => ctx: Context => TmRecord(fs(ctx)) } |
       numericLit ^^ { x => ctx: Context => num(x.toInt) } |
-      (("{" ~ "*") ~> `type`) ~ ("," ~> term <~ "}") ~ ("as" ~> `type`) ^^ {
+      (("{" ~ "*") ~> typ) ~ ("," ~> term <~ "}") ~ ("as" ~> typ) ^^ {
         case ty1 ~ t ~ ty2 => ctx: Context => TmPack(ty1(ctx), t(ctx), ty2(ctx))
       }
 

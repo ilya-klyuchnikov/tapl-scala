@@ -85,19 +85,19 @@ object FullRefParsers extends StandardTokenParsers with PackratParsers with Impl
       }
 
   lazy val binder: Parser[Context => Binding] =
-    ":" ~> `type` ^^ { t => ctx: Context => VarBind(t(ctx)) } |
+    ":" ~> typ ^^ { t => ctx: Context => VarBind(t(ctx)) } |
       "=" ~> term ^^ { t => ctx: Context => TmAbbBind(t(ctx), None) }
   lazy val tyBinder: Parser[Context => Binding] =
-    ("=" ~> `type`) ^^ { ty => ctx: Context => TyAbbBind(ty(ctx)) } |
+    ("=" ~> typ) ^^ { ty => ctx: Context => TyAbbBind(ty(ctx)) } |
       success({ ctx: Context => TyVarBind })
 
   // TYPES
-  lazy val `type`: PackratParser[Res[Ty]] = arrowType |
+  lazy val typ: PackratParser[Res[Ty]] = arrowType |
     "Ref" ~> aType ^^ { ty => ctx: Context => TyRef(ty(ctx)) } |
     "Source" ~> aType ^^ { ty => ctx: Context => TySource(ty(ctx)) } |
     "Sink" ~> aType ^^ { ty => ctx: Context => TySink(ty(ctx)) }
   lazy val aType: PackratParser[Res[Ty]] =
-    "(" ~> `type` <~ ")" |
+    "(" ~> typ <~ ")" |
       ucid ^^ { tn => ctx: Context =>
         if (ctx.isNameBound(tn)) TyVar(ctx.name2index(tn), ctx.length) else TyId(tn)
       } |
@@ -116,8 +116,8 @@ object FullRefParsers extends StandardTokenParsers with PackratParsers with Impl
     }
 
   lazy val fieldType: PackratParser[(Context, Int) => (String, Ty)] =
-    lcid ~ (":" ~> `type`) ^^ { case id ~ ty => (ctx: Context, i: Int) => (id, ty(ctx)) } |
-      `type` ^^ { ty => (ctx: Context, i: Int) => (i.toString, ty(ctx)) }
+    lcid ~ (":" ~> typ) ^^ { case id ~ ty => (ctx: Context, i: Int) => (id, ty(ctx)) } |
+      typ ^^ { ty => (ctx: Context, i: Int) => (i.toString, ty(ctx)) }
 
   lazy val arrowType: PackratParser[Res[Ty]] =
     (aType <~ "->") ~ arrowType ^^ { case t1 ~ t2 => ctx: Context => TyArr(t1(ctx), t2(ctx)) } |
@@ -131,10 +131,10 @@ object FullRefParsers extends StandardTokenParsers with PackratParsers with Impl
       ("case" ~> term) ~ ("of" ~> cases) ^^ {
         case t ~ cs => ctx: Context => TmCase(t(ctx), cs(ctx))
       } |
-      ("lambda" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ {
+      ("lambda" ~> lcid) ~ (":" ~> typ) ~ ("." ~> term) ^^ {
         case v ~ ty ~ t => ctx: Context => TmAbs(v, ty(ctx), t(ctx.addName(v)))
       } |
-      ("lambda" ~ "_") ~> (":" ~> `type`) ~ ("." ~> term) ^^ {
+      ("lambda" ~ "_") ~> (":" ~> typ) ~ ("." ~> term) ^^ {
         case ty ~ t => ctx: Context => TmAbs("_", ty(ctx), t(ctx.addName("_")))
       } |
       ("let" ~> lcid) ~ ("=" ~> term) ~ ("in" ~> term) ^^ {
@@ -143,7 +143,7 @@ object FullRefParsers extends StandardTokenParsers with PackratParsers with Impl
       ("let" ~ "_") ~> ("=" ~> term) ~ ("in" ~> term) ^^ {
         case t1 ~ t2 => ctx: Context => TmLet("_", t1(ctx), t2(ctx.addName("_")))
       } | {
-      ("letrec" ~> lcid) ~ (":" ~> `type`) ~ ("=" ~> term) ~ ("in" ~> term) ^^ {
+      ("letrec" ~> lcid) ~ (":" ~> typ) ~ ("=" ~> term) ~ ("in" ~> term) ^^ {
         case id ~ ty ~ t1 ~ t2 =>
           ctx: Context =>
             TmLet(id, TmFix(TmAbs(id, ty(ctx), t1(ctx.addName(id)))), t2(ctx.addName(id)))
@@ -165,7 +165,7 @@ object FullRefParsers extends StandardTokenParsers with PackratParsers with Impl
       pathTerm
 
   lazy val ascribeTerm: PackratParser[Res[Term]] =
-    aTerm ~ ("as" ~> `type`) ^^ { case t ~ ty => ctx: Context => TmAscribe(t(ctx), ty(ctx)) } |
+    aTerm ~ ("as" ~> typ) ^^ { case t ~ ty => ctx: Context => TmAscribe(t(ctx), ty(ctx)) } |
       aTerm
 
   lazy val pathTerm: PackratParser[Res[Term]] =
@@ -183,7 +183,7 @@ object FullRefParsers extends StandardTokenParsers with PackratParsers with Impl
     "(" ~> termSeq <~ ")" |
       "true" ^^ { _ => ctx: Context => TmTrue } |
       "false" ^^ { _ => ctx: Context => TmFalse } |
-      ("<" ~> lcid) ~ ("=" ~> term <~ ">") ~ ("as" ~> `type`) ^^ {
+      ("<" ~> lcid) ~ ("=" ~> term <~ ">") ~ ("as" ~> typ) ^^ {
         case l ~ t ~ ty => ctx: Context => TmTag(l, t(ctx), ty(ctx))
       } |
       lcid ^^ { i => ctx: Context => TmVar(ctx.name2index(i), ctx.length) } |

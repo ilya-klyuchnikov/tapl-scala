@@ -74,12 +74,12 @@ object ReconParsers extends StandardTokenParsers with PackratParsers with Implic
       }
 
   lazy val binder: Parser[Context => Binding] =
-    ":" ~> `type` ^^ { t => ctx: Context => VarBind(t(ctx)) }
+    ":" ~> typ ^^ { t => ctx: Context => VarBind(t(ctx)) }
 
   // TYPES
-  lazy val `type`: PackratParser[Res[Ty]] = arrowType
+  lazy val typ: PackratParser[Res[Ty]] = arrowType
   lazy val aType: PackratParser[Res[Ty]] =
-    "(" ~> `type` <~ ")" |
+    "(" ~> typ <~ ")" |
       ucid ^^ { tn => ctx: Context => TyId(tn) } |
       "Bool" ^^ { _ => ctx: Context => TyBool } |
       "Nat" ^^ { _ => ctx: Context => TyNat }
@@ -90,8 +90,8 @@ object ReconParsers extends StandardTokenParsers with PackratParsers with Implic
     }
 
   lazy val fieldType: PackratParser[(Context, Int) => (String, Ty)] =
-    lcid ~ (":" ~> `type`) ^^ { case id ~ ty => (ctx: Context, i: Int) => (id, ty(ctx)) } |
-      `type` ^^ { ty => (ctx: Context, i: Int) => (i.toString, ty(ctx)) }
+    lcid ~ (":" ~> typ) ^^ { case id ~ ty => (ctx: Context, i: Int) => (id, ty(ctx)) } |
+      typ ^^ { ty => (ctx: Context, i: Int) => (i.toString, ty(ctx)) }
 
   lazy val arrowType: PackratParser[Res[Ty]] =
     (aType <~ "->") ~ arrowType ^^ { case t1 ~ t2 => ctx: Context => TyArr(t1(ctx), t2(ctx)) } |
@@ -105,10 +105,10 @@ object ReconParsers extends StandardTokenParsers with PackratParsers with Implic
       ("lambda" ~> lcid) ~ ("." ~> term) ^^ {
         case v ~ t => ctx: Context => TmAbs(v, None, t(ctx.addName(v)))
       } |
-      ("lambda" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ {
+      ("lambda" ~> lcid) ~ (":" ~> typ) ~ ("." ~> term) ^^ {
         case v ~ ty ~ t => ctx: Context => TmAbs(v, Some(ty(ctx)), t(ctx.addName(v)))
       } |
-      ("lambda" ~ "_") ~> (":" ~> `type`) ~ ("." ~> term) ^^ {
+      ("lambda" ~ "_") ~> (":" ~> typ) ~ ("." ~> term) ^^ {
         case ty ~ t => ctx: Context => TmAbs("_", Some(ty(ctx)), t(ctx.addName("_")))
       }
   lazy val appTerm: PackratParser[Res[Term]] =
