@@ -19,16 +19,21 @@ object EquirecParsers extends StandardTokenParsers with PackratParsers with Impl
 
   lazy val topLevel: PackratParser[Res1[List[Command]]] =
     ((command <~ ";") ~ topLevel) ^^ {
-      case f ~ g => ctx: Context =>
-        val (cmd1, ctx1) = f(ctx)
-        val (cmds, ctx2) = g(ctx1)
-        (cmd1 :: cmds, ctx2)
-    } | success{ctx: Context => (List(), ctx)}
+      case f ~ g =>
+        ctx: Context =>
+          val (cmd1, ctx1) = f(ctx)
+          val (cmds, ctx2) = g(ctx1)
+          (cmd1 :: cmds, ctx2)
+    } | success { ctx: Context => (List(), ctx) }
 
   lazy val command: PackratParser[Res1[Command]] =
     lcid ~ binder ^^ { case id ~ bind => ctx: Context => (Bind(id, bind(ctx)), ctx.addName(id)) } |
-      ucid ~ tyBinder ^^ { case id ~ bind => ctx: Context => (Bind(id, bind(ctx)), ctx.addName(id)) } |
-      term ^^ { t => ctx: Context => val t1 = t(ctx); (Eval(t1), ctx) }
+      ucid ~ tyBinder ^^ {
+        case id ~ bind => ctx: Context => (Bind(id, bind(ctx)), ctx.addName(id))
+      } |
+      term ^^ { t => ctx: Context =>
+        val t1 = t(ctx); (Eval(t1), ctx)
+      }
 
   lazy val binder: Parser[Context => Binding] =
     ":" ~> `type` ^^ { t => ctx: Context => VarBind(t(ctx)) }
@@ -38,11 +43,15 @@ object EquirecParsers extends StandardTokenParsers with PackratParsers with Impl
   // TYPES
   lazy val `type`: PackratParser[Res[Ty]] =
     arrowType |
-      ("Rec" ~> ucid) ~ ("." ~> `type`) ^^ { case id ~ ty => ctx: Context => TyRec(id, ty(ctx.addName(id))) }
+      ("Rec" ~> ucid) ~ ("." ~> `type`) ^^ {
+        case id ~ ty => ctx: Context => TyRec(id, ty(ctx.addName(id)))
+      }
 
   lazy val aType: PackratParser[Res[Ty]] =
     "(" ~> `type` <~ ")" |
-      ucid ^^ { tn => ctx: Context => if (ctx.isNameBound(tn)) TyVar(ctx.name2index(tn), ctx.length) else TyId(tn) }
+      ucid ^^ { tn => ctx: Context =>
+        if (ctx.isNameBound(tn)) TyVar(ctx.name2index(tn), ctx.length) else TyId(tn)
+      }
 
   lazy val arrowType: PackratParser[Res[Ty]] =
     (aType <~ "->") ~ arrowType ^^ { case t1 ~ t2 => ctx: Context => TyArr(t1(ctx), t2(ctx)) } |
@@ -51,8 +60,12 @@ object EquirecParsers extends StandardTokenParsers with PackratParsers with Impl
   // TERMS
   lazy val term: PackratParser[Res[Term]] =
     appTerm |
-      (("lambda" ~ "_") ~> (":" ~> `type`)) ~ ("." ~> term) ^^ { case ty ~ t => ctx: Context => TmAbs("_", ty(ctx), t(ctx.addName("_"))) } |
-      ("lambda" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => ctx: Context => TmAbs(v, ty(ctx), t(ctx.addName(v))) }
+      (("lambda" ~ "_") ~> (":" ~> `type`)) ~ ("." ~> term) ^^ {
+        case ty ~ t => ctx: Context => TmAbs("_", ty(ctx), t(ctx.addName("_")))
+      } |
+      ("lambda" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ {
+        case v ~ ty ~ t => ctx: Context => TmAbs(v, ty(ctx), t(ctx.addName(v)))
+      }
 
   lazy val appTerm: PackratParser[Res[Term]] =
     appTerm ~ aTerm ^^ { case t1 ~ t2 => ctx: Context => TmApp(t1(ctx), t2(ctx)) } |
@@ -64,9 +77,10 @@ object EquirecParsers extends StandardTokenParsers with PackratParsers with Impl
 
   lazy val phraseTopLevel: PackratParser[Res1[List[Command]]] = phrase(topLevel)
 
-  def input(s: String): Res1[List[Command]] = phraseTopLevel(new lexical.Scanner(s)) match {
-    case t if t.successful => t.get
-    case t                 => sys.error(t.toString)
-  }
+  def input(s: String): Res1[List[Command]] =
+    phraseTopLevel(new lexical.Scanner(s)) match {
+      case t if t.successful => t.get
+      case t                 => sys.error(t.toString)
+    }
 
 }

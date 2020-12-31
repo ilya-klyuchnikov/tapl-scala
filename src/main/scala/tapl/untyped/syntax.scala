@@ -51,11 +51,12 @@ case class Context(l: List[(String, Binding)] = List()) {
 
 object Syntax {
   private def tmMap[A](onVar: (Int, TmVar) => Term, c: Int, t: Term): Term = {
-    def walk(c: Int, t: Term): Term = t match {
-      case v: TmVar      => onVar(c, v)
-      case TmAbs(x, t2)  => TmAbs(x, walk(c + 1, t2))
-      case TmApp(t1, t2) => TmApp(walk(c, t1), walk(c, t2))
-    }
+    def walk(c: Int, t: Term): Term =
+      t match {
+        case v: TmVar      => onVar(c, v)
+        case TmAbs(x, t2)  => TmAbs(x, walk(c + 1, t2))
+        case TmApp(t1, t2) => TmApp(walk(c, t1), walk(c, t2))
+      }
     walk(c, t)
   }
 
@@ -89,34 +90,38 @@ import util.Document._
 object PrettyPrinter {
   import util.Print._
 
-  def ptmTerm(outer: Boolean, ctx: Context, t: Term): Document = t match {
-    case TmAbs(x, t2) =>
-      val (ctx1, x1) = ctx.pickFreshName(x)
-      val abs = g0("\\" :: x1 :: ".")
-      val body = ptmTerm(outer, ctx1, t2)
-      g2(abs :/: body)
-    case t => ptmAppTerm(outer, ctx, t)
+  def ptmTerm(outer: Boolean, ctx: Context, t: Term): Document =
+    t match {
+      case TmAbs(x, t2) =>
+        val (ctx1, x1) = ctx.pickFreshName(x)
+        val abs = g0("\\" :: x1 :: ".")
+        val body = ptmTerm(outer, ctx1, t2)
+        g2(abs :/: body)
+      case t => ptmAppTerm(outer, ctx, t)
 
-  }
+    }
 
-  def ptmAppTerm(outer: Boolean, ctx: Context, t: Term): Document = t match {
-    case TmApp(t1, t2) =>
-      g2(ptmAppTerm(false, ctx, t1) :/: ptmATerm(false, ctx, t2))
-    case t =>
-      ptmATerm(outer, ctx, t)
-  }
+  def ptmAppTerm(outer: Boolean, ctx: Context, t: Term): Document =
+    t match {
+      case TmApp(t1, t2) =>
+        g2(ptmAppTerm(false, ctx, t1) :/: ptmATerm(false, ctx, t2))
+      case t =>
+        ptmATerm(outer, ctx, t)
+    }
 
   def ptm(ctx: Context, t: Term) = ptmTerm(true, ctx, t)
 
-  def ptmATerm(outer: Boolean, ctx: Context, t: Term): Document = t match {
-    case TmVar(x, n) =>
-      if (ctx.length == n) ctx.index2Name(x)
-      else text("[bad index: " + x + "/" + n + " in {" + ctx.l.mkString(", ") + "}]")
-    case t =>
-      "(" :: ptmTerm(outer, ctx, t) :: ")"
-  }
+  def ptmATerm(outer: Boolean, ctx: Context, t: Term): Document =
+    t match {
+      case TmVar(x, n) =>
+        if (ctx.length == n) ctx.index2Name(x)
+        else text("[bad index: " + x + "/" + n + " in {" + ctx.l.mkString(", ") + "}]")
+      case t =>
+        "(" :: ptmTerm(outer, ctx, t) :: ")"
+    }
 
-  def pBinding(bind: Binding): Document = bind match {
-    case NameBind => empty
-  }
+  def pBinding(bind: Binding): Document =
+    bind match {
+      case NameBind => empty
+    }
 }

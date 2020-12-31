@@ -13,8 +13,9 @@ object ArithParsers extends StandardTokenParsers with ImplicitConversions {
   private def command: Parser[Command] =
     term ^^ Eval
 
-  private def term: Parser[Term] = appTerm |
-    ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ TmIf
+  private def term: Parser[Term] =
+    appTerm |
+      ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ TmIf
 
   private def appTerm: Parser[Term] =
     aTerm |
@@ -29,15 +30,17 @@ object ArithParsers extends StandardTokenParsers with ImplicitConversions {
       "false" ^^ { _ => TmFalse } |
       numericLit ^^ { x => num(x.toInt) }
 
-  private def num(x: Int): Term = x match {
-    case 0 => TmZero
-    case _ => TmSucc(num(x - 1))
-  }
+  private def num(x: Int): Term =
+    x match {
+      case 0 => TmZero
+      case _ => TmSucc(num(x - 1))
+    }
 
   private def eof: Parser[String] = elem("<eof>", _ == lexical.EOF) ^^ { _.chars }
 
-  def input(s: String): List[Command] = phrase(topLevel)(new lexical.Scanner(s)) match {
-    case t if t.successful => t.get
-    case t                 => sys.error(t.toString)
-  }
+  def input(s: String): List[Command] =
+    phrase(topLevel)(new lexical.Scanner(s)) match {
+      case t if t.successful => t.get
+      case t                 => sys.error(t.toString)
+    }
 }

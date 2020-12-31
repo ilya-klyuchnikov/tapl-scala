@@ -15,35 +15,35 @@ object FullFomSubRefDemo extends util.Demo[(Context, Store), Command] {
   override def parseInput(s: String): List[Command] =
     FullFomSubRefParsers.input(s)(Context())._1
 
-  private def checkBinding(ctx: Context, bind: Binding): Binding = bind match {
-    case NameBind =>
-      NameBind
-    case TyVarBind(tyS) =>
-      kindof(ctx, tyS)
-      TyVarBind(tyS)
-    case TyAbbBind(tyT, None) =>
-      TyAbbBind(tyT, Some(kindof(ctx, tyT)))
-    case VarBind(tyT) =>
-      VarBind(tyT)
-    case TmAbbBind(t, None) =>
-      TmAbbBind(t, Some(typeof(ctx, t)))
-    case TmAbbBind(t, Some(tyT)) =>
-      val tyT1 = typeof(ctx, t)
-      if (subtype(ctx, tyT1, tyT))
-        TmAbbBind(t, Some(tyT))
-      else
-        sys.error("type of binding doesn't match declared type in " + bind)
-    case TyAbbBind(tyT, Some(knK)) =>
-      val knK1 = kindof(ctx, tyT)
-      if (knK == knK1) TyAbbBind(tyT, Some(knK))
-      else throw new Exception("type of binding doesn't match declared type in " + bind)
-  }
+  private def checkBinding(ctx: Context, bind: Binding): Binding =
+    bind match {
+      case NameBind =>
+        NameBind
+      case TyVarBind(tyS) =>
+        kindof(ctx, tyS)
+        TyVarBind(tyS)
+      case TyAbbBind(tyT, None) =>
+        TyAbbBind(tyT, Some(kindof(ctx, tyT)))
+      case VarBind(tyT) =>
+        VarBind(tyT)
+      case TmAbbBind(t, None) =>
+        TmAbbBind(t, Some(typeof(ctx, t)))
+      case TmAbbBind(t, Some(tyT)) =>
+        val tyT1 = typeof(ctx, t)
+        if (subtype(ctx, tyT1, tyT))
+          TmAbbBind(t, Some(tyT))
+        else
+          sys.error("type of binding doesn't match declared type in " + bind)
+      case TyAbbBind(tyT, Some(knK)) =>
+        val knK1 = kindof(ctx, tyT)
+        if (knK == knK1) TyAbbBind(tyT, Some(knK))
+        else throw new Exception("type of binding doesn't match declared type in " + bind)
+    }
 
   def processCommand(in: (Context, Store), cmd: Command): (Context, Store) = {
     val (ctx, store) = in
     cmd match {
       case Eval(t1) =>
-
         val ty1 = Typer.typeof(ctx, t1)
         val doc1 = g2(ptmATerm(true, ctx, t1) :: ":" :/: ptyTy(ctx, ty1) :: ";")
 

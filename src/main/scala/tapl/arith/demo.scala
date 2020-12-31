@@ -14,17 +14,18 @@ object ArithDemo extends util.Demo[Unit, Command] {
   override def parseInput(s: String): List[Command] =
     ArithParsers.input(s)
 
-  override def processCommand(ctx: Unit, cmd: Command): Unit = cmd match {
-    case Eval(t1) =>
-      val doc1 = g2(ptmATerm(true, t1) :: ";")
-      val t2 = eval(t1)
-      val doc2 = g2(ptmATerm(true, t2) :: ";")
+  override def processCommand(ctx: Unit, cmd: Command): Unit =
+    cmd match {
+      case Eval(t1) =>
+        val doc1 = g2(ptmATerm(true, t1) :: ";")
+        val t2 = eval(t1)
+        val doc2 = g2(ptmATerm(true, t2) :: ";")
 
-      println("====================")
-      println(print(doc1, width))
-      println("""||""")
-      println("""\/""")
-      println(print(doc2, width))
-  }
+        println("====================")
+        println(print(doc1, width))
+        println("""||""")
+        println("""\/""")
+        println(print(doc2, width))
+    }
 
 }

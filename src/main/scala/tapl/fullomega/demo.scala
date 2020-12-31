@@ -15,28 +15,29 @@ object FullOmegaDemo extends util.Demo[(Context, Store), Command] {
   override def parseInput(s: String): List[Command] =
     FullOmegaParsers.input(s)(Context())._1
 
-  private def checkBinding(ctx: Context, bind: Binding): Binding = bind match {
-    case NameBind =>
-      NameBind
-    case TyVarBind(knK) =>
-      TyVarBind(knK)
-    case VarBind(tyT) =>
-      VarBind(tyT)
-    case TyAbbBind(tyT, None) =>
-      TyAbbBind(tyT, Some(kindof(ctx, tyT)))
-    case TmAbbBind(t, None) =>
-      TmAbbBind(t, Some(typeof(ctx, t)))
-    case TmAbbBind(t, Some(tyT)) =>
-      val tyT1 = typeof(ctx, t)
-      if (tyEqv(ctx, tyT1, tyT))
-        TmAbbBind(t, Some(tyT))
-      else
-        throw new Exception("type of binding doesn't match declared type in " + bind)
-    case TyAbbBind(tyT, Some(knK)) =>
-      val knK1 = kindof(ctx, tyT)
-      if (knK == knK1) TyAbbBind(tyT, Some(knK))
-      else throw new Exception("type of binding doesn't match declared type in " + bind)
-  }
+  private def checkBinding(ctx: Context, bind: Binding): Binding =
+    bind match {
+      case NameBind =>
+        NameBind
+      case TyVarBind(knK) =>
+        TyVarBind(knK)
+      case VarBind(tyT) =>
+        VarBind(tyT)
+      case TyAbbBind(tyT, None) =>
+        TyAbbBind(tyT, Some(kindof(ctx, tyT)))
+      case TmAbbBind(t, None) =>
+        TmAbbBind(t, Some(typeof(ctx, t)))
+      case TmAbbBind(t, Some(tyT)) =>
+        val tyT1 = typeof(ctx, t)
+        if (tyEqv(ctx, tyT1, tyT))
+          TmAbbBind(t, Some(tyT))
+        else
+          throw new Exception("type of binding doesn't match declared type in " + bind)
+      case TyAbbBind(tyT, Some(knK)) =>
+        val knK1 = kindof(ctx, tyT)
+        if (knK == knK1) TyAbbBind(tyT, Some(knK))
+        else throw new Exception("type of binding doesn't match declared type in " + bind)
+    }
 
   def processCommand(in: (Context, Store), cmd: Command): (Context, Store) = {
     val (ctx, store) = in

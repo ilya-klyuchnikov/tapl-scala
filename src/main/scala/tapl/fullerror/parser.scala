@@ -5,7 +5,21 @@ import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 
 object FullErrorParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
-  lexical.reserved ++= Seq("lambda", "Bool", "true", "false", "if", "then", "else", "_", "try", "with", "error", "Top", "Bot")
+  lexical.reserved ++= Seq(
+    "lambda",
+    "Bool",
+    "true",
+    "false",
+    "if",
+    "then",
+    "else",
+    "_",
+    "try",
+    "with",
+    "error",
+    "Top",
+    "Bot",
+  )
   lexical.delimiters ++= Seq("(", ")", ";", "/", ".", ":", "->")
 
   // lower-case identifier
@@ -18,16 +32,21 @@ object FullErrorParsers extends StandardTokenParsers with PackratParsers with Im
 
   lazy val topLevel: PackratParser[Res1[List[Command]]] =
     ((command <~ ";") ~ topLevel) ^^ {
-      case f ~ g => ctx: Context =>
-        val (cmd1, ctx1) = f(ctx)
-        val (cmds, ctx2) = g(ctx1)
-        (cmd1 :: cmds, ctx2)
-    } | success{ctx: Context => (List(), ctx)}
+      case f ~ g =>
+        ctx: Context =>
+          val (cmd1, ctx1) = f(ctx)
+          val (cmds, ctx2) = g(ctx1)
+          (cmd1 :: cmds, ctx2)
+    } | success { ctx: Context => (List(), ctx) }
 
   lazy val command: PackratParser[Res1[Command]] =
     lcid ~ binder ^^ { case id ~ bind => ctx: Context => (Bind(id, bind(ctx)), ctx.addName(id)) } |
-      ucid ~ tyBinder ^^ { case id ~ bind => ctx: Context => (Bind(id, bind(ctx)), ctx.addName(id)) } |
-      term ^^ { t => ctx: Context => val t1 = t(ctx); (Eval(t1), ctx) }
+      ucid ~ tyBinder ^^ {
+        case id ~ bind => ctx: Context => (Bind(id, bind(ctx)), ctx.addName(id))
+      } |
+      term ^^ { t => ctx: Context =>
+        val t1 = t(ctx); (Eval(t1), ctx)
+      }
 
   lazy val eof: PackratParser[String] = elem("<eof>", _ == lexical.EOF) ^^ { _.chars }
   lazy val binder: Parser[Context => Binding] =
@@ -49,10 +68,18 @@ object FullErrorParsers extends StandardTokenParsers with PackratParsers with Im
 
   lazy val term: PackratParser[Res[Term]] =
     appTerm |
-      ("lambda" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => ctx: Context => TmAbs(v, ty(ctx), t(ctx.addName(v))) } |
-      ("lambda" ~ "_") ~> (":" ~> `type`) ~ ("." ~> term) ^^ { case ty ~ t => ctx: Context => TmAbs("_", ty(ctx), t(ctx.addName("_"))) } |
-      ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ { case t1 ~ t2 ~ t3 => ctx: Context => TmIf(t1(ctx), t2(ctx), t3(ctx)) } |
-      ("try" ~> term) ~ ("with" ~> term) ^^ { case t1 ~ t2 => ctx: Context => TmTry(t1(ctx), t2(ctx)) }
+      ("lambda" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ {
+        case v ~ ty ~ t => ctx: Context => TmAbs(v, ty(ctx), t(ctx.addName(v)))
+      } |
+      ("lambda" ~ "_") ~> (":" ~> `type`) ~ ("." ~> term) ^^ {
+        case ty ~ t => ctx: Context => TmAbs("_", ty(ctx), t(ctx.addName("_")))
+      } |
+      ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ {
+        case t1 ~ t2 ~ t3 => ctx: Context => TmIf(t1(ctx), t2(ctx), t3(ctx))
+      } |
+      ("try" ~> term) ~ ("with" ~> term) ^^ {
+        case t1 ~ t2 => ctx: Context => TmTry(t1(ctx), t2(ctx))
+      }
 
   lazy val appTerm: PackratParser[Res[Term]] =
     (appTerm ~ aTerm) ^^ { case t1 ~ t2 => ctx: Context => TmApp(t1(ctx), t2(ctx)) } |
@@ -67,8 +94,9 @@ object FullErrorParsers extends StandardTokenParsers with PackratParsers with Im
 
   lazy val phraseTopLevel: PackratParser[Res1[List[Command]]] = phrase(topLevel)
 
-  def input(s: String): Res1[List[Command]] = phraseTopLevel(new lexical.Scanner(s)) match {
-    case t if t.successful => t.get
-    case t                 => sys.error(t.toString)
-  }
+  def input(s: String): Res1[List[Command]] =
+    phraseTopLevel(new lexical.Scanner(s)) match {
+      case t if t.successful => t.get
+      case t                 => sys.error(t.toString)
+    }
 }

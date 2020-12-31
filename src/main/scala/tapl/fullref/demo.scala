@@ -14,24 +14,25 @@ object FullRefDemo extends util.Demo[(Context, Store), Command] {
   override def parseInput(s: String): List[Command] =
     FullRefParsers.input(s)(Context())._1
 
-  private def checkBinding(ctx: Context, bind: Binding): Binding = bind match {
-    case NameBind =>
-      NameBind
-    case TyVarBind =>
-      TyVarBind
-    case VarBind(tyT) =>
-      VarBind(tyT)
-    case TyAbbBind(tyT) =>
-      TyAbbBind(tyT)
-    case TmAbbBind(t, None) =>
-      TmAbbBind(t, Some(typeof(ctx, t)))
-    case TmAbbBind(t, Some(tyT)) =>
-      val tyT1 = typeof(ctx, t)
-      if (subtype(ctx, tyT1, tyT))
-        TmAbbBind(t, Some(tyT))
-      else
-        throw new Exception("type of binding doesn't match declared type in " + bind)
-  }
+  private def checkBinding(ctx: Context, bind: Binding): Binding =
+    bind match {
+      case NameBind =>
+        NameBind
+      case TyVarBind =>
+        TyVarBind
+      case VarBind(tyT) =>
+        VarBind(tyT)
+      case TyAbbBind(tyT) =>
+        TyAbbBind(tyT)
+      case TmAbbBind(t, None) =>
+        TmAbbBind(t, Some(typeof(ctx, t)))
+      case TmAbbBind(t, Some(tyT)) =>
+        val tyT1 = typeof(ctx, t)
+        if (subtype(ctx, tyT1, tyT))
+          TmAbbBind(t, Some(tyT))
+        else
+          throw new Exception("type of binding doesn't match declared type in " + bind)
+    }
 
   def processCommand(in: (Context, Store), cmd: Command): (Context, Store) = {
     val (ctx, store) = in

@@ -2,24 +2,26 @@ package tapl.fullref
 
 object Util {
 
-  def isNumericVal(ctx: Context, t: Term): Boolean = t match {
-    case TmZero     => true
-    case TmSucc(t1) => isNumericVal(ctx, t1)
-    case _          => false
-  }
+  def isNumericVal(ctx: Context, t: Term): Boolean =
+    t match {
+      case TmZero     => true
+      case TmSucc(t1) => isNumericVal(ctx, t1)
+      case _          => false
+    }
 
-  def isVal(ctx: Context, t: Term): Boolean = t match {
-    case TmString(_)                 => true
-    case TmUnit                      => true
-    case TmTag(_, t1, _)             => isVal(ctx, t1)
-    case TmLoc(_)                    => true
-    case TmTrue                      => true
-    case TmFalse                     => true
-    case t1 if isNumericVal(ctx, t1) => true
-    case TmAbs(_, _, _)              => true
-    case TmRecord(fields)            => fields.forall { case (_, ti) => isVal(ctx, ti) }
-    case _                           => false
-  }
+  def isVal(ctx: Context, t: Term): Boolean =
+    t match {
+      case TmString(_)                 => true
+      case TmUnit                      => true
+      case TmTag(_, t1, _)             => isVal(ctx, t1)
+      case TmLoc(_)                    => true
+      case TmTrue                      => true
+      case TmFalse                     => true
+      case t1 if isNumericVal(ctx, t1) => true
+      case TmAbs(_, _, _)              => true
+      case TmRecord(fields)            => fields.forall { case (_, ti) => isVal(ctx, ti) }
+      case _                           => false
+    }
 
 }
 
@@ -40,128 +42,130 @@ object Evaluator {
   import Util._
   import Syntax._
 
-  private def eval1(ctx: Context, store: Store, t: Term): (Term, Store) = t match {
-    case TmAscribe(v1, tyT) if isVal(ctx, v1) =>
-      (v1, store)
-    case TmAscribe(t1, tyT) =>
-      val (t11, store1) = eval1(ctx, store, t1)
-      (TmAscribe(t11, tyT), store1)
-    case TmApp(TmAbs(x, ty, t), v2) if isVal(ctx, v2) =>
-      (termSubstTop(v2, t), store)
-    case TmApp(v1, t2) if isVal(ctx, v1) =>
-      val (t21, store1) = eval1(ctx, store, t2)
-      (TmApp(v1, t21), store1)
-    case TmApp(t1, t2) =>
-      val (t11, store1) = eval1(ctx, store, t1)
-      (TmApp(t11, t2), store1)
-    case TmRecord(fields) =>
-      def evalAField(l: List[(String, Term)]): (List[(String, Term)], Store) = l match {
-        case Nil =>
-          throw new NoRuleApplies(t)
-        case (l, vi) :: rest if isVal(ctx, vi) =>
-          val (rest1, store1) = evalAField(rest)
-          ((l, vi) :: rest1, store1)
-        case (l, ti) :: rest =>
-          val (ti1, store1) = eval1(ctx, store, ti)
-          ((l, ti1) :: rest, store1)
-      }
-      val (fields1, store1) = evalAField(fields)
-      (TmRecord(fields1), store1)
-    case TmProj(v1 @ TmRecord(fields), l) if isVal(ctx, v1) =>
-      fields.find { _._1 == l } match {
-        case Some((_, ti)) => (ti, store)
-        case None          => throw new NoRuleApplies(t)
-      }
-    case TmProj(t1, l) =>
-      val (t11, store1) = eval1(ctx, store, t1)
-      (TmProj(t11, l), store1)
-    case TmTag(l, t1, tyT) =>
-      val (t11, store1) = eval1(ctx, store, t1)
-      (TmTag(l, t11, tyT), store1)
-    case TmCase(TmTag(li, v11, _), bs) if isVal(ctx, v11) =>
-      bs find { _._1 == li } match {
-        case Some((_, x, body)) => (termSubstTop(v11, body), store)
-        case None               => throw new NoRuleApplies(t)
-      }
-    case TmCase(t1, bs) =>
-      val (t11, store1) = eval1(ctx, store, t1)
-      (TmCase(t11, bs), store1)
-    case TmRef(t1) =>
-      if (!isVal(ctx, t1)) {
+  private def eval1(ctx: Context, store: Store, t: Term): (Term, Store) =
+    t match {
+      case TmAscribe(v1, tyT) if isVal(ctx, v1) =>
+        (v1, store)
+      case TmAscribe(t1, tyT) =>
         val (t11, store1) = eval1(ctx, store, t1)
-        (TmRef(t11), store1)
-      } else {
-        val (l, store1) = store.extend(t1)
-        (TmLoc(l), store1)
-      }
-    case TmDeref(t1) =>
-      if (!isVal(ctx, t1)) {
-        val (t11, store1) = eval1(ctx, store, t1)
-        (TmDeref(t11), store1)
-      } else {
-        t1 match {
-          case TmLoc(l) => (store.lookup(l), store)
-          case _        => throw new NoRuleApplies(t)
-        }
-      }
-    case TmAssign(t1, t2) =>
-      if (!isVal(ctx, t1)) {
-        val (t11, store1) = eval1(ctx, store, t1)
-        (TmAssign(t11, t2), store1)
-      } else if (!isVal(ctx, t2)) {
+        (TmAscribe(t11, tyT), store1)
+      case TmApp(TmAbs(x, ty, t), v2) if isVal(ctx, v2) =>
+        (termSubstTop(v2, t), store)
+      case TmApp(v1, t2) if isVal(ctx, v1) =>
         val (t21, store1) = eval1(ctx, store, t2)
-        (TmAssign(t1, t21), store1)
-      } else {
-        t1 match {
-          case TmLoc(l) => (TmUnit, store.update(l, t2))
-          case _        => throw new NoRuleApplies(t)
+        (TmApp(v1, t21), store1)
+      case TmApp(t1, t2) =>
+        val (t11, store1) = eval1(ctx, store, t1)
+        (TmApp(t11, t2), store1)
+      case TmRecord(fields) =>
+        def evalAField(l: List[(String, Term)]): (List[(String, Term)], Store) =
+          l match {
+            case Nil =>
+              throw new NoRuleApplies(t)
+            case (l, vi) :: rest if isVal(ctx, vi) =>
+              val (rest1, store1) = evalAField(rest)
+              ((l, vi) :: rest1, store1)
+            case (l, ti) :: rest =>
+              val (ti1, store1) = eval1(ctx, store, ti)
+              ((l, ti1) :: rest, store1)
+          }
+        val (fields1, store1) = evalAField(fields)
+        (TmRecord(fields1), store1)
+      case TmProj(v1 @ TmRecord(fields), l) if isVal(ctx, v1) =>
+        fields.find { _._1 == l } match {
+          case Some((_, ti)) => (ti, store)
+          case None          => throw new NoRuleApplies(t)
         }
-      }
-    case TmLet(x, v1, t2) if isVal(ctx, v1) =>
-      (termSubstTop(v1, t2), store)
-    case TmLet(x, t1, t2) =>
-      val (t11, store1) = eval1(ctx, store, t1)
-      (TmLet(x, t11, t2), store1)
-    case TmIf(TmTrue, t2, t3) =>
-      (t2, store)
-    case TmIf(TmFalse, t2, t3) =>
-      (t3, store)
-    case TmIf(t1, t2, t3) =>
-      val (t11, store1) = eval1(ctx, store, t1)
-      (TmIf(t11, t2, t3), store1)
-    case TmSucc(t1) =>
-      val (t11, store1) = eval1(ctx, store, t1)
-      (TmSucc(t11), store1)
-    case TmPred(TmZero) =>
-      (TmZero, store)
-    case TmPred(TmSucc(nv1)) if isNumericVal(ctx, nv1) =>
-      (nv1, store)
-    case TmPred(t1) =>
-      val (t2, store1) = eval1(ctx, store, t1)
-      (TmPred(t2), store)
-    case TmIsZero(TmZero) =>
-      (TmTrue, store)
-    case TmIsZero(TmSucc(nv1)) if isNumericVal(ctx, nv1) =>
-      (TmFalse, store)
-    case TmIsZero(t1) =>
-      val (t2, store1) = eval1(ctx, store, t1)
-      (TmIsZero(t2), store)
-    case t @ TmFix(v1) if isVal(ctx, v1) =>
-      v1 match {
-        case TmAbs(_, _, t12) => (termSubstTop(t, t12), store)
-        case _                => throw new NoRuleApplies(t)
-      }
-    case TmFix(t1) =>
-      val (t2, store1) = eval1(ctx, store, t1)
-      (TmFix(t2), store1)
-    case TmVar(n, _) =>
-      ctx.getBinding(n) match {
-        case TmAbbBind(t1, _) => (t1, store)
-        case _                => throw new NoRuleApplies(t)
-      }
-    case _ =>
-      throw new NoRuleApplies(t)
-  }
+      case TmProj(t1, l) =>
+        val (t11, store1) = eval1(ctx, store, t1)
+        (TmProj(t11, l), store1)
+      case TmTag(l, t1, tyT) =>
+        val (t11, store1) = eval1(ctx, store, t1)
+        (TmTag(l, t11, tyT), store1)
+      case TmCase(TmTag(li, v11, _), bs) if isVal(ctx, v11) =>
+        bs find { _._1 == li } match {
+          case Some((_, x, body)) => (termSubstTop(v11, body), store)
+          case None               => throw new NoRuleApplies(t)
+        }
+      case TmCase(t1, bs) =>
+        val (t11, store1) = eval1(ctx, store, t1)
+        (TmCase(t11, bs), store1)
+      case TmRef(t1) =>
+        if (!isVal(ctx, t1)) {
+          val (t11, store1) = eval1(ctx, store, t1)
+          (TmRef(t11), store1)
+        } else {
+          val (l, store1) = store.extend(t1)
+          (TmLoc(l), store1)
+        }
+      case TmDeref(t1) =>
+        if (!isVal(ctx, t1)) {
+          val (t11, store1) = eval1(ctx, store, t1)
+          (TmDeref(t11), store1)
+        } else {
+          t1 match {
+            case TmLoc(l) => (store.lookup(l), store)
+            case _        => throw new NoRuleApplies(t)
+          }
+        }
+      case TmAssign(t1, t2) =>
+        if (!isVal(ctx, t1)) {
+          val (t11, store1) = eval1(ctx, store, t1)
+          (TmAssign(t11, t2), store1)
+        } else if (!isVal(ctx, t2)) {
+          val (t21, store1) = eval1(ctx, store, t2)
+          (TmAssign(t1, t21), store1)
+        } else {
+          t1 match {
+            case TmLoc(l) => (TmUnit, store.update(l, t2))
+            case _        => throw new NoRuleApplies(t)
+          }
+        }
+      case TmLet(x, v1, t2) if isVal(ctx, v1) =>
+        (termSubstTop(v1, t2), store)
+      case TmLet(x, t1, t2) =>
+        val (t11, store1) = eval1(ctx, store, t1)
+        (TmLet(x, t11, t2), store1)
+      case TmIf(TmTrue, t2, t3) =>
+        (t2, store)
+      case TmIf(TmFalse, t2, t3) =>
+        (t3, store)
+      case TmIf(t1, t2, t3) =>
+        val (t11, store1) = eval1(ctx, store, t1)
+        (TmIf(t11, t2, t3), store1)
+      case TmSucc(t1) =>
+        val (t11, store1) = eval1(ctx, store, t1)
+        (TmSucc(t11), store1)
+      case TmPred(TmZero) =>
+        (TmZero, store)
+      case TmPred(TmSucc(nv1)) if isNumericVal(ctx, nv1) =>
+        (nv1, store)
+      case TmPred(t1) =>
+        val (t2, store1) = eval1(ctx, store, t1)
+        (TmPred(t2), store)
+      case TmIsZero(TmZero) =>
+        (TmTrue, store)
+      case TmIsZero(TmSucc(nv1)) if isNumericVal(ctx, nv1) =>
+        (TmFalse, store)
+      case TmIsZero(t1) =>
+        val (t2, store1) = eval1(ctx, store, t1)
+        (TmIsZero(t2), store)
+      case t @ TmFix(v1) if isVal(ctx, v1) =>
+        v1 match {
+          case TmAbs(_, _, t12) => (termSubstTop(t, t12), store)
+          case _                => throw new NoRuleApplies(t)
+        }
+      case TmFix(t1) =>
+        val (t2, store1) = eval1(ctx, store, t1)
+        (TmFix(t2), store1)
+      case TmVar(n, _) =>
+        ctx.getBinding(n) match {
+          case TmAbbBind(t1, _) => (t1, store)
+          case _                => throw new NoRuleApplies(t)
+        }
+      case _ =>
+        throw new NoRuleApplies(t)
+    }
 
   def eval(ctx: Context, store: Store, t: Term): (Term, Store) =
     try {
@@ -171,34 +175,38 @@ object Evaluator {
       case _: NoRuleApplies => (t, store)
     }
 
-  def evalBinding(ctx: Context, store: Store, bind: Binding): (Binding, Store) = bind match {
-    case TmAbbBind(t, tyT) =>
-      val (t1, store1) = eval(ctx, store, t)
-      (TmAbbBind(t1, tyT), store1)
-    case b =>
-      (b, store)
-  }
+  def evalBinding(ctx: Context, store: Store, bind: Binding): (Binding, Store) =
+    bind match {
+      case TmAbbBind(t, tyT) =>
+        val (t1, store1) = eval(ctx, store, t)
+        (TmAbbBind(t1, tyT), store1)
+      case b =>
+        (b, store)
+    }
 }
 
 object Typer {
   import Syntax._
 
-  private def isTyAbb(ctx: Context, i: Int) = ctx.getBinding(i) match {
-    case TyAbbBind(_) => true
-    case _            => false
-  }
+  private def isTyAbb(ctx: Context, i: Int) =
+    ctx.getBinding(i) match {
+      case TyAbbBind(_) => true
+      case _            => false
+    }
 
-  private def getTyAbb(ctx: Context, i: Int) = ctx.getBinding(i) match {
-    case TyAbbBind(ty) => ty
-    case _             => throw new NoRuleApplies(null)
-  }
+  private def getTyAbb(ctx: Context, i: Int) =
+    ctx.getBinding(i) match {
+      case TyAbbBind(ty) => ty
+      case _             => throw new NoRuleApplies(null)
+    }
 
-  private def computeTy(ctx: Context, tyT: Ty) = tyT match {
-    case TyVar(i, _) if isTyAbb(ctx, i) =>
-      getTyAbb(ctx, i)
-    case _ =>
-      throw new NoRuleApplies(null)
-  }
+  private def computeTy(ctx: Context, tyT: Ty) =
+    tyT match {
+      case TyVar(i, _) if isTyAbb(ctx, i) =>
+        getTyAbb(ctx, i)
+      case _ =>
+        throw new NoRuleApplies(null)
+    }
 
   def simplifyTy(ctx: Context, ty: Ty): Ty =
     try {
@@ -231,10 +239,11 @@ object Typer {
       case (TyNat, TyNat)             => true
       case (TyRecord(fields1), TyRecord(fields2)) =>
         fields1.length == fields2.length && fields2.forall {
-          case (li2, tyTi2) => fields1.find { _._1 == li2 } match {
-            case Some((li1, tyTi1)) => tyEqv(ctx, tyTi1, tyTi2)
-            case None               => false
-          }
+          case (li2, tyTi2) =>
+            fields1.find { _._1 == li2 } match {
+              case Some((li1, tyTi1)) => tyEqv(ctx, tyTi1, tyTi2)
+              case None               => false
+            }
         }
       case (TyVariant(fields1), TyVariant(fields2)) =>
         fields1.length == fields2.length && (fields1 zip fields2).forall {
@@ -379,169 +388,172 @@ object Typer {
       }
     }
 
-  def typeof(ctx: Context, t: Term): Ty = t match {
-    case TmVar(i, _) =>
-      ctx.getType(i)
-    case TmAbs(v, tyT1, t2) =>
-      val ctx1 = ctx.addBinding(v, VarBind(tyT1))
-      val tyT2 = typeof(ctx1, t2)
-      TyArr(tyT1, typeShift(-1, tyT2))
-    case TmApp(t1, t2) =>
-      val tyT1 = typeof(ctx, t1)
-      val tyT2 = typeof(ctx, t2)
-      simplifyTy(ctx, tyT1) match {
-        case TyArr(tyT11, tyT12) =>
-          if (subtype(ctx, tyT2, tyT11))
-            tyT12
-          else {
-            println(tyT1)
-            println(tyT2)
-            println(simplifyTy(ctx, tyT1))
-            throw new Exception("parameter mismatch in " + t + " : " + tyT2 + " != " + tyT11)
-          }
-        case TyBot => TyBot
-        case z =>
-          {
+  def typeof(ctx: Context, t: Term): Ty =
+    t match {
+      case TmVar(i, _) =>
+        ctx.getType(i)
+      case TmAbs(v, tyT1, t2) =>
+        val ctx1 = ctx.addBinding(v, VarBind(tyT1))
+        val tyT2 = typeof(ctx1, t2)
+        TyArr(tyT1, typeShift(-1, tyT2))
+      case TmApp(t1, t2) =>
+        val tyT1 = typeof(ctx, t1)
+        val tyT2 = typeof(ctx, t2)
+        simplifyTy(ctx, tyT1) match {
+          case TyArr(tyT11, tyT12) =>
+            if (subtype(ctx, tyT2, tyT11))
+              tyT12
+            else {
+              println(tyT1)
+              println(tyT2)
+              println(simplifyTy(ctx, tyT1))
+              throw new Exception("parameter mismatch in " + t + " : " + tyT2 + " != " + tyT11)
+            }
+          case TyBot => TyBot
+          case z => {
             println(tyT1)
             println(tyT2)
             println(simplifyTy(ctx, tyT1))
             throw new Exception("arrow type expected in " + t1)
           }
-      }
-    case TmTrue =>
-      TyBool
-    case TmFalse =>
-      TyBool
-    case TmIf(t1, t2, t3) =>
-      if (subtype(ctx, typeof(ctx, t1), TyBool)) {
-        join(ctx, typeof(ctx, t2), typeof(ctx, t3))
-      } else {
-        throw new Exception("guard of conditional " + t + " is not a boolean")
-      }
-    case TmLet(x, t1, t2) =>
-      val tyT1 = typeof(ctx, t1)
-      val ctx1 = ctx.addBinding(x, VarBind(tyT1))
-      typeShift(-1, typeof(ctx1, t2))
-    case TmRecord(fields) =>
-      val fieldTys = fields.map { case (li, ti) => (li, typeof(ctx, ti)) }
-      TyRecord(fieldTys)
-    case TmProj(t1, l) =>
-      simplifyTy(ctx, typeof(ctx, t1)) match {
-        case TyRecord(fieldTys) =>
-          fieldTys find { _._1 == l } match {
-            case Some((_, tyi)) => tyi
-            case None           => throw new Exception("Label " + l + " not found in " + t)
-          }
-        case _ => throw new Exception("Expected record type for " + t1)
-      }
-    case TmCase(t, cases) =>
-      simplifyTy(ctx, typeof(ctx, t)) match {
-        case TyVariant(fieldTys) =>
-          cases.foreach {
-            case (l, _, _) => fieldTys.find(_._1 == l) match {
-              case Some(_) =>
-              case None    => throw new Exception("label" + l + " is not in type")
-            }
-          }
-          val casetypes = cases map {
-            case (li, xi, ti) =>
-              val tyTi = fieldTys.find(_._1 == li) match {
-                case Some(ty) => ty._2
-                case None     => throw new Exception("label" + li + " is not found")
-              }
-              val ctx1 = ctx.addBinding(xi, VarBind(tyTi))
-              typeShift(-1, typeof(ctx1, ti))
-          }
-          casetypes.foldLeft(TyBot: Ty) { join(ctx, _, _) }
-        case TyBot => TyBot
-        case _     => throw new Exception("Expected variant type " + t)
-      }
-    case TmFix(t1) =>
-      val tyT1 = typeof(ctx, t1)
-      simplifyTy(ctx, tyT1) match {
-        case TyArr(tyT11, tyT12) =>
-          if (subtype(ctx, tyT12, tyT11))
-            tyT12
-          else
-            throw new Exception("result of body not compatible with domain " + t + " : " + tyT12 + " != " + tyT11)
-        case _ =>
-          throw new Exception("arrow type expected in " + t1)
-      }
-    case TmTag(li, ti, tyT) =>
-      simplifyTy(ctx, tyT) match {
-        case TyVariant(fieldTys) =>
-          fieldTys.find { _._1 == li } match {
-            case Some((_, tyTiExpected)) =>
-              val tyTi = typeof(ctx, ti)
-              if (subtype(ctx, tyTi, tyTiExpected))
-                tyT
-              else
-                throw new Exception("field doesn't have expected type in " + t)
-            case None => throw new Exception("label " + li + " not found " + t)
-          }
-        case z =>
-          println(z)
-          throw new Exception("annotation is not a variant type: " + t)
-      }
-    case TmAscribe(t1, tyT) =>
-      if (subtype(ctx, typeof(ctx, t1), tyT))
-        tyT
-      else
-        throw new Exception("body of as-term doesn't have the expected type in " + t)
-    case TmString(_) =>
-      TyString
-    case TmUnit =>
-      TyUnit
-    case TmRef(t1) =>
-      TyRef(typeof(ctx, t1))
-    case TmLoc(l) =>
-      sys.error("locations are not supposed to occur in source programs!")
-    case TmDeref(t1) =>
-      simplifyTy(ctx, typeof(ctx, t1)) match {
-        case TyRef(tyT1)    => tyT1
-        case TyBot          => TyBot
-        case TySource(tyT1) => tyT1
-        case _              => sys.error("argument of ! is not a Ref")
-      }
-    case TmAssign(t1, t2) =>
-      simplifyTy(ctx, typeof(ctx, t1)) match {
-        case TyRef(tyT1) =>
-          if (subtype(ctx, typeof(ctx, t2), tyT1))
-            TyUnit
-          else
-            sys.error("arguments of := are incompatible")
-        case TySink(tyT1) =>
-          if (subtype(ctx, typeof(ctx, t2), tyT1))
-            TyUnit
-          else
-            sys.error("arguments of := are incompatible")
-        case TyBot =>
-          val _ = typeof(ctx, t2)
-          TyBot
-        case _ =>
-          sys.error("argument of ! is not a Ref")
-      }
-    case TmZero =>
-      TyNat
-    case TmSucc(t1) =>
-      if (subtype(ctx, typeof(ctx, t1), TyNat)) {
-        TyNat
-      } else {
-        throw new Exception("argument of Succ: is not a number: " + t)
-      }
-    case TmPred(t1) =>
-      if (subtype(ctx, typeof(ctx, t1), TyNat)) {
-        TyNat
-      } else {
-        throw new Exception("argument of Pred: is not a number: " + t)
-      }
-    case TmIsZero(t1) =>
-      if (subtype(ctx, typeof(ctx, t1), TyNat)) {
+        }
+      case TmTrue =>
         TyBool
-      } else {
-        throw new Exception("argument of IsZero: is not a number: " + t)
-      }
-  }
+      case TmFalse =>
+        TyBool
+      case TmIf(t1, t2, t3) =>
+        if (subtype(ctx, typeof(ctx, t1), TyBool)) {
+          join(ctx, typeof(ctx, t2), typeof(ctx, t3))
+        } else {
+          throw new Exception("guard of conditional " + t + " is not a boolean")
+        }
+      case TmLet(x, t1, t2) =>
+        val tyT1 = typeof(ctx, t1)
+        val ctx1 = ctx.addBinding(x, VarBind(tyT1))
+        typeShift(-1, typeof(ctx1, t2))
+      case TmRecord(fields) =>
+        val fieldTys = fields.map { case (li, ti) => (li, typeof(ctx, ti)) }
+        TyRecord(fieldTys)
+      case TmProj(t1, l) =>
+        simplifyTy(ctx, typeof(ctx, t1)) match {
+          case TyRecord(fieldTys) =>
+            fieldTys find { _._1 == l } match {
+              case Some((_, tyi)) => tyi
+              case None           => throw new Exception("Label " + l + " not found in " + t)
+            }
+          case _ => throw new Exception("Expected record type for " + t1)
+        }
+      case TmCase(t, cases) =>
+        simplifyTy(ctx, typeof(ctx, t)) match {
+          case TyVariant(fieldTys) =>
+            cases.foreach {
+              case (l, _, _) =>
+                fieldTys.find(_._1 == l) match {
+                  case Some(_) =>
+                  case None    => throw new Exception("label" + l + " is not in type")
+                }
+            }
+            val casetypes = cases map {
+              case (li, xi, ti) =>
+                val tyTi = fieldTys.find(_._1 == li) match {
+                  case Some(ty) => ty._2
+                  case None     => throw new Exception("label" + li + " is not found")
+                }
+                val ctx1 = ctx.addBinding(xi, VarBind(tyTi))
+                typeShift(-1, typeof(ctx1, ti))
+            }
+            casetypes.foldLeft(TyBot: Ty) { join(ctx, _, _) }
+          case TyBot => TyBot
+          case _     => throw new Exception("Expected variant type " + t)
+        }
+      case TmFix(t1) =>
+        val tyT1 = typeof(ctx, t1)
+        simplifyTy(ctx, tyT1) match {
+          case TyArr(tyT11, tyT12) =>
+            if (subtype(ctx, tyT12, tyT11))
+              tyT12
+            else
+              throw new Exception(
+                "result of body not compatible with domain " + t + " : " + tyT12 + " != " + tyT11
+              )
+          case _ =>
+            throw new Exception("arrow type expected in " + t1)
+        }
+      case TmTag(li, ti, tyT) =>
+        simplifyTy(ctx, tyT) match {
+          case TyVariant(fieldTys) =>
+            fieldTys.find { _._1 == li } match {
+              case Some((_, tyTiExpected)) =>
+                val tyTi = typeof(ctx, ti)
+                if (subtype(ctx, tyTi, tyTiExpected))
+                  tyT
+                else
+                  throw new Exception("field doesn't have expected type in " + t)
+              case None => throw new Exception("label " + li + " not found " + t)
+            }
+          case z =>
+            println(z)
+            throw new Exception("annotation is not a variant type: " + t)
+        }
+      case TmAscribe(t1, tyT) =>
+        if (subtype(ctx, typeof(ctx, t1), tyT))
+          tyT
+        else
+          throw new Exception("body of as-term doesn't have the expected type in " + t)
+      case TmString(_) =>
+        TyString
+      case TmUnit =>
+        TyUnit
+      case TmRef(t1) =>
+        TyRef(typeof(ctx, t1))
+      case TmLoc(l) =>
+        sys.error("locations are not supposed to occur in source programs!")
+      case TmDeref(t1) =>
+        simplifyTy(ctx, typeof(ctx, t1)) match {
+          case TyRef(tyT1)    => tyT1
+          case TyBot          => TyBot
+          case TySource(tyT1) => tyT1
+          case _              => sys.error("argument of ! is not a Ref")
+        }
+      case TmAssign(t1, t2) =>
+        simplifyTy(ctx, typeof(ctx, t1)) match {
+          case TyRef(tyT1) =>
+            if (subtype(ctx, typeof(ctx, t2), tyT1))
+              TyUnit
+            else
+              sys.error("arguments of := are incompatible")
+          case TySink(tyT1) =>
+            if (subtype(ctx, typeof(ctx, t2), tyT1))
+              TyUnit
+            else
+              sys.error("arguments of := are incompatible")
+          case TyBot =>
+            val _ = typeof(ctx, t2)
+            TyBot
+          case _ =>
+            sys.error("argument of ! is not a Ref")
+        }
+      case TmZero =>
+        TyNat
+      case TmSucc(t1) =>
+        if (subtype(ctx, typeof(ctx, t1), TyNat)) {
+          TyNat
+        } else {
+          throw new Exception("argument of Succ: is not a number: " + t)
+        }
+      case TmPred(t1) =>
+        if (subtype(ctx, typeof(ctx, t1), TyNat)) {
+          TyNat
+        } else {
+          throw new Exception("argument of Pred: is not a number: " + t)
+        }
+      case TmIsZero(t1) =>
+        if (subtype(ctx, typeof(ctx, t1), TyNat)) {
+          TyBool
+        } else {
+          throw new Exception("argument of IsZero: is not a number: " + t)
+        }
+    }
 }
 
 class NoRuleApplies(t: Term) extends Exception("No rule applies for term: " + t)

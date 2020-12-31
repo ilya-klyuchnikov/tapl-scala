@@ -5,12 +5,71 @@ import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 import Syntax._
 
-object FullFomSubRefParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
-  lexical.reserved ++= Seq("lambda", "Bool", "true", "false", "if", "then", "else",
-    "Nat", "String", "Unit", "Float", "unit", "case", "let", "in", "succ", "pred",
-    "as", "of", "fix", "iszero", "letrec", "_", "All", "Some", "Ref", "ref", "Source", "Sink", "Bot", "Top", "try", "with", "error")
-  lexical.delimiters ++= Seq("(", ")", ";", "/", ".", ":", "->", "=",
-    "<", ">", "{", "}", "=>", "==>", ",", "|", "*", "[", "]", "<:", "::", "!", ":=")
+object FullFomSubRefParsers
+    extends StandardTokenParsers
+    with PackratParsers
+    with ImplicitConversions {
+  lexical.reserved ++= Seq(
+    "lambda",
+    "Bool",
+    "true",
+    "false",
+    "if",
+    "then",
+    "else",
+    "Nat",
+    "String",
+    "Unit",
+    "Float",
+    "unit",
+    "case",
+    "let",
+    "in",
+    "succ",
+    "pred",
+    "as",
+    "of",
+    "fix",
+    "iszero",
+    "letrec",
+    "_",
+    "All",
+    "Some",
+    "Ref",
+    "ref",
+    "Source",
+    "Sink",
+    "Bot",
+    "Top",
+    "try",
+    "with",
+    "error",
+  )
+  lexical.delimiters ++= Seq(
+    "(",
+    ")",
+    ";",
+    "/",
+    ".",
+    ":",
+    "->",
+    "=",
+    "<",
+    ">",
+    "{",
+    "}",
+    "=>",
+    "==>",
+    ",",
+    "|",
+    "*",
+    "[",
+    "]",
+    "<:",
+    "::",
+    "!",
+    ":=",
+  )
 
   // lower-case identifier
   lazy val lcid: PackratParser[String] = ident ^? { case id if id.charAt(0).isLower => id }
@@ -23,40 +82,51 @@ object FullFomSubRefParsers extends StandardTokenParsers with PackratParsers wit
 
   lazy val topLevel: PackratParser[Res1[List[Command]]] =
     ((command <~ ";") ~ topLevel) ^^ {
-      case f ~ g => ctx: Context =>
-        val (cmd1, ctx1) = f(ctx)
-        val (cmds, ctx2) = g(ctx1)
-        (cmd1 :: cmds, ctx2)
-    } | success{ctx: Context => (List(), ctx)}
+      case f ~ g =>
+        ctx: Context =>
+          val (cmd1, ctx1) = f(ctx)
+          val (cmds, ctx2) = g(ctx1)
+          (cmd1 :: cmds, ctx2)
+    } | success { ctx: Context => (List(), ctx) }
 
   lazy val command: PackratParser[Res1[Command]] =
     lcid ~ binder ^^ { case id ~ bind => ctx: Context => (Bind(id, bind(ctx)), ctx.addName(id)) } |
-      ucid ~ tyBinder ^^ { case id ~ bind => ctx: Context => (Bind(id, bind(ctx)), ctx.addName(id)) } |
-      term ^^ { t => ctx: Context => val t1 = t(ctx); (Eval(t1), ctx) } |
-      ("{" ~> ucid <~ ",") ~ (lcid <~ "}") ~ ("=" ~> term) ^^ { case i1 ~ i2 ~ t => ctx: Context => (SomeBind(i1, i2, t(ctx)), ctx.addName(i1).addName(i2)) }
+      ucid ~ tyBinder ^^ {
+        case id ~ bind => ctx: Context => (Bind(id, bind(ctx)), ctx.addName(id))
+      } |
+      term ^^ { t => ctx: Context =>
+        val t1 = t(ctx); (Eval(t1), ctx)
+      } |
+      ("{" ~> ucid <~ ",") ~ (lcid <~ "}") ~ ("=" ~> term) ^^ {
+        case i1 ~ i2 ~ t => ctx: Context => (SomeBind(i1, i2, t(ctx)), ctx.addName(i1).addName(i2))
+      }
 
   lazy val binder: Parser[Context => Binding] =
     ":" ~> `type` ^^ { t => ctx: Context => VarBind(t(ctx)) } |
       "=" ~> term ^^ { t => ctx: Context => TmAbbBind(t(ctx), None) }
 
-  def addBinders(tyT: Ty, l: List[(String, Kind)]): Ty = l match {
-    case Nil              => tyT
-    case (tyX, k) :: rest => TyAbs(tyX, k, addBinders(tyT, rest))
-  }
+  def addBinders(tyT: Ty, l: List[(String, Kind)]): Ty =
+    l match {
+      case Nil              => tyT
+      case (tyX, k) :: rest => TyAbs(tyX, k, addBinders(tyT, rest))
+    }
 
-  lazy val tyAbbArgs: PackratParser[(List[(String, Kind)], Context) => (List[(String, Kind)], Context)] =
+  lazy val tyAbbArgs
+      : PackratParser[(List[(String, Kind)], Context) => (List[(String, Kind)], Context)] =
     success({ (b: List[(String, Kind)], ctx: Context) => (b, ctx) }) |
       ucid ~ oKind ~ tyAbbArgs ^^ {
-        case id ~ k ~ args => (b: List[(String, Kind)], ctx: Context) =>
-          val ctx1 = ctx.addName(id)
-          args(b :+ (id, k(ctx)), ctx1)
+        case id ~ k ~ args =>
+          (b: List[(String, Kind)], ctx: Context) =>
+            val ctx1 = ctx.addName(id)
+            args(b :+ (id, k(ctx)), ctx1)
       }
 
   lazy val tyBinder: Parser[Context => Binding] =
     tyAbbArgs ~ ("=" ~> `type`) ^^ {
-      case args ~ ty => ctx: Context =>
-        val (b, ctx1) = args(Nil, ctx)
-        TyAbbBind(addBinders(ty(ctx1), b), None)
+      case args ~ ty =>
+        ctx: Context =>
+          val (b, ctx1) = args(Nil, ctx)
+          TyAbbBind(addBinders(ty(ctx1), b), None)
     } | "::" ~> kind ^^ { k => ctx: Context => TyVarBind(makeTop(k(ctx))) } |
       ("<:" ~> `type`) ^^ { ty => ctx: Context => TyVarBind(ty(ctx)) } |
       success({ ctx: Context => TyVarBind(TyTop) })
@@ -78,16 +148,24 @@ object FullFomSubRefParsers extends StandardTokenParsers with PackratParsers wit
   // TYPES
   lazy val `type`: PackratParser[Res[Ty]] =
     arrowType |
-      ("All" ~> ucid) ~ oType ~ ("." ~> `type`) ^^ { case id ~ ty1 ~ ty2 => ctx: Context => TyAll(id, ty1(ctx), ty2(ctx.addName(id))) } |
-      ("lambda" ~> ucid) ~ oKind ~ ("." ~> `type`) ^^ { case id ~ k ~ ty => ctx: Context => TyAbs(id, k(ctx), ty(ctx.addName(id))) } |
+      ("All" ~> ucid) ~ oType ~ ("." ~> `type`) ^^ {
+        case id ~ ty1 ~ ty2 => ctx: Context => TyAll(id, ty1(ctx), ty2(ctx.addName(id)))
+      } |
+      ("lambda" ~> ucid) ~ oKind ~ ("." ~> `type`) ^^ {
+        case id ~ k ~ ty => ctx: Context => TyAbs(id, k(ctx), ty(ctx.addName(id)))
+      } |
       "Ref" ~> aType ^^ { ty => ctx: Context => TyRef(ty(ctx)) } |
       "Source" ~> aType ^^ { ty => ctx: Context => TySource(ty(ctx)) } |
       "Sink" ~> aType ^^ { ty => ctx: Context => TySink(ty(ctx)) }
   lazy val oType: PackratParser[Res[Ty]] =
-    ("<:" ~> `type`) | ("::" ~> kind) ^^ {k => ctx: Context => makeTop(k(ctx))} | success({ ctx: Context => TyTop }) 
+    ("<:" ~> `type`) | ("::" ~> kind) ^^ { k => ctx: Context => makeTop(k(ctx)) } | success({
+      ctx: Context => TyTop
+    })
   lazy val aType: PackratParser[Res[Ty]] =
     "(" ~> `type` <~ ")" |
-      ucid ^^ { tn => ctx: Context => if (ctx.isNameBound(tn)) TyVar(ctx.name2index(tn), ctx.length) else TyId(tn) } |
+      ucid ^^ { tn => ctx: Context =>
+        if (ctx.isNameBound(tn)) TyVar(ctx.name2index(tn), ctx.length) else TyId(tn)
+      } |
       "Bool" ^^ { _ => ctx: Context => TyBool } |
       "Top" ^^ { _ => ctx: Context => TyTop } |
       "Bot" ^^ { _ => ctx: Context => TyBot } |
@@ -96,10 +174,14 @@ object FullFomSubRefParsers extends StandardTokenParsers with PackratParsers wit
       "String" ^^ { _ => ctx: Context => TyString } |
       "Unit" ^^ { _ => ctx: Context => TyUnit } |
       "Nat" ^^ { _ => ctx: Context => TyNat } |
-      (("{" ~ "Some") ~> ucid) ~ oType ~ ("," ~> `type` <~ "}") ^^ { case id ~ ty1 ~ ty2 => ctx: Context => TySome(id, ty1(ctx), ty2(ctx.addName(id))) }
+      (("{" ~ "Some") ~> ucid) ~ oType ~ ("," ~> `type` <~ "}") ^^ {
+        case id ~ ty1 ~ ty2 => ctx: Context => TySome(id, ty1(ctx), ty2(ctx.addName(id)))
+      }
 
   lazy val fieldTypes: PackratParser[Res[List[(String, Ty)]]] =
-    repsep(fieldType, ",") ^^ { fs => ctx: Context => fs.zipWithIndex.map { case (ft, i) => ft(ctx, i + 1) } }
+    repsep(fieldType, ",") ^^ { fs => ctx: Context =>
+      fs.zipWithIndex.map { case (ft, i) => ft(ctx, i + 1) }
+    }
 
   lazy val fieldType: PackratParser[(Context, Int) => (String, Ty)] =
     lcid ~ (":" ~> `type`) ^^ { case id ~ ty => (ctx: Context, i: Int) => (id, ty(ctx)) } |
@@ -115,23 +197,44 @@ object FullFomSubRefParsers extends StandardTokenParsers with PackratParsers wit
 
   // TERMS
   lazy val term: PackratParser[Res[Term]] =
-      ("lambda" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => ctx: Context => TmAbs(v, ty(ctx), t(ctx.addName(v))) } |
-      ("lambda" ~ "_") ~> (":" ~> `type`) ~ ("." ~> term) ^^ { case ty ~ t => ctx: Context => TmAbs("_", ty(ctx), t(ctx.addName("_"))) } |
-      ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ { case t1 ~ t2 ~ t3 => ctx: Context => TmIf(t1(ctx), t2(ctx), t3(ctx)) } |
-      ("let" ~> lcid) ~ ("=" ~> term) ~ ("in" ~> term) ^^ { case id ~ t1 ~ t2 => ctx: Context => TmLet(id, t1(ctx), t2(ctx.addName(id))) } |
-      ("let" ~ "_") ~> ("=" ~> term) ~ ("in" ~> term) ^^ { case t1 ~ t2 => ctx: Context => TmLet("_", t1(ctx), t2(ctx.addName("_"))) } |
-      {
-        ("letrec" ~> lcid) ~ (":" ~> `type`) ~ ("=" ~> term) ~ ("in" ~> term) ^^
-          { case id ~ ty ~ t1 ~ t2 => ctx: Context => TmLet(id, TmFix(TmAbs(id, ty(ctx), t1(ctx.addName(id)))), t2(ctx.addName(id))) }
+    ("lambda" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ {
+      case v ~ ty ~ t => ctx: Context => TmAbs(v, ty(ctx), t(ctx.addName(v)))
+    } |
+      ("lambda" ~ "_") ~> (":" ~> `type`) ~ ("." ~> term) ^^ {
+        case ty ~ t => ctx: Context => TmAbs("_", ty(ctx), t(ctx.addName("_")))
       } |
-      ("case" ~> term) ~ ("of" ~> cases) ^^ { case t ~ cs => ctx: Context => TmCase(t(ctx), cs(ctx)) } |
-      (appTerm <~ ":=") ~ appTerm ^^ { case t1 ~ t2 => ctx: Context => TmAssign(t1(ctx), t2(ctx)) } |
-      ("try" ~> term) ~ ("with" ~> term) ^^ { case t1 ~ t2 => ctx: Context => TmTry(t1(ctx), t2(ctx)) } |
-      {
-        (("let" ~ "{") ~> ucid) ~ ("," ~> lcid <~ "}") ~ ("=" ~> term) ~ ("in" ~> term) ^^
-          { case id1 ~ id2 ~ t1 ~ t2 => ctx: Context => TmUnPack(id1, id2, t1(ctx), t2(ctx.addName(id1).addName(id2))) }
+      ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ {
+        case t1 ~ t2 ~ t3 => ctx: Context => TmIf(t1(ctx), t2(ctx), t3(ctx))
       } |
-      ("lambda" ~> ucid) ~ oType ~ ("." ~> term) ^^ { case id ~ k ~ t => ctx: Context => TmTAbs(id, k(ctx), t(ctx.addName(id))) } |
+      ("let" ~> lcid) ~ ("=" ~> term) ~ ("in" ~> term) ^^ {
+        case id ~ t1 ~ t2 => ctx: Context => TmLet(id, t1(ctx), t2(ctx.addName(id)))
+      } |
+      ("let" ~ "_") ~> ("=" ~> term) ~ ("in" ~> term) ^^ {
+        case t1 ~ t2 => ctx: Context => TmLet("_", t1(ctx), t2(ctx.addName("_")))
+      } | {
+      ("letrec" ~> lcid) ~ (":" ~> `type`) ~ ("=" ~> term) ~ ("in" ~> term) ^^ {
+        case id ~ ty ~ t1 ~ t2 =>
+          ctx: Context =>
+            TmLet(id, TmFix(TmAbs(id, ty(ctx), t1(ctx.addName(id)))), t2(ctx.addName(id)))
+      }
+    } |
+      ("case" ~> term) ~ ("of" ~> cases) ^^ {
+        case t ~ cs => ctx: Context => TmCase(t(ctx), cs(ctx))
+      } |
+      (appTerm <~ ":=") ~ appTerm ^^ {
+        case t1 ~ t2 => ctx: Context => TmAssign(t1(ctx), t2(ctx))
+      } |
+      ("try" ~> term) ~ ("with" ~> term) ^^ {
+        case t1 ~ t2 => ctx: Context => TmTry(t1(ctx), t2(ctx))
+      } | {
+      (("let" ~ "{") ~> ucid) ~ ("," ~> lcid <~ "}") ~ ("=" ~> term) ~ ("in" ~> term) ^^ {
+        case id1 ~ id2 ~ t1 ~ t2 =>
+          ctx: Context => TmUnPack(id1, id2, t1(ctx), t2(ctx.addName(id1).addName(id2)))
+      }
+    } |
+      ("lambda" ~> ucid) ~ oType ~ ("." ~> term) ^^ {
+        case id ~ k ~ t => ctx: Context => TmTAbs(id, k(ctx), t(ctx.addName(id)))
+      } |
       appTerm
 
   lazy val appTerm: PackratParser[Res[Term]] =
@@ -142,7 +245,9 @@ object FullFomSubRefParsers extends StandardTokenParsers with PackratParsers wit
       "succ" ~> pathTerm ^^ { t => ctx: Context => TmSucc(t(ctx)) } |
       "pred" ~> pathTerm ^^ { t => ctx: Context => TmPred(t(ctx)) } |
       "iszero" ~> pathTerm ^^ { t => ctx: Context => TmIsZero(t(ctx)) } |
-      (appTerm <~ "[") ~ (`type` <~ "]") ^^ { case t ~ ty => ctx: Context => TmTApp(t(ctx), ty(ctx)) } |
+      (appTerm <~ "[") ~ (`type` <~ "]") ^^ {
+        case t ~ ty => ctx: Context => TmTApp(t(ctx), ty(ctx))
+      } |
       pathTerm
 
   lazy val ascribeTerm: PackratParser[Res[Term]] =
@@ -155,7 +260,9 @@ object FullFomSubRefParsers extends StandardTokenParsers with PackratParsers wit
       ascribeTerm
 
   lazy val termSeq: PackratParser[Res[Term]] =
-    term ~ (";" ~> termSeq) ^^ { case t ~ ts => ctx: Context => TmApp(TmAbs("_", TyUnit, ts(ctx.addName("_"))), t(ctx)) } |
+    term ~ (";" ~> termSeq) ^^ {
+      case t ~ ts => ctx: Context => TmApp(TmAbs("_", TyUnit, ts(ctx.addName("_"))), t(ctx))
+    } |
       term
 
   lazy val aTerm: PackratParser[Res[Term]] =
@@ -164,33 +271,43 @@ object FullFomSubRefParsers extends StandardTokenParsers with PackratParsers wit
       "true" ^^ { _ => ctx: Context => TmTrue } |
       "false" ^^ { _ => ctx: Context => TmFalse } |
       "{" ~> fields <~ "}" ^^ { fs => ctx: Context => TmRecord(fs(ctx)) } |
-      ("<" ~> lcid) ~ ("=" ~> term <~ ">") ~ ("as" ~> `type`) ^^ { case l ~ t ~ ty => ctx: Context => TmTag(l, t(ctx), ty(ctx)) } |
+      ("<" ~> lcid) ~ ("=" ~> term <~ ">") ~ ("as" ~> `type`) ^^ {
+        case l ~ t ~ ty => ctx: Context => TmTag(l, t(ctx), ty(ctx))
+      } |
       stringLit ^^ { l => ctx: Context => TmString(l) } |
       "unit" ^^ { _ => ctx: Context => TmUnit } |
       "error" ^^ { _ => ctx: Context => TmError } |
       numericLit ^^ { x => ctx: Context => num(x.toInt) } |
-      (("{" ~ "*") ~> `type`) ~ ("," ~> term <~ "}") ~ ("as" ~> `type`) ^^ { case ty1 ~ t ~ ty2 => ctx: Context => TmPack(ty1(ctx), t(ctx), ty2(ctx)) }
+      (("{" ~ "*") ~> `type`) ~ ("," ~> term <~ "}") ~ ("as" ~> `type`) ^^ {
+        case ty1 ~ t ~ ty2 => ctx: Context => TmPack(ty1(ctx), t(ctx), ty2(ctx))
+      }
 
   lazy val fields: PackratParser[Res[List[(String, Term)]]] =
-    repsep(field, ",") ^^ { fs => ctx: Context => fs.zipWithIndex.map { case (ft, i) => ft(ctx, i + 1) } }
+    repsep(field, ",") ^^ { fs => ctx: Context =>
+      fs.zipWithIndex.map { case (ft, i) => ft(ctx, i + 1) }
+    }
   lazy val field: PackratParser[(Context, Int) => (String, Term)] =
     lcid ~ ("=" ~> term) ^^ { case id ~ t => (ctx: Context, i: Int) => (id, t(ctx)) } |
       term ^^ { t => (ctx: Context, i: Int) => (i.toString, t(ctx)) }
   lazy val cases: PackratParser[Res[List[(String, String, Term)]]] =
     rep1sep(`case`, "|") ^^ { cs => ctx: Context => cs.map { c => c(ctx) } }
   lazy val `case`: PackratParser[Res[(String, String, Term)]] =
-    ("<" ~> lcid <~ "=") ~ (lcid <~ ">") ~ ("==>" ~> term) ^^ { case l1 ~ l2 ~ t => ctx: Context => (l1, l2, t(ctx.addName(l2))) }
+    ("<" ~> lcid <~ "=") ~ (lcid <~ ">") ~ ("==>" ~> term) ^^ {
+      case l1 ~ l2 ~ t => ctx: Context => (l1, l2, t(ctx.addName(l2)))
+    }
 
-  private def num(x: Int): Term = x match {
-    case 0 => TmZero
-    case _ => TmSucc(num(x - 1))
-  }
+  private def num(x: Int): Term =
+    x match {
+      case 0 => TmZero
+      case _ => TmSucc(num(x - 1))
+    }
 
   lazy val phraseTopLevel: PackratParser[Res1[List[Command]]] = phrase(topLevel)
 
-  def input(s: String): Res1[List[Command]] = phraseTopLevel(new lexical.Scanner(s)) match {
-    case t if t.successful => t.get
-    case t                 => sys.error(t.toString)
-  }
+  def input(s: String): Res1[List[Command]] =
+    phraseTopLevel(new lexical.Scanner(s)) match {
+      case t if t.successful => t.get
+      case t                 => sys.error(t.toString)
+    }
 
 }

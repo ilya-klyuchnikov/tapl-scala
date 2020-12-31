@@ -18,15 +18,18 @@ object SimpleBoolParsers extends StandardTokenParsers with PackratParsers with I
 
   lazy val topLevel: PackratParser[Res1[List[Command]]] =
     ((command <~ ";") ~ topLevel) ^^ {
-      case f ~ g => ctx: Context =>
-        val (cmd1, ctx1) = f(ctx)
-        val (cmds, ctx2) = g(ctx1)
-        (cmd1 :: cmds, ctx2)
-    } | success{ctx: Context => (List(), ctx)}
+      case f ~ g =>
+        ctx: Context =>
+          val (cmd1, ctx1) = f(ctx)
+          val (cmds, ctx2) = g(ctx1)
+          (cmd1 :: cmds, ctx2)
+    } | success { ctx: Context => (List(), ctx) }
 
   lazy val command: PackratParser[Res1[Command]] =
     lcid ~ binder ^^ { case id ~ bind => ctx: Context => (Bind(id, bind(ctx)), ctx.addName(id)) } |
-      term ^^ { t => ctx: Context => val t1 = t(ctx); (Eval(t1), ctx) }
+      term ^^ { t => ctx: Context =>
+        val t1 = t(ctx); (Eval(t1), ctx)
+      }
 
   lazy val eof: PackratParser[String] = elem("<eof>", _ == lexical.EOF) ^^ { _.chars }
   lazy val binder: Parser[Context => Binding] =
@@ -42,9 +45,15 @@ object SimpleBoolParsers extends StandardTokenParsers with PackratParsers with I
 
   lazy val term: PackratParser[Res[Term]] =
     appTerm |
-      ("\\" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => ctx: Context => TmAbs(v, ty(ctx), t(ctx.addName(v))) } |
-      ("\\" ~ "_") ~> (":" ~> `type`) ~ ("." ~> term) ^^ { case ty ~ t => ctx: Context => TmAbs("_", ty(ctx), t(ctx.addName("_"))) } |
-      ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ { case t1 ~ t2 ~ t3 => ctx: Context => TmIf(t1(ctx), t2(ctx), t3(ctx)) }
+      ("\\" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ {
+        case v ~ ty ~ t => ctx: Context => TmAbs(v, ty(ctx), t(ctx.addName(v)))
+      } |
+      ("\\" ~ "_") ~> (":" ~> `type`) ~ ("." ~> term) ^^ {
+        case ty ~ t => ctx: Context => TmAbs("_", ty(ctx), t(ctx.addName("_")))
+      } |
+      ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ {
+        case t1 ~ t2 ~ t3 => ctx: Context => TmIf(t1(ctx), t2(ctx), t3(ctx))
+      }
 
   lazy val appTerm: PackratParser[Res[Term]] =
     (appTerm ~ aTerm) ^^ { case t1 ~ t2 => ctx: Context => TmApp(t1(ctx), t2(ctx)) } |
@@ -62,13 +71,15 @@ object SimpleBoolParsers extends StandardTokenParsers with PackratParsers with I
   lazy val phraseTopLevel: PackratParser[Res1[List[Command]]] =
     phrase(topLevel)
 
-  def inputTerm(s: String): Res[Term] = phraseTerm(new lexical.Scanner(s)) match {
-    case t if t.successful => t.get
-    case t                 => sys.error(t.toString)
-  }
+  def inputTerm(s: String): Res[Term] =
+    phraseTerm(new lexical.Scanner(s)) match {
+      case t if t.successful => t.get
+      case t                 => sys.error(t.toString)
+    }
 
-  def input(s: String): Res1[List[Command]] = phraseTopLevel(new lexical.Scanner(s)) match {
-    case t if t.successful => t.get
-    case t                 => sys.error(t.toString)
-  }
+  def input(s: String): Res1[List[Command]] =
+    phraseTopLevel(new lexical.Scanner(s)) match {
+      case t if t.successful => t.get
+      case t                 => sys.error(t.toString)
+    }
 }

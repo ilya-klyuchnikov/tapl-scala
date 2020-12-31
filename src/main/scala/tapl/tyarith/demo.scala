@@ -14,21 +14,22 @@ object TyArithDemo extends util.Demo[Unit, Command] {
   override def parseInput(s: String): List[Command] =
     ArithParsers.input(s)
 
-  def processCommand(ctx: Unit, cmd: Command): Unit = cmd match {
-    case Eval(t1) =>
-      val ty1 = Typer.typeof(t1)
-      val doc1 = g2(ptmATerm(true, t1) :: ":" :/: ptyTy(ty1) :: ";")
+  def processCommand(ctx: Unit, cmd: Command): Unit =
+    cmd match {
+      case Eval(t1) =>
+        val ty1 = Typer.typeof(t1)
+        val doc1 = g2(ptmATerm(true, t1) :: ":" :/: ptyTy(ty1) :: ";")
 
-      val t2 = eval(t1)
-      val ty2 = Typer.typeof(t2)
-      val doc2 = g2(ptmATerm(true, t2) :: ":" :/: ptyTy(ty2) :: ";")
+        val t2 = eval(t1)
+        val ty2 = Typer.typeof(t2)
+        val doc2 = g2(ptmATerm(true, t2) :: ":" :/: ptyTy(ty2) :: ";")
 
-      println("====================")
-      println(print(doc1, width))
-      println("""||""")
-      println("""\/""")
-      println(print(doc2, width))
+        println("====================")
+        println(print(doc1, width))
+        println("""||""")
+        println("""\/""")
+        println(print(doc2, width))
 
-  }
+    }
 
 }
