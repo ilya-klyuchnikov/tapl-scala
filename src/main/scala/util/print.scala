@@ -1,14 +1,15 @@
 package util
 
 import java.io.StringWriter
-
 import scala.language.implicitConversions
 import Document._
 
+import scala.annotation.tailrec
+
 object Print {
   implicit def text2doc(s: String): Document = text(s)
-  def g0(doc: Document) = group(doc)
-  def g2(doc: Document) = group(nest(2, doc))
+  def g0(doc: Document): Document = group(doc)
+  def g2(doc: Document): Document = group(nest(2, doc))
 
   def print(d: Document, w: Int = 90): String = {
     val sw = new StringWriter()
@@ -26,14 +27,9 @@ case class DocGroup(doc: Document) extends Document
 case class DocNest(indent: Int, doc: Document) extends Document
 case class DocCons(hd: Document, tl: Document) extends Document
 
-/**
-  * A basic pretty-printing library, based on Lindig's strict version
-  * of Wadler's adaptation of Hughes' pretty-printer.
-  *
-  * @author Michel Schinz
-  * @version 1.0
+/** scala.text https://www.scala-lang.org/api/2.12.12/scala/text/index.html
   */
-abstract class Document {
+sealed abstract class Document {
   def ::(hd: Document): Document = DocCons(hd, this)
   def ::(hd: String): Document = DocCons(DocText(hd), this)
   def :/:(hd: Document): Document = hd :: DocBreak :: this
@@ -46,11 +42,12 @@ abstract class Document {
   def format(width: Int, writer: Writer): Unit = {
     type FmtState = (Int, Boolean, Document)
 
+    @tailrec
     def fits(w: Int, state: List[FmtState]): Boolean =
       state match {
         case _ if w < 0 =>
           false
-        case List() =>
+        case Nil =>
           true
         case (_, _, DocNil) :: z =>
           fits(w, z)
@@ -77,6 +74,7 @@ abstract class Document {
       if (rem == 1) { writer write " " }
     }
 
+    @tailrec
     def fmt(k: Int, state: List[FmtState]): Unit =
       state match {
         case List() => ()
@@ -110,10 +108,10 @@ abstract class Document {
 object Document {
 
   /** The empty document */
-  def empty = DocNil
+  def empty: Document = DocNil
 
   /** A break, which will either be turned into a space or a line break */
-  def break = DocBreak
+  def break: Document = DocBreak
 
   /** A document consisting of some text literal */
   def text(s: String): Document = DocText(s)
