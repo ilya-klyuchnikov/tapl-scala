@@ -1,5 +1,7 @@
 package tapl.fullsimple
 
+import util.Range
+
 sealed trait Ty
 case class TyVar(i: Int, cl: Int) extends Ty
 case class TyId(id: String) extends Ty
@@ -11,26 +13,26 @@ case object TyBool extends Ty
 case object TyString extends Ty
 case object TyNat extends Ty
 
-sealed trait Term
-case object TmTrue extends Term
-case object TmFalse extends Term
-case class TmIf(cond: Term, t1: Term, t2: Term) extends Term
-case class TmCase(sel: Term, branches: List[(String, String, Term)]) extends Term
-case class TmTag(tag: String, t: Term, ty: Ty) extends Term
-case class TmVar(i: Int, cl: Int) extends Term
-case class TmAbs(v: String, ty: Ty, t: Term) extends Term
-case class TmApp(t1: Term, t2: Term) extends Term
-case class TmLet(l: String, t1: Term, t2: Term) extends Term
-case class TmFix(t: Term) extends Term
-case class TmString(s: String) extends Term
-case object TmUnit extends Term
-case class TmAscribe(t: Term, ty: Ty) extends Term
-case class TmRecord(fields: List[(String, Term)]) extends Term
-case class TmProj(t: Term, proj: String) extends Term
-case object TmZero extends Term
-case class TmSucc(t: Term) extends Term
-case class TmPred(t: Term) extends Term
-case class TmIsZero(t: Term) extends Term
+sealed trait Term { val r: Range }
+case class TmTrue()(val r: Range) extends Term
+case class TmFalse()(val r: Range) extends Term
+case class TmIf(cond: Term, t1: Term, t2: Term)(val r: Range) extends Term
+case class TmCase(sel: Term, branches: List[(String, String, Term)])(val r: Range) extends Term
+case class TmTag(tag: String, t: Term, ty: Ty)(val r: Range) extends Term
+case class TmVar(i: Int, cl: Int)(val r: Range) extends Term
+case class TmAbs(v: String, ty: Ty, t: Term)(val r: Range) extends Term
+case class TmApp(t1: Term, t2: Term)(val r: Range) extends Term
+case class TmLet(l: String, t1: Term, t2: Term)(val r: Range) extends Term
+case class TmFix(t: Term)(val r: Range) extends Term
+case class TmString(s: String)(val r: Range) extends Term
+case class TmUnit()(val r: Range) extends Term
+case class TmAscribe(t: Term, ty: Ty)(val r: Range) extends Term
+case class TmRecord(fields: List[(String, Term)])(val r: Range) extends Term
+case class TmProj(t: Term, proj: String)(val r: Range) extends Term
+case class TmZero()(val r: Range) extends Term
+case class TmSucc(t: Term)(val r: Range) extends Term
+case class TmPred(t: Term)(val r: Range) extends Term
+case class TmIsZero(t: Term)(val r: Range) extends Term
 
 sealed trait Binding
 case object NameBind extends Binding
@@ -102,25 +104,25 @@ object Syntax {
     def walk(c: Int, t: Term): Term =
       t match {
         case v: TmVar            => onVar(c, v)
-        case TmAbs(x, ty1, t2)   => TmAbs(x, onType(c, ty1), walk(c + 1, t2))
-        case TmApp(t1, t2)       => TmApp(walk(c, t1), walk(c, t2))
-        case TmLet(x, t1, t2)    => TmLet(x, walk(c, t1), walk(c + 1, t2))
-        case TmFix(t1)           => TmFix(walk(c, t1))
-        case TmTrue              => TmTrue
-        case TmFalse             => TmFalse
-        case TmIf(t1, t2, t3)    => TmIf(walk(c, t1), walk(c, t2), walk(c, t3))
+        case TmAbs(x, ty1, t2)   => TmAbs(x, onType(c, ty1), walk(c + 1, t2))(t.r)
+        case TmApp(t1, t2)       => TmApp(walk(c, t1), walk(c, t2))(t.r)
+        case TmLet(x, t1, t2)    => TmLet(x, walk(c, t1), walk(c + 1, t2))(t.r)
+        case TmFix(t1)           => TmFix(walk(c, t1))(t.r)
+        case t: TmTrue           => t
+        case t: TmFalse          => t
+        case TmIf(t1, t2, t3)    => TmIf(walk(c, t1), walk(c, t2), walk(c, t3))(t.r)
         case t: TmString         => t
-        case TmUnit              => TmUnit
-        case TmProj(t1, l)       => TmProj(walk(c, t1), l)
-        case TmRecord(fields)    => TmRecord(fields.map { case (l, t) => (l, walk(c, t)) })
-        case TmAscribe(t1, tyT1) => TmAscribe(walk(c, t1), onType(c, tyT1))
-        case TmZero              => TmZero
-        case TmSucc(t1)          => TmSucc(walk(c, t1))
-        case TmPred(t1)          => TmPred(walk(c, t1))
-        case TmIsZero(t1)        => TmIsZero(walk(c, t1))
-        case TmTag(lbl, t1, tyT) => TmTag(lbl, walk(c, t1), onType(c, tyT))
+        case t: TmUnit           => t
+        case TmProj(t1, l)       => TmProj(walk(c, t1), l)(t.r)
+        case TmRecord(fields)    => TmRecord(fields.map { case (l, t) => (l, walk(c, t)) })(t.r)
+        case TmAscribe(t1, tyT1) => TmAscribe(walk(c, t1), onType(c, tyT1))(t.r)
+        case t: TmZero           => t
+        case TmSucc(t1)          => TmSucc(walk(c, t1))(t.r)
+        case TmPred(t1)          => TmPred(walk(c, t1))(t.r)
+        case TmIsZero(t1)        => TmIsZero(walk(c, t1))(t.r)
+        case TmTag(lbl, t1, tyT) => TmTag(lbl, walk(c, t1), onType(c, tyT))(t.r)
         case TmCase(t, cases) =>
-          TmCase(walk(c, t), cases.map { case (li, xi, ti) => (li, xi, walk(c + 1, ti)) })
+          TmCase(walk(c, t), cases.map { case (li, xi, ti) => (li, xi, walk(c + 1, ti)) })(t.r)
       }
     walk(c, t)
   }
@@ -134,7 +136,7 @@ object Syntax {
 
   private def termShiftAbove(d: Int, c: Int, t: Term): Term = {
     val f = { (c: Int, v: TmVar) =>
-      if (v.i >= c) TmVar(v.i + d, v.cl + d) else TmVar(v.i, v.cl + d)
+      if (v.i >= c) TmVar(v.i + d, v.cl + d)(v.r) else TmVar(v.i, v.cl + d)(v.r)
     }
     tmMap(f, typeShiftAbove(d, _, _), c, t)
   }
@@ -321,9 +323,9 @@ object PrettyPrinter {
 
   def ptmATerm(outer: Boolean, ctx: Context, t: Term): Document =
     t match {
-      case TmTrue =>
+      case TmTrue() =>
         "true"
-      case TmFalse =>
+      case TmFalse() =>
         "false"
       case TmTag(l, t, ty) =>
         g2(
@@ -338,7 +340,7 @@ object PrettyPrinter {
         else text("[bad index: " + x + "/" + n + " in {" + ctx.l.mkString(", ") + "}]")
       case TmString(s) =>
         "\"" :: s :: "\""
-      case TmUnit =>
+      case TmUnit() =>
         "unit"
       case TmRecord(fields) =>
         def pf(i: Int, li: String, t: Term): Document =
@@ -351,12 +353,12 @@ object PrettyPrinter {
           .map { case ((li, tyTi), i) => pf(i + 1, li, tyTi) }
           .reduceLeftOption(_ :: "," :/: _)
           .getOrElse(empty) :: "}"
-      case TmZero =>
+      case TmZero() =>
         "0"
       case TmSucc(t1) =>
         def pf(i: Int, t: Term): Document =
           t match {
-            case TmZero =>
+            case TmZero() =>
               i.toString()
             case TmSucc(s) =>
               pf(i + 1, s)

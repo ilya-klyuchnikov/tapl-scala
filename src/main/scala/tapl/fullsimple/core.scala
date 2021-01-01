@@ -4,18 +4,18 @@ object Util {
 
   def isNumericVal(ctx: Context, t: Term): Boolean =
     t match {
-      case TmZero     => true
+      case TmZero()   => true
       case TmSucc(t1) => isNumericVal(ctx, t1)
       case _          => false
     }
 
   def isVal(ctx: Context, t: Term): Boolean =
     t match {
-      case TmTrue                      => true
-      case TmFalse                     => true
+      case TmTrue()                    => true
+      case TmFalse()                   => true
       case TmTag(_, t1, _)             => isVal(ctx, t1)
       case TmString(_)                 => true
-      case TmUnit                      => true
+      case TmUnit()                    => true
       case t1 if isNumericVal(ctx, t1) => true
       case TmAbs(_, _, _)              => true
       case TmRecord(fields)            => fields.forall { case (_, ti) => isVal(ctx, ti) }
@@ -29,41 +29,41 @@ object Evaluator {
 
   private def eval1(ctx: Context, t: Term): Term =
     t match {
-      case TmIf(TmTrue, t2, t3) =>
+      case TmIf(TmTrue(), t2, t3) =>
         t2
-      case TmIf(TmFalse, t2, t3) =>
+      case TmIf(TmFalse(), t2, t3) =>
         t3
       case TmIf(t1, t2, t3) =>
         val t11 = eval1(ctx, t1)
-        TmIf(t11, t2, t3)
+        TmIf(t11, t2, t3)(t.r)
       case TmTag(l, t1, tyT) =>
-        TmTag(l, eval1(ctx, t1), tyT)
+        TmTag(l, eval1(ctx, t1), tyT)(t.r)
       case TmCase(TmTag(li, v11, _), bs) if isVal(ctx, v11) =>
         bs find { _._1 == li } match {
           case Some((_, x, body)) => termSubstTop(v11, body)
           case None               => throw new NoRuleApplies(t)
         }
       case TmCase(t1, bs) =>
-        TmCase(eval1(ctx, t1), bs)
+        TmCase(eval1(ctx, t1), bs)(t.r)
       case TmApp(TmAbs(x, ty, t), v2) if isVal(ctx, v2) =>
         termSubstTop(v2, t)
       case TmApp(v1, t2) if isVal(ctx, v1) =>
         val t21 = eval1(ctx, t2)
-        TmApp(v1, t21)
+        TmApp(v1, t21)(t.r)
       case TmApp(t1, t2) =>
         val t11 = eval1(ctx, t1)
-        TmApp(t11, t2)
+        TmApp(t11, t2)(t.r)
       case TmLet(x, v1, t2) if isVal(ctx, v1) =>
         termSubstTop(v1, t2)
       case TmLet(x, v1, t2) =>
-        TmLet(x, eval(ctx, v1), t2)
+        TmLet(x, eval(ctx, v1), t2)(t.r)
       case t @ TmFix(v1) if isVal(ctx, v1) =>
         v1 match {
           case TmAbs(_, _, t12) => termSubstTop(t, t12)
           case _                => throw new NoRuleApplies(t)
         }
       case TmFix(t1) =>
-        TmFix(eval1(ctx, t1))
+        TmFix(eval1(ctx, t1))(t.r)
       case TmVar(n, _) =>
         ctx.getBinding(n) match {
           case TmAbbBind(t1, _) => t1
@@ -72,7 +72,7 @@ object Evaluator {
       case TmAscribe(v1, tyT) if isVal(ctx, v1) =>
         v1
       case TmAscribe(t1, tyT) =>
-        TmAscribe(eval1(ctx, t1), tyT)
+        TmAscribe(eval1(ctx, t1), tyT)(t.r)
       case TmRecord(fields) =>
         def evalAField(l: List[(String, Term)]): List[(String, Term)] =
           l match {
@@ -80,31 +80,31 @@ object Evaluator {
             case (l, v1) :: rest if isVal(ctx, v1) => (l, v1) :: evalAField(rest)
             case (l, t1) :: rest                   => (l, eval1(ctx, t1)) :: rest
           }
-        TmRecord(evalAField(fields))
+        TmRecord(evalAField(fields))(t.r)
       case TmProj(v1 @ TmRecord(fields), l) if isVal(ctx, v1) =>
         fields.find { _._1 == l } match {
           case Some((_, ti)) => ti
           case None          => throw new NoRuleApplies(t)
         }
       case TmProj(t1, l) =>
-        TmProj(eval1(ctx, t1), l)
+        TmProj(eval1(ctx, t1), l)(t.r)
       case TmSucc(t1) =>
         val t11 = eval1(ctx, t1)
-        TmSucc(t11)
-      case TmPred(TmZero) =>
-        TmZero
+        TmSucc(t11)(t.r)
+      case TmPred(TmZero()) =>
+        TmZero()(t.r)
       case TmPred(TmSucc(nv1)) if isNumericVal(ctx, nv1) =>
         nv1
       case TmPred(t1) =>
         val t2 = eval1(ctx, t1)
-        TmPred(t2)
-      case TmIsZero(TmZero) =>
-        TmTrue
+        TmPred(t2)(t.r)
+      case TmIsZero(TmZero()) =>
+        TmTrue()(t.r)
       case TmIsZero(TmSucc(nv1)) if isNumericVal(ctx, nv1) =>
-        TmFalse
+        TmFalse()(t.r)
       case TmIsZero(t1) =>
         val t2 = eval(ctx, t1)
-        TmIsZero(t2)
+        TmIsZero(t2)(t.r)
       case _ =>
         throw new NoRuleApplies(t)
     }
@@ -191,9 +191,9 @@ object Typer {
 
   def typeof(ctx: Context, t: Term): Ty =
     t match {
-      case TmTrue =>
+      case TmTrue() =>
         TyBool
-      case TmFalse =>
+      case TmFalse() =>
         TyBool
       case TmIf(t1, t2, t3) =>
         if (tyEqv(ctx, typeof(ctx, t1), TyBool)) {
@@ -287,7 +287,7 @@ object Typer {
         }
       case TmString(_) =>
         TyString
-      case TmUnit =>
+      case TmUnit() =>
         TyUnit
       case TmAscribe(t1, tyT) =>
         if (tyEqv(ctx, typeof(ctx, t1), tyT))
@@ -306,7 +306,7 @@ object Typer {
             }
           case _ => throw new Exception("Expected record type for " + t1)
         }
-      case TmZero =>
+      case TmZero() =>
         TyNat
       case TmSucc(t1) =>
         if (tyEqv(ctx, typeof(ctx, t1), TyNat)) {
