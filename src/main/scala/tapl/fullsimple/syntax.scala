@@ -38,7 +38,6 @@ sealed trait Binding
 case object NameBind extends Binding
 case object TyVarBind extends Binding
 case class VarBind(t: Ty) extends Binding
-// abbreviations
 case class TmAbbBind(t: Term, ty: Option[Ty]) extends Binding
 case class TyAbbBind(ty: Ty) extends Binding
 

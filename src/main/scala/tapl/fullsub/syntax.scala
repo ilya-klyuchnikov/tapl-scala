@@ -12,19 +12,19 @@ case object TyNat extends Ty
 case object TyTop extends Ty
 
 sealed trait Term
-case class TmVar(i: Int, cl: Int) extends Term
-case class TmAbs(v: String, ty: Ty, t: Term) extends Term
-case class TmApp(t1: Term, t2: Term) extends Term
 case object TmTrue extends Term
 case object TmFalse extends Term
 case class TmIf(cond: Term, t1: Term, t2: Term) extends Term
-case class TmRecord(fields: List[(String, Term)]) extends Term
-case class TmProj(t: Term, proj: String) extends Term
+case class TmVar(i: Int, cl: Int) extends Term
+case class TmAbs(v: String, ty: Ty, t: Term) extends Term
+case class TmApp(t1: Term, t2: Term) extends Term
 case class TmLet(l: String, t1: Term, t2: Term) extends Term
 case class TmFix(t: Term) extends Term
 case class TmString(s: String) extends Term
 case object TmUnit extends Term
 case class TmAscribe(t: Term, ty: Ty) extends Term
+case class TmRecord(fields: List[(String, Term)]) extends Term
+case class TmProj(t: Term, proj: String) extends Term
 case object TmZero extends Term
 case class TmSucc(t: Term) extends Term
 case class TmPred(t: Term) extends Term
