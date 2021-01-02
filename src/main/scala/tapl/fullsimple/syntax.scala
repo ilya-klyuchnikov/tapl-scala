@@ -75,7 +75,7 @@ case class Context(l: List[(String, Binding)] = List()) {
       case VarBind(ty)            => ty
       case TmAbbBind(_, Some(ty)) => ty
       case TmAbbBind(_, None) =>
-        throw new Exception("No type recorder for variable " + index2Name(i))
+        throw new Exception("No type recorded for variable " + index2Name(i))
       case _ => throw new Exception("Wrong kind of binding for " + index2Name(i))
     }
 }
