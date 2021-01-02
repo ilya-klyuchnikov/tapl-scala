@@ -36,15 +36,6 @@ object Evaluator {
       case TmIf(t1, t2, t3) =>
         val t11 = eval1(ctx, t1)
         TmIf(t11, t2, t3)(t.r)
-      case TmTag(l, t1, tyT) =>
-        TmTag(l, eval1(ctx, t1), tyT)(t.r)
-      case TmCase(TmTag(li, v11, _), bs) if isVal(ctx, v11) =>
-        bs find { _._1 == li } match {
-          case Some((_, x, body)) => termSubstTop(v11, body)
-          case None               => throw new NoRuleApplies(t)
-        }
-      case TmCase(t1, bs) =>
-        TmCase(eval1(ctx, t1), bs)(t.r)
       case TmApp(TmAbs(x, ty, t), v2) if isVal(ctx, v2) =>
         termSubstTop(v2, t)
       case TmApp(v1, t2) if isVal(ctx, v1) =>
@@ -105,6 +96,15 @@ object Evaluator {
       case TmIsZero(t1) =>
         val t2 = eval(ctx, t1)
         TmIsZero(t2)(t.r)
+      case TmTag(l, t1, tyT) =>
+        TmTag(l, eval1(ctx, t1), tyT)(t.r)
+      case TmCase(TmTag(li, v11, _), bs) if isVal(ctx, v11) =>
+        bs find { _._1 == li } match {
+          case Some((_, x, body)) => termSubstTop(v11, body)
+          case None               => throw new NoRuleApplies(t)
+        }
+      case TmCase(t1, bs) =>
+        TmCase(eval1(ctx, t1), bs)(t.r)
       case _ =>
         throw new NoRuleApplies(t)
     }
@@ -191,6 +191,25 @@ object Typer {
 
   def typeof(ctx: Context, t: Term): Ty =
     t match {
+      case TmVar(i, _) =>
+        ctx.getType(i)
+      case TmAbs(v, tyT1, t2) =>
+        val ctx1 = ctx.addBinding(v, VarBind(tyT1))
+        val tyT2 = typeof(ctx1, t2)
+        TyArr(tyT1, typeShift(-1, tyT2))
+      case TmApp(t1, t2) =>
+        val tyT1 = typeof(ctx, t1)
+        val tyT2 = typeof(ctx, t2)
+        simplifyTy(ctx, tyT1) match {
+          case TyArr(tyT11, tyT12) =>
+            if (tyEqv(ctx, tyT2, tyT11))
+              tyT12
+            else
+              throw new Exception("parameter mismatch in " + t + " : " + tyT2 + " != " + tyT11)
+          case z =>
+            println(z)
+            throw new Exception("arrow type expected in " + t1)
+        }
       case TmTrue() =>
         TyBool
       case TmFalse() =>
@@ -205,6 +224,64 @@ object Typer {
           }
         } else {
           throw new Exception("guard of conditional " + t + " is not a boolean")
+        }
+      case TmRecord(fields) =>
+        val fieldTys = fields.map { case (li, ti) => (li, typeof(ctx, ti)) }
+        TyRecord(fieldTys)
+      case TmProj(t1, l) =>
+        simplifyTy(ctx, typeof(ctx, t1)) match {
+          case TyRecord(fieldTys) =>
+            fieldTys find { _._1 == l } match {
+              case Some((_, tyi)) => tyi
+              case None           => throw new Exception("Label " + l + " not found in " + t)
+            }
+          case _ => throw new Exception("Expected record type for " + t1)
+        }
+      case TmLet(x, t1, t2) =>
+        val tyT1 = typeof(ctx, t1)
+        val ctx1 = ctx.addBinding(x, VarBind(tyT1))
+        typeShift(-1, typeof(ctx1, t2))
+      case TmFix(t1) =>
+        val tyT1 = typeof(ctx, t1)
+        simplifyTy(ctx, tyT1) match {
+          case TyArr(tyT11, tyT12) =>
+            if (tyEqv(ctx, tyT12, tyT11))
+              tyT12
+            else
+              throw new Exception(
+                "result of body not compatible with domain " + t + " : " + tyT12 + " != " + tyT11
+              )
+          case _ =>
+            throw new Exception("error type expected in " + t1)
+        }
+      case TmString(_) =>
+        TyString
+      case TmUnit() =>
+        TyUnit
+      case TmAscribe(t1, tyT) =>
+        if (tyEqv(ctx, typeof(ctx, t1), tyT))
+          tyT
+        else
+          throw new Exception("body of as-term doesn't have the expected type in " + t)
+      case TmZero() =>
+        TyNat
+      case TmSucc(t1) =>
+        if (tyEqv(ctx, typeof(ctx, t1), TyNat)) {
+          TyNat
+        } else {
+          throw new Exception("argument of Succ: is not a number: " + t)
+        }
+      case TmPred(t1) =>
+        if (tyEqv(ctx, typeof(ctx, t1), TyNat)) {
+          TyNat
+        } else {
+          throw new Exception("argument of Pred: is not a number: " + t)
+        }
+      case TmIsZero(t1) =>
+        if (tyEqv(ctx, typeof(ctx, t1), TyNat)) {
+          TyBool
+        } else {
+          throw new Exception("argument of IsZero: is not a number: " + t)
         }
       case TmCase(t, cases) =>
         simplifyTy(ctx, typeof(ctx, t)) match {
@@ -248,83 +325,6 @@ object Typer {
           case z =>
             println(z)
             throw new Exception("annotation is not a variant type: " + t)
-        }
-      case TmVar(i, _) =>
-        ctx.getType(i)
-      case TmAbs(v, tyT1, t2) =>
-        val ctx1 = ctx.addBinding(v, VarBind(tyT1))
-        val tyT2 = typeof(ctx1, t2)
-        TyArr(tyT1, typeShift(-1, tyT2))
-      case TmApp(t1, t2) =>
-        val tyT1 = typeof(ctx, t1)
-        val tyT2 = typeof(ctx, t2)
-        simplifyTy(ctx, tyT1) match {
-          case TyArr(tyT11, tyT12) =>
-            if (tyEqv(ctx, tyT2, tyT11))
-              tyT12
-            else
-              throw new Exception("parameter mismatch in " + t + " : " + tyT2 + " != " + tyT11)
-          case z =>
-            println(z)
-            throw new Exception("arrow type expected in " + t1)
-        }
-      case TmLet(x, t1, t2) =>
-        val tyT1 = typeof(ctx, t1)
-        val ctx1 = ctx.addBinding(x, VarBind(tyT1))
-        typeShift(-1, typeof(ctx1, t2))
-      case TmFix(t1) =>
-        val tyT1 = typeof(ctx, t1)
-        simplifyTy(ctx, tyT1) match {
-          case TyArr(tyT11, tyT12) =>
-            if (tyEqv(ctx, tyT12, tyT11))
-              tyT12
-            else
-              throw new Exception(
-                "result of body not compatible with domain " + t + " : " + tyT12 + " != " + tyT11
-              )
-          case _ =>
-            throw new Exception("error type expected in " + t1)
-        }
-      case TmString(_) =>
-        TyString
-      case TmUnit() =>
-        TyUnit
-      case TmAscribe(t1, tyT) =>
-        if (tyEqv(ctx, typeof(ctx, t1), tyT))
-          tyT
-        else
-          throw new Exception("body of as-term doesn't have the expected type in " + t)
-      case TmRecord(fields) =>
-        val fieldTys = fields.map { case (li, ti) => (li, typeof(ctx, ti)) }
-        TyRecord(fieldTys)
-      case TmProj(t1, l) =>
-        simplifyTy(ctx, typeof(ctx, t1)) match {
-          case TyRecord(fieldTys) =>
-            fieldTys find { _._1 == l } match {
-              case Some((_, tyi)) => tyi
-              case None           => throw new Exception("Label " + l + " not found in " + t)
-            }
-          case _ => throw new Exception("Expected record type for " + t1)
-        }
-      case TmZero() =>
-        TyNat
-      case TmSucc(t1) =>
-        if (tyEqv(ctx, typeof(ctx, t1), TyNat)) {
-          TyNat
-        } else {
-          throw new Exception("argument of Succ: is not a number: " + t)
-        }
-      case TmPred(t1) =>
-        if (tyEqv(ctx, typeof(ctx, t1), TyNat)) {
-          TyNat
-        } else {
-          throw new Exception("argument of Pred: is not a number: " + t)
-        }
-      case TmIsZero(t1) =>
-        if (tyEqv(ctx, typeof(ctx, t1), TyNat)) {
-          TyBool
-        } else {
-          throw new Exception("argument of IsZero: is not a number: " + t)
         }
     }
 }
