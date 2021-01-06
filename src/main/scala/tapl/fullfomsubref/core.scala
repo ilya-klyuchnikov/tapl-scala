@@ -398,10 +398,10 @@ object Typer {
             }
         }
       case (TyVariant(fS), TyVariant(fT)) =>
-        fT.forall {
-          case (li, tyTi) =>
-            fS.find { _._1 == li } match {
-              case Some((_, tySi)) => subtype(ctx, tySi, tyTi)
+        fS.forall {
+          case (li, tySi) =>
+            fT.find { _._1 == li } match {
+              case Some((_, tyTi)) => subtype(ctx, tySi, tyTi)
               case None            => false
             }
         }
