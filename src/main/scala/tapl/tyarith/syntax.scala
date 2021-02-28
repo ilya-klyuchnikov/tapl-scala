@@ -32,7 +32,6 @@ object PrettyPrinter {
     ty match {
       case TyBool => "Bool"
       case TyNat  => "Nat"
-      case ty1    => "(" ::: ptyAType(outer, ty1) ::: ")"
     }
 
   def ptyTy(ty: Ty) = ptyType(true, ty)

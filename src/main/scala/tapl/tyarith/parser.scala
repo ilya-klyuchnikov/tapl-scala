@@ -11,17 +11,17 @@ object ArithParsers extends StandardTokenParsers with ImplicitConversions {
     (command <~ ";") ~ topLevel ^^ { case c ~ cs => c :: cs } | success(List())
 
   private def command: Parser[Command] =
-    term ^^ Eval
+    term ^^ Eval.apply
 
   private def term: Parser[Term] =
     appTerm |
-      ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ TmIf
+      ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ TmIf.apply
 
   private def appTerm: Parser[Term] =
     aTerm |
-      "succ" ~> aTerm ^^ TmSucc |
-      "pred" ~> aTerm ^^ TmPred |
-      "iszero" ~> aTerm ^^ TmIsZero
+      "succ" ~> aTerm ^^ TmSucc.apply |
+      "pred" ~> aTerm ^^ TmPred.apply |
+      "iszero" ~> aTerm ^^ TmIsZero.apply
 
   //  Atomic terms are ones that never require extra parentheses
   private def aTerm: Parser[Term] =
