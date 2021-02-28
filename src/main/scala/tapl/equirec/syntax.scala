@@ -1,26 +1,32 @@
 package tapl.equirec
 
-sealed trait Ty
-case class TyId(id: String) extends Ty
-case class TyVar(i: Int, cl: Int) extends Ty
-case class TyArr(t1: Ty, t2: Ty) extends Ty
-case class TyRec(id: String, ty: Ty) extends Ty
+enum Ty {
+  case TyId(id: String)
+  case TyVar(i: Int, cl: Int)
+  case TyArr(t1: Ty, t2: Ty)
+  case TyRec(id: String, ty: Ty)
+}
 
-sealed trait Term
-case class TmVar(i: Int, cl: Int) extends Term
-case class TmAbs(v: String, ty: Ty, t: Term) extends Term
-case class TmApp(t1: Term, t2: Term) extends Term
+enum Term {
+  case TmVar(i: Int, cl: Int)
+  case TmAbs(v: String, ty: Ty, t: Term)
+  case TmApp(t1: Term, t2: Term)
+}
 
-sealed trait Binding
-case object NameBind extends Binding
-case object TyVarBind extends Binding
-case class VarBind(t: Ty) extends Binding
+enum Binding {
+  case NameBind
+  case TyVarBind
+  case VarBind(t: Ty)
+}
 
-sealed trait Command
-case class Eval(t: Term) extends Command
-case class Bind(n: String, b: Binding) extends Command
+enum Command {
+  case Eval(t: Term)
+  case Bind(n: String, b: Binding)
+}
 
 case class Context(l: List[(String, Binding)] = List()) {
+  import Binding._
+
   val length: Int = l.length
   def addBinding(s: String, bind: Binding): Context = Context((s, bind) :: l)
   def addName(s: String): Context = addBinding(s, NameBind)
@@ -53,6 +59,9 @@ case class Context(l: List[(String, Binding)] = List()) {
 }
 
 object Syntax {
+  import Binding._
+  import Term._
+  import Ty._
 
   private def tyMap(onVar: (Int, TyVar) => Ty, c: Int, ty: Ty): Ty = {
     def walk(c: Int, ty: Ty): Ty =
@@ -145,6 +154,10 @@ import util.Document._
 object PrettyPrinter {
   import scala.language.implicitConversions
   import util.Print._, util.Print.text2doc
+
+  import Binding._
+  import Term._
+  import Ty._
 
   def ptyType(outer: Boolean, ctx: Context, ty: Ty): Document =
     ty match {

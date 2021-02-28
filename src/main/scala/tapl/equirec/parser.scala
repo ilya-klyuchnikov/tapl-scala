@@ -5,6 +5,11 @@ import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 
 object EquirecParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
+  import Binding._
+  import Command._
+  import Term._
+  import Ty._
+
   lexical.reserved ++= Seq("lambda", "Rec", "_")
   lexical.delimiters ++= Seq("(", ")", ";", ".", ":", "->", "=")
 
