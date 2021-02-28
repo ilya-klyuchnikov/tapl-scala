@@ -7,6 +7,9 @@ object FullFomSubDemo extends util.Demo[Context, Command] {
   import Syntax._
   import util.Print._, util.Print.text2doc
   import PrettyPrinter._
+  import Term._
+  import Binding._
+  import Command._
 
   val width = 60
 
@@ -70,7 +73,7 @@ object FullFomSubDemo extends util.Demo[Context, Command] {
       case SomeBind(tyX, x, t1) =>
         val tyT = typeof(ctx, t1)
         lcst(ctx, tyT) match {
-          case TySome(_, tyBound, tyBody) =>
+          case Ty.TySome(_, tyBound, tyBody) =>
             val t2 = eval(ctx, t1)
             val b = t2 match {
               case TmPack(_, t12, _) => (TmAbbBind(termShift(1, t12), Some(tyBody)))

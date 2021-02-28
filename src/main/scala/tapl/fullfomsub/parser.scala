@@ -7,6 +7,12 @@ import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 import Syntax._
 
 object FullFomSubParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
+  import Binding._
+  import Command._
+  import Kind._
+  import Term._
+  import Ty._
+
   lexical.reserved ++= Seq(
     "lambda",
     "Bool",
