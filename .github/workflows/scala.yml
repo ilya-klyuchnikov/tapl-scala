@@ -13,5 +13,5 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 11
-    - name: format, test
-      run: sbt scalafmtCheckAll test
+    - name: test
+      run: sbt test
