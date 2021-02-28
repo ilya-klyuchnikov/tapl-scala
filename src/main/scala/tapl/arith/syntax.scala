@@ -10,8 +10,9 @@ enum Term {
   case TmIsZero(t: Term)
 }
 
-sealed trait Command
-case class Eval(t: Term) extends Command
+enum Command {
+  case Eval(t: Term)
+}
 
 import util.Document
 import util.Document._

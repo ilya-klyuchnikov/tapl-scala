@@ -4,6 +4,7 @@ import scala.util.parsing.combinator.ImplicitConversions
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 
 object ArithParsers extends StandardTokenParsers with ImplicitConversions {
+  import Command._
   import Term._
 
   lexical.reserved ++= Seq("true", "false", "if", "then", "else", "iszero", "succ", "pred")
