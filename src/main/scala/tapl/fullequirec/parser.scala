@@ -8,6 +8,11 @@ object FullEquirecParsers
     extends StandardTokenParsers
     with PackratParsers
     with ImplicitConversions {
+  import Binding._
+  import Command._
+  import Term._
+  import Ty._
+
   lexical.reserved ++= Seq(
     "lambda",
     "Bool",
