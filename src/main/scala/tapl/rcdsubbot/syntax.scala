@@ -104,7 +104,8 @@ import util.Document._
 
 // outer means that the term is the top-level term
 object PrettyPrinter {
-  import util.Print._
+  import scala.language.implicitConversions
+  import util.Print._, util.Print.text2doc
 
   def ptyType(outer: Boolean, ctx: Context, ty: Ty): Document =
     ty match {
@@ -114,7 +115,7 @@ object PrettyPrinter {
   def ptyArrowType(outer: Boolean, ctx: Context, tyT: Ty): Document =
     tyT match {
       case TyArr(tyT1, tyT2) =>
-        g2(ptyAType(false, ctx, tyT1) :: " ->" :/: ptyArrowType(outer, ctx, tyT2))
+        g2(ptyAType(false, ctx, tyT1) ::: " ->" :/: ptyArrowType(outer, ctx, tyT2))
       case tyT =>
         ptyAType(outer, ctx, tyT)
     }
@@ -126,20 +127,20 @@ object PrettyPrinter {
           if (i.toString() == li) {
             ptyType(false, ctx, tyTi)
           } else {
-            g0(li :: ":" :/: ptyType(false, ctx, tyTi))
+            g0(li ::: ":" :/: ptyType(false, ctx, tyTi))
           }
         g2(
-          "{" :: fields.zipWithIndex
+          "{" ::: fields.zipWithIndex
             .map { case ((li, tyTi), i) => pf(i + 1, li, tyTi) }
-            .reduceLeftOption(_ :: "," :/: _)
-            .getOrElse(empty) :: "}"
+            .reduceLeftOption(_ ::: "," :/: _)
+            .getOrElse(empty) ::: "}"
         )
       case TyBot =>
         "Bot"
       case TyTop =>
         "Top"
       case tyT =>
-        "(" :: ptyType(outer, ctx, tyT) :: ")"
+        "(" ::: ptyType(outer, ctx, tyT) ::: ")"
     }
 
   def ptyTy(ctx: Context, ty: Ty) = ptyType(true, ctx, ty)
@@ -148,7 +149,7 @@ object PrettyPrinter {
     t match {
       case TmAbs(x, tyT1, t2) =>
         val (ctx1, x1) = ctx.pickFreshName(x)
-        val abs = g0("lambda" :/: x1 :: ":" :/: ptyType(false, ctx, tyT1) :: ".")
+        val abs = g0("lambda" :/: x1 ::: ":" :/: ptyType(false, ctx, tyT1) ::: ".")
         val body = ptmTerm(outer, ctx1, t2)
         g2(abs :/: body)
       case t => ptmAppTerm(outer, ctx, t)
@@ -165,7 +166,7 @@ object PrettyPrinter {
   def ptmPathTerm(outer: Boolean, ctx: Context, t: Term): Document =
     t match {
       case TmProj(t1, l) =>
-        ptmATerm(false, ctx, t1) :: "." :: l
+        ptmATerm(false, ctx, t1) ::: "." ::: l
       case t1 =>
         ptmATerm(outer, ctx, t1)
     }
@@ -180,14 +181,14 @@ object PrettyPrinter {
           if (i.toString() == li) {
             ptmTerm(false, ctx, t)
           } else {
-            li :: "=" :: ptmTerm(false, ctx, t)
+            li ::: "=" ::: ptmTerm(false, ctx, t)
           }
-        "{" :: fields.zipWithIndex
+        "{" ::: fields.zipWithIndex
           .map { case ((li, tyTi), i) => pf(i + 1, li, tyTi) }
-          .reduceLeftOption(_ :: "," :/: _)
-          .getOrElse(empty) :: "}"
+          .reduceLeftOption(_ ::: "," :/: _)
+          .getOrElse(empty) ::: "}"
       case t =>
-        "(" :: ptmTerm(outer, ctx, t) :: ")"
+        "(" ::: ptmTerm(outer, ctx, t) ::: ")"
     }
 
   def ptm(ctx: Context, t: Term) = ptmTerm(true, ctx, t)
@@ -197,7 +198,7 @@ object PrettyPrinter {
       case NameBind =>
         empty
       case VarBind(ty) =>
-        ": " :: ptyTy(ctx, ty)
+        ": " ::: ptyTy(ctx, ty)
     }
 
   def pBindingTy(ctx: Context, b: Binding): Document =
@@ -205,6 +206,6 @@ object PrettyPrinter {
       case NameBind =>
         empty
       case VarBind(ty) =>
-        ": " :: ptyTy(ctx, ty)
+        ": " ::: ptyTy(ctx, ty)
     }
 }

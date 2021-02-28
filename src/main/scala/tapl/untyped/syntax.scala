@@ -88,13 +88,14 @@ import util.Document._
 
 // outer means that the term is the top-level term
 object PrettyPrinter {
-  import util.Print._
+  import scala.language.implicitConversions
+  import util.Print._, util.Print.text2doc
 
   def ptmTerm(outer: Boolean, ctx: Context, t: Term): Document =
     t match {
       case TmAbs(x, t2) =>
         val (ctx1, x1) = ctx.pickFreshName(x)
-        val abs = g0("\\" :: x1 :: ".")
+        val abs = g0("\\" ::: x1 ::: ".")
         val body = ptmTerm(outer, ctx1, t2)
         g2(abs :/: body)
       case t => ptmAppTerm(outer, ctx, t)
@@ -117,7 +118,7 @@ object PrettyPrinter {
         if (ctx.length == n) ctx.index2Name(x)
         else text("[bad index: " + x + "/" + n + " in {" + ctx.l.mkString(", ") + "}]")
       case t =>
-        "(" :: ptmTerm(outer, ctx, t) :: ")"
+        "(" ::: ptmTerm(outer, ctx, t) ::: ")"
     }
 
   def pBinding(bind: Binding): Document =

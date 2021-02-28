@@ -2,8 +2,9 @@ package tapl.fulluntyped
 
 object FullUntypedDemo extends util.Demo[Context, Command] {
   import Evaluator._
-  import util.Print._
   import PrettyPrinter._
+  import scala.language.implicitConversions
+  import util.Print._, util.Print.text2doc
 
   val width = 60
 
@@ -16,9 +17,9 @@ object FullUntypedDemo extends util.Demo[Context, Command] {
   def processCommand(ctx: Context, cmd: Command): Context =
     cmd match {
       case Eval(t1) =>
-        val doc1 = g2(ptmATerm(true, ctx, t1) :: ";")
+        val doc1 = g2(ptmATerm(true, ctx, t1) ::: ";")
         val t2 = eval(ctx, t1)
-        val doc2 = g2(ptmATerm(true, ctx, t2) :: ";")
+        val doc2 = g2(ptmATerm(true, ctx, t2) ::: ";")
 
         println("====================")
         println(print(doc1, width))

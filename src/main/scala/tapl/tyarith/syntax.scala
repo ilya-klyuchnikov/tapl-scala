@@ -20,7 +20,8 @@ import util.Document
 import util.Document._
 
 object PrettyPrinter {
-  import util.Print._
+  import scala.language.implicitConversions
+  import util.Print._, util.Print.text2doc
 
   def ptyType(outer: Boolean, ty: Ty): Document =
     ty match {
@@ -31,7 +32,7 @@ object PrettyPrinter {
     ty match {
       case TyBool => "Bool"
       case TyNat  => "Nat"
-      case ty1    => "(" :: ptyAType(outer, ty1) :: ")"
+      case ty1    => "(" ::: ptyAType(outer, ty1) ::: ")"
     }
 
   def ptyTy(ty: Ty) = ptyType(true, ty)
@@ -51,9 +52,9 @@ object PrettyPrinter {
   def ptmAppTerm(outer: Boolean, t: Term): Document =
     t match {
       case TmPred(t1) =>
-        "pred " :: ptmATerm(false, t1)
+        "pred " ::: ptmATerm(false, t1)
       case TmIsZero(t1) =>
-        "iszero " :: ptmATerm(false, t1)
+        "iszero " ::: ptmATerm(false, t1)
       case t =>
         ptmATerm(outer, t)
     }
@@ -74,11 +75,11 @@ object PrettyPrinter {
             case TmSucc(s) =>
               pf(i + 1, s)
             case _ =>
-              "(succ " :: ptmATerm(false, t1) :: ")"
+              "(succ " ::: ptmATerm(false, t1) ::: ")"
           }
         pf(1, t1)
       case t =>
-        "(" :: ptmTerm(outer, t) :: ")"
+        "(" ::: ptmTerm(outer, t) ::: ")"
     }
 
   def ptm(t: Term) = ptmTerm(true, t)

@@ -106,7 +106,8 @@ import util.Document._
 
 // outer means that the term is the top-level term
 object PrettyPrinter {
-  import util.Print._
+  import scala.language.implicitConversions
+  import util.Print._, util.Print.text2doc
 
   def ptyType(outer: Boolean, ctx: Context, ty: Ty): Document =
     ty match {
@@ -116,7 +117,7 @@ object PrettyPrinter {
   def ptyArrowType(outer: Boolean, ctx: Context, tyT: Ty): Document =
     tyT match {
       case TyArr(tyT1, tyT2) =>
-        g2(ptyAType(false, ctx, tyT1) :: " ->" :/: ptyArrowType(outer, ctx, tyT2))
+        g2(ptyAType(false, ctx, tyT1) ::: " ->" :/: ptyArrowType(outer, ctx, tyT2))
       case tyT =>
         ptyAType(outer, ctx, tyT)
     }
@@ -130,7 +131,7 @@ object PrettyPrinter {
       case TyNat =>
         "Nat"
       case tyT =>
-        "(" :: ptyType(outer, ctx, tyT) :: ")"
+        "(" ::: ptyType(outer, ctx, tyT) ::: ")"
     }
 
   def ptyTy(ctx: Context, ty: Ty) = ptyType(true, ctx, ty)
@@ -145,17 +146,17 @@ object PrettyPrinter {
         g0(ifB :/: thenB :/: elseB)
       case TmAbs(x, Some(tyT1), t2) =>
         val (ctx1, x1) = ctx.pickFreshName(x)
-        val abs = g0("lambda" :/: x1 :: ":" :/: ptyType(false, ctx, tyT1) :: ".")
+        val abs = g0("lambda" :/: x1 ::: ":" :/: ptyType(false, ctx, tyT1) ::: ".")
         val body = ptmTerm(outer, ctx1, t2)
         g2(abs :/: body)
       case TmAbs(x, None, t2) =>
         val (ctx1, x1) = ctx.pickFreshName(x)
-        val abs = g0("lambda" :/: x1 :: ".")
+        val abs = g0("lambda" :/: x1 ::: ".")
         val body = ptmTerm(outer, ctx1, t2)
         g2(abs :/: body)
       case TmLet(x, t1, t2) =>
         g0(
-          "let " :: x :: " = " :: ptmTerm(false, ctx, t1) :/: "in" :/: ptmTerm(
+          "let " ::: x ::: " = " ::: ptmTerm(false, ctx, t1) :/: "in" :/: ptmTerm(
             false,
             ctx.addName(x),
             t2,
@@ -169,9 +170,9 @@ object PrettyPrinter {
       case TmApp(t1, t2) =>
         g2(ptmAppTerm(false, ctx, t1) :/: ptmATerm(false, ctx, t2))
       case TmPred(t1) =>
-        "pred " :: ptmATerm(false, ctx, t1)
+        "pred " ::: ptmATerm(false, ctx, t1)
       case TmIsZero(t1) =>
-        "iszero " :: ptmATerm(false, ctx, t1)
+        "iszero " ::: ptmATerm(false, ctx, t1)
       case t =>
         ptmATerm(outer, ctx, t)
     }
@@ -195,11 +196,11 @@ object PrettyPrinter {
             case TmSucc(s) =>
               pf(i + 1, s)
             case _ =>
-              "(succ " :: ptmATerm(false, ctx, t1) :: ")"
+              "(succ " ::: ptmATerm(false, ctx, t1) ::: ")"
           }
         pf(1, t1)
       case t =>
-        "(" :: ptmTerm(outer, ctx, t) :: ")"
+        "(" ::: ptmTerm(outer, ctx, t) ::: ")"
     }
 
   def ptm(ctx: Context, t: Term) = ptmTerm(true, ctx, t)
@@ -209,7 +210,7 @@ object PrettyPrinter {
       case NameBind =>
         empty
       case VarBind(ty) =>
-        ": " :: ptyTy(ctx, ty)
+        ": " ::: ptyTy(ctx, ty)
     }
 
   def pBindingTy(ctx: Context, b: Binding): Document =
@@ -217,7 +218,7 @@ object PrettyPrinter {
       case NameBind =>
         empty
       case VarBind(ty) =>
-        ": " :: ptyTy(ctx, ty)
+        ": " ::: ptyTy(ctx, ty)
     }
 
 }

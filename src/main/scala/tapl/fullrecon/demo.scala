@@ -3,8 +3,9 @@ package tapl.fullrecon
 import tapl.fullrecon.Typer._
 
 object FullReconDemo extends util.Demo[(Context, UVarGenerator, IdConstr), Command] {
+  import scala.language.implicitConversions
   import Evaluator._
-  import util.Print._
+  import util.Print._, util.Print.text2doc
   import PrettyPrinter._
 
   val width = 60
@@ -31,7 +32,7 @@ object FullReconDemo extends util.Demo[(Context, UVarGenerator, IdConstr), Comma
               unify(ctx, "Could not simplify constraints", constr11)
 
             val ty1 = applySub(constr12, tyT)
-            val doc1 = g2(ptmATerm(true, ctx, t1) :: ":" :/: ptyTy(ctx, ty1) :: ";")
+            val doc1 = g2(ptmATerm(true, ctx, t1) ::: ":" :/: ptyTy(ctx, ty1) ::: ";")
 
             val t2 = eval(ctx, t1)
             val (tyT2, nextuvar2, constrT2: Constr) =
@@ -41,7 +42,7 @@ object FullReconDemo extends util.Demo[(Context, UVarGenerator, IdConstr), Comma
             val constr22: IdConstr =
               unify(ctx, "Could not simplify constraints", constr21)
             val ty2 = applySub(constr22, tyT2)
-            val doc2 = g2(ptmATerm(true, ctx, t2) :: ":" :/: ptyTy(ctx, ty1) :: ";")
+            val doc2 = g2(ptmATerm(true, ctx, t2) ::: ":" :/: ptyTy(ctx, ty1) ::: ";")
 
             println("====================")
             println(print(doc1, width))
@@ -50,7 +51,7 @@ object FullReconDemo extends util.Demo[(Context, UVarGenerator, IdConstr), Comma
             println(print(doc2, width))
             (ctx, nextuvar1, constr12)
           case Bind(x, bind) =>
-            val doc1 = x :: pBindingTy(ctx, bind) :: ";"
+            val doc1 = x ::: pBindingTy(ctx, bind) ::: ";"
             println("====================")
             println(print(doc1, width))
             (ctx.addBinding(x, bind), nextuvar, constr)

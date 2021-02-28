@@ -110,7 +110,8 @@ import util.Document._
 
 // outer means that the term is the top-level term
 object PrettyPrinter {
-  import util.Print._
+  import scala.language.implicitConversions
+  import util.Print._, util.Print.text2doc
 
   def ptyType(outer: Boolean, ty: Ty): Document =
     ty match {
@@ -120,7 +121,7 @@ object PrettyPrinter {
   def ptyArrowType(outer: Boolean, tyT: Ty): Document =
     tyT match {
       case TyArr(tyT1, tyT2) =>
-        g0(ptyAType(false, tyT1) :: " ->" :/: ptyArrowType(outer, tyT2))
+        g0(ptyAType(false, tyT1) ::: " ->" :/: ptyArrowType(outer, tyT2))
       case tyT =>
         ptyAType(outer, tyT)
     }
@@ -128,7 +129,7 @@ object PrettyPrinter {
   def ptyAType(outer: Boolean, tyT: Ty): Document =
     tyT match {
       case TyBool => "Bool"
-      case tyT    => "(" :: ptyType(outer, tyT) :: ")"
+      case tyT    => "(" ::: ptyType(outer, tyT) ::: ")"
     }
 
   def ptyTy(ty: Ty) = ptyType(true, ty)
@@ -137,7 +138,7 @@ object PrettyPrinter {
     t match {
       case TmAbs(x, tyT1, t2) =>
         val (ctx1, x1) = ctx.pickFreshName(x)
-        val abs = g0("\\" :: x1 :: ":" :: ptyType(false, tyT1) :: ".")
+        val abs = g0("\\" ::: x1 ::: ":" ::: ptyType(false, tyT1) ::: ".")
         val body = ptmTerm(outer, ctx1, t2)
         g2(abs :/: body)
       case TmIf(t1, t2, t3) =>
@@ -169,12 +170,12 @@ object PrettyPrinter {
       case TmFalse =>
         "false"
       case t =>
-        "(" :: ptmTerm(outer, ctx, t) :: ")"
+        "(" ::: ptmTerm(outer, ctx, t) ::: ")"
     }
 
   def pBinding(bind: Binding): Document =
     bind match {
       case NameBind    => empty
-      case VarBind(ty) => ": " :: ptyTy(ty)
+      case VarBind(ty) => ": " ::: ptyTy(ty)
     }
 }

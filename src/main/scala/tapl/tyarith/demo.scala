@@ -3,8 +3,9 @@ package tapl.tyarith
 object TyArithDemo extends util.Demo[Unit, Command] {
 
   import Evaluator._
-  import util.Print._
   import PrettyPrinter._
+  import scala.language.implicitConversions
+  import util.Print._, util.Print.text2doc
 
   val width = 60
 
@@ -18,11 +19,11 @@ object TyArithDemo extends util.Demo[Unit, Command] {
     cmd match {
       case Eval(t1) =>
         val ty1 = Typer.typeof(t1)
-        val doc1 = g2(ptmATerm(true, t1) :: ":" :/: ptyTy(ty1) :: ";")
+        val doc1 = g2(ptmATerm(true, t1) ::: ":" :/: ptyTy(ty1) ::: ";")
 
         val t2 = eval(t1)
         val ty2 = Typer.typeof(t2)
-        val doc2 = g2(ptmATerm(true, t2) :: ":" :/: ptyTy(ty2) :: ";")
+        val doc2 = g2(ptmATerm(true, t2) ::: ":" :/: ptyTy(ty2) ::: ";")
 
         println("====================")
         println(print(doc1, width))

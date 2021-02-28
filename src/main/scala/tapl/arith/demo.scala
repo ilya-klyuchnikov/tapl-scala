@@ -1,9 +1,11 @@
 package tapl.arith
 
+import scala.language.implicitConversions
+
 object ArithDemo extends util.Demo[Unit, Command] {
 
   import Evaluator._
-  import util.Print._
+  import util.Print._, util.Print.text2doc
   import PrettyPrinter._
 
   val width = 60
@@ -17,9 +19,9 @@ object ArithDemo extends util.Demo[Unit, Command] {
   override def processCommand(ctx: Unit, cmd: Command): Unit =
     cmd match {
       case Eval(t1) =>
-        val doc1 = g2(ptmATerm(true, t1) :: ";")
+        val doc1 = g2(ptmATerm(true, t1) ::: ";")
         val t2 = eval(t1)
-        val doc2 = g2(ptmATerm(true, t2) :: ";")
+        val doc2 = g2(ptmATerm(true, t2) ::: ";")
 
         println("====================")
         println(print(doc1, width))
