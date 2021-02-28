@@ -3,6 +3,7 @@ package tapl.arith
 // Small-step semantics as described by Pierce
 object Evaluator {
   import Util._
+  import Term._
 
   private def eval1(t: Term): Term =
     t match {
@@ -47,6 +48,7 @@ object Evaluator {
 
 // This is solution to the Exercise 3.5.17
 object BigStepEvaluator {
+  import Term._
   import Util._
 
   def eval(t: Term): Term =
@@ -91,6 +93,8 @@ object BigStepEvaluator {
 }
 
 object Util {
+  import Term._
+
   def isNumericVal(t: Term): Boolean =
     t match {
       case TmZero     => true
