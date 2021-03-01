@@ -1,9 +1,6 @@
 package tapl.simplebool
 
-sealed trait Term {
-  final def prettyString(ctx: Context = Context()): String =
-    util.Print.print(PrettyPrinter.ptm(ctx, this), 60)
-}
+sealed trait Term
 // i - index, cl - context length
 case class TmVar(i: Int, cl: Int) extends Term
 case class TmAbs(v: String, ty: Ty, t: Term) extends Term
