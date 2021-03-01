@@ -10,6 +10,10 @@ import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 // The input text represents named terms. The module works with nameless terms
 // So translation from named form into nameless form is done on the fly during parsing.
 object UntypedParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
+  import Binding._
+  import Command._
+  import Term._
+
   lexical.reserved ++= Seq("_")
   lexical.delimiters ++= Seq("(", ")", ";", "/", ".", "\\")
 
