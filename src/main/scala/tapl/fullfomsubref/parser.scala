@@ -9,6 +9,8 @@ object FullFomSubRefParsers
     extends StandardTokenParsers
     with PackratParsers
     with ImplicitConversions {
+  import Kind._
+
   lexical.reserved ++= Seq(
     "lambda",
     "Bool",

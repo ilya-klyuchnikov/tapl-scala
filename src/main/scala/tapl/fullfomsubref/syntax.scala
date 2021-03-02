@@ -4,9 +4,10 @@ package tapl.fullfomsubref
 // and checkers from the book.
 // (Except recursive datatypes??)
 
-sealed trait Kind
-case object KnStar extends Kind
-case class KnArr(k1: Kind, k2: Kind) extends Kind
+enum Kind {
+  case KnStar
+  case KnArr(k1: Kind, k2: Kind)
+}
 
 sealed trait Ty
 case class TyId(id: String) extends Ty
@@ -110,6 +111,7 @@ case class Context(l: List[(String, Binding)] = List()) {
 }
 
 object Syntax {
+  import Kind._
 
   private def tyMap(onVar: (Int, TyVar) => Ty, c: Int, ty: Ty): Ty = {
     def walk(c: Int, ty: Ty): Ty =
@@ -251,6 +253,8 @@ import util.Document._
 object PrettyPrinter {
   import scala.language.implicitConversions
   import util.Print._, util.Print.text2doc
+
+  import Kind._
 
   def pknKind(outer: Boolean, ctx: Context, k: Kind): Document =
     k match {

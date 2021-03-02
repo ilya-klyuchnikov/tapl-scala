@@ -202,6 +202,7 @@ object Evaluator {
 }
 
 object Typer {
+  import Kind._
   import Syntax._
 
   private def isTyAbb(ctx: Context, i: Int) =
