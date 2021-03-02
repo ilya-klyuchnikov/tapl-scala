@@ -29,38 +29,39 @@ case class TyRef(ty: Ty) extends Ty
 case class TySource(ty: Ty) extends Ty
 case class TySink(ty: Ty) extends Ty
 
-sealed trait Term
-case class TmVar(i: Int, cl: Int) extends Term
-case class TmAbs(v: String, ty: Ty, t: Term) extends Term
-case class TmApp(t1: Term, t2: Term) extends Term
-case object TmTrue extends Term
-case object TmFalse extends Term
-case class TmIf(cond: Term, t1: Term, t2: Term) extends Term
-case class TmRecord(fields: List[(String, Term)]) extends Term
-case class TmProj(t: Term, proj: String) extends Term
-case class TmLet(l: String, t1: Term, t2: Term) extends Term
-// float
-// timesfloat
-case class TmAscribe(t: Term, ty: Ty) extends Term
-case class TmString(s: String) extends Term
-case object TmUnit extends Term
-case class TmFix(t: Term) extends Term
-case class TmCase(sel: Term, branches: List[(String, String, Term)]) extends Term
-case class TmTag(tag: String, t: Term, ty: Ty) extends Term
-case class TmLoc(i: Int) extends Term
-case class TmRef(t: Term) extends Term
-case class TmDeref(t: Term) extends Term
-case class TmAssign(t1: Term, t2: Term) extends Term
-case object TmError extends Term
-case class TmTry(t1: Term, t2: Term) extends Term
-case class TmTAbs(v: String, ty: Ty, t: Term) extends Term
-case class TmTApp(t: Term, ty: Ty) extends Term
-case object TmZero extends Term
-case class TmSucc(t: Term) extends Term
-case class TmPred(t: Term) extends Term
-case class TmIsZero(t: Term) extends Term
-case class TmPack(ty: Ty, t: Term, as: Ty) extends Term
-case class TmUnPack(n1: String, n2: String, t1: Term, t2: Term) extends Term
+enum Term {
+  case TmVar(i: Int, cl: Int)
+  case TmAbs(v: String, ty: Ty, t: Term)
+  case TmApp(t1: Term, t2: Term)
+  case TmTrue
+  case TmFalse
+  case TmIf(cond: Term, t1: Term, t2: Term)
+  case TmRecord(fields: List[(String, Term)])
+  case TmProj(t: Term, proj: String)
+  case TmLet(l: String, t1: Term, t2: Term)
+  // float
+  // timesfloat
+  case TmAscribe(t: Term, ty: Ty)
+  case TmString(s: String)
+  case TmUnit
+  case TmFix(t: Term)
+  case TmCase(sel: Term, branches: List[(String, String, Term)])
+  case TmTag(tag: String, t: Term, ty: Ty)
+  case TmLoc(i: Int)
+  case TmRef(t: Term)
+  case TmDeref(t: Term)
+  case TmAssign(t1: Term, t2: Term)
+  case TmError
+  case TmTry(t1: Term, t2: Term)
+  case TmTAbs(v: String, ty: Ty, t: Term)
+  case TmTApp(t: Term, ty: Ty)
+  case TmZero
+  case TmSucc(t: Term)
+  case TmPred(t: Term)
+  case TmIsZero(t: Term)
+  case TmPack(ty: Ty, t: Term, as: Ty)
+  case TmUnPack(n1: String, n2: String, t1: Term, t2: Term)
+}
 
 sealed trait Binding
 case object NameBind extends Binding
@@ -112,6 +113,7 @@ case class Context(l: List[(String, Binding)] = List()) {
 
 object Syntax {
   import Kind._
+  import Term._
 
   private def tyMap(onVar: (Int, TyVar) => Ty, c: Int, ty: Ty): Ty = {
     def walk(c: Int, ty: Ty): Ty =
@@ -255,6 +257,7 @@ object PrettyPrinter {
   import util.Print._, util.Print.text2doc
 
   import Kind._
+  import Term._
 
   def pknKind(outer: Boolean, ctx: Context, k: Kind): Document =
     k match {

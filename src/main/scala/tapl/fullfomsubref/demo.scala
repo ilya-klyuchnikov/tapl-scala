@@ -7,6 +7,7 @@ object FullFomSubRefDemo extends util.Demo[(Context, Store), Command] {
   import Syntax._
   import util.Print._, util.Print.text2doc
   import PrettyPrinter._
+  import Term._
 
   val width = 60
 

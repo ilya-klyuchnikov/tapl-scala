@@ -10,6 +10,7 @@ object FullFomSubRefParsers
     with PackratParsers
     with ImplicitConversions {
   import Kind._
+  import Term._
 
   lexical.reserved ++= Seq(
     "lambda",
