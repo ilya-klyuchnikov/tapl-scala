@@ -64,20 +64,24 @@ enum Term {
   case TmUnPack(n1: String, n2: String, t1: Term, t2: Term)
 }
 
-sealed trait Binding
-case object NameBind extends Binding
-case class TyVarBind(t: Ty) extends Binding
-case class VarBind(t: Ty) extends Binding
-case class TyAbbBind(ty: Ty, k: Option[Kind]) extends Binding
-case class TmAbbBind(t: Term, ty: Option[Ty]) extends Binding
+enum Binding {
+  case NameBind
+  case TyVarBind(t: Ty)
+  case VarBind(t: Ty)
+  case TyAbbBind(ty: Ty, k: Option[Kind])
+  case TmAbbBind(t: Term, ty: Option[Ty])
+}
 
-sealed trait Command
-//case class Import(path: String) extends Command
-case class Eval(t: Term) extends Command
-case class Bind(n: String, b: Binding) extends Command
-case class SomeBind(n1: String, n2: String, t: Term) extends Command
+enum Command {
+  //case Import(path: String)
+  case Eval(t: Term)
+  case Bind(n: String, b: Binding)
+  case SomeBind(n1: String, n2: String, t: Term)
+}
 
 case class Context(l: List[(String, Binding)] = List()) {
+  import Binding._
+
   val length: Int = l.length
   def addBinding(s: String, bind: Binding): Context = Context((s, bind) :: l)
   def addName(s: String): Context = addBinding(s, NameBind)
@@ -113,6 +117,7 @@ case class Context(l: List[(String, Binding)] = List()) {
 }
 
 object Syntax {
+  import Binding._
   import Kind._
   import Term._
   import Ty._
@@ -258,6 +263,7 @@ object PrettyPrinter {
   import scala.language.implicitConversions
   import util.Print._, util.Print.text2doc
 
+  import Binding._
   import Kind._
   import Term._
   import Ty._

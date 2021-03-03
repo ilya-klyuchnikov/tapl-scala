@@ -9,6 +9,8 @@ object FullFomSubRefParsers
     extends StandardTokenParsers
     with PackratParsers
     with ImplicitConversions {
+  import Binding._
+  import Command._
   import Kind._
   import Term._
   import Ty._
