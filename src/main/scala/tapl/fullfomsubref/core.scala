@@ -207,6 +207,7 @@ object Typer {
   import Kind._
   import Syntax._
   import Term._
+  import Ty._
 
   private def isTyAbb(ctx: Context, i: Int) =
     ctx.getBinding(i) match {

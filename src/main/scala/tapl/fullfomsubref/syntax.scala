@@ -9,25 +9,26 @@ enum Kind {
   case KnArr(k1: Kind, k2: Kind)
 }
 
-sealed trait Ty
-case class TyId(id: String) extends Ty
-case class TyVar(i: Int, cl: Int) extends Ty
-case object TyBool extends Ty
-case object TyTop extends Ty
-case object TyBot extends Ty
-case class TyArr(t1: Ty, t2: Ty) extends Ty
-case class TyRecord(els: List[(String, Ty)]) extends Ty
-case class TyVariant(els: List[(String, Ty)]) extends Ty
-case object TyString extends Ty
-case object TyUnit extends Ty
-case object TyNat extends Ty
-case class TyAll(n: String, t1: Ty, ty2: Ty) extends Ty
-case class TySome(n: String, ty1: Ty, ty2: Ty) extends Ty
-case class TyAbs(v: String, k: Kind, ty: Ty) extends Ty
-case class TyApp(ty1: Ty, ty2: Ty) extends Ty
-case class TyRef(ty: Ty) extends Ty
-case class TySource(ty: Ty) extends Ty
-case class TySink(ty: Ty) extends Ty
+enum Ty {
+  case TyId(id: String)
+  case TyVar(i: Int, cl: Int)
+  case TyBool
+  case TyTop
+  case TyBot
+  case TyArr(t1: Ty, t2: Ty)
+  case TyRecord(els: List[(String, Ty)])
+  case TyVariant(els: List[(String, Ty)])
+  case TyString
+  case TyUnit
+  case TyNat
+  case TyAll(n: String, t1: Ty, ty2: Ty)
+  case TySome(n: String, ty1: Ty, ty2: Ty)
+  case TyAbs(v: String, k: Kind, ty: Ty)
+  case TyApp(ty1: Ty, ty2: Ty)
+  case TyRef(ty: Ty)
+  case TySource(ty: Ty)
+  case TySink(ty: Ty)
+}
 
 enum Term {
   case TmVar(i: Int, cl: Int)
@@ -114,6 +115,7 @@ case class Context(l: List[(String, Binding)] = List()) {
 object Syntax {
   import Kind._
   import Term._
+  import Ty._
 
   private def tyMap(onVar: (Int, TyVar) => Ty, c: Int, ty: Ty): Ty = {
     def walk(c: Int, ty: Ty): Ty =
@@ -258,6 +260,7 @@ object PrettyPrinter {
 
   import Kind._
   import Term._
+  import Ty._
 
   def pknKind(outer: Boolean, ctx: Context, k: Kind): Document =
     k match {

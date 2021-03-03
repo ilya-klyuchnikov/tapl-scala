@@ -11,6 +11,7 @@ object FullFomSubRefParsers
     with ImplicitConversions {
   import Kind._
   import Term._
+  import Ty._
 
   lexical.reserved ++= Seq(
     "lambda",
