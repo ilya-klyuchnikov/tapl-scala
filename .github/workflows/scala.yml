@@ -16,4 +16,4 @@ jobs:
     - name: Coursier Cache
       uses: coursier/cache-action@v5
     - name: test
-      run: sbt test
+      run: sbt 'test; runMain tapl.Demos'
