@@ -1,54 +1,60 @@
 package tapl.fullfsub
 
-sealed trait Ty
-case class TyVar(i: Int, cl: Int) extends Ty
-case class TyId(id: String) extends Ty
-case object TyTop extends Ty
-case class TyArr(t1: Ty, t2: Ty) extends Ty
-case object TyBool extends Ty
-case class TyRecord(els: List[(String, Ty)]) extends Ty
-case object TyString extends Ty
-case object TyUnit extends Ty
-case class TyAll(n: String, ty1: Ty, ty2: Ty) extends Ty
-case object TyNat extends Ty
-case class TySome(n: String, ty1: Ty, ty2: Ty) extends Ty
+enum Ty {
+  case TyVar(i: Int, cl: Int)
+  case TyId(id: String)
+  case TyTop
+  case TyArr(t1: Ty, t2: Ty)
+  case TyBool
+  case TyRecord(els: List[(String, Ty)])
+  case TyString
+  case TyUnit
+  case TyAll(n: String, ty1: Ty, ty2: Ty)
+  case TyNat
+  case TySome(n: String, ty1: Ty, ty2: Ty)
+}
 
-sealed trait Term
-case class TmVar(i: Int, cl: Int) extends Term
-case class TmAbs(v: String, ty: Ty, t: Term) extends Term
-case class TmApp(t1: Term, t2: Term) extends Term
-case class TmLet(l: String, t1: Term, t2: Term) extends Term
-case class TmFix(t: Term) extends Term
-case class TmString(s: String) extends Term
-case object TmUnit extends Term
-case class TmAscribe(t: Term, ty: Ty) extends Term
-case class TmRecord(fields: List[(String, Term)]) extends Term
-case class TmProj(t: Term, proj: String) extends Term
-case object TmTrue extends Term
-case object TmFalse extends Term
-case class TmIf(cond: Term, t1: Term, t2: Term) extends Term
-case object TmZero extends Term
-case class TmSucc(t: Term) extends Term
-case class TmPred(t: Term) extends Term
-case class TmIsZero(t: Term) extends Term
-case class TmPack(ty: Ty, t: Term, as: Ty) extends Term
-case class TmUnPack(n1: String, n2: String, t1: Term, t2: Term) extends Term
-case class TmTAbs(v: String, ty: Ty, t: Term) extends Term
-case class TmTApp(t: Term, ty: Ty) extends Term
+enum Term {
+  case TmVar(i: Int, cl: Int)
+  case TmAbs(v: String, ty: Ty, t: Term)
+  case TmApp(t1: Term, t2: Term)
+  case TmLet(l: String, t1: Term, t2: Term)
+  case TmFix(t: Term)
+  case TmString(s: String)
+  case TmUnit
+  case TmAscribe(t: Term, ty: Ty)
+  case TmRecord(fields: List[(String, Term)])
+  case TmProj(t: Term, proj: String)
+  case TmTrue
+  case TmFalse
+  case TmIf(cond: Term, t1: Term, t2: Term)
+  case TmZero
+  case TmSucc(t: Term)
+  case TmPred(t: Term)
+  case TmIsZero(t: Term)
+  case TmPack(ty: Ty, t: Term, as: Ty)
+  case TmUnPack(n1: String, n2: String, t1: Term, t2: Term)
+  case TmTAbs(v: String, ty: Ty, t: Term)
+  case TmTApp(t: Term, ty: Ty)
+}
 
-sealed trait Binding
-case object NameBind extends Binding
-case class TyVarBind(ty: Ty) extends Binding
-case class VarBind(t: Ty) extends Binding
-case class TmAbbBind(t: Term, ty: Option[Ty]) extends Binding
-case class TyAbbBind(ty: Ty) extends Binding
+enum Binding {
+  case NameBind
+  case TyVarBind(ty: Ty)
+  case VarBind(t: Ty)
+  case TmAbbBind(t: Term, ty: Option[Ty])
+  case TyAbbBind(ty: Ty)
+}
 
-sealed trait Command
-case class Eval(t: Term) extends Command
-case class Bind(n: String, b: Binding) extends Command
-case class SomeBind(n1: String, n2: String, t: Term) extends Command
+enum Command {
+  case Eval(t: Term)
+  case Bind(n: String, b: Binding)
+  case SomeBind(n1: String, n2: String, t: Term)
+}
 
 case class Context(l: List[(String, Binding)] = List()) {
+  import Binding._
+
   val length: Int = l.length
   def addBinding(s: String, bind: Binding): Context = Context((s, bind) :: l)
   def addName(s: String): Context = addBinding(s, NameBind)
@@ -84,6 +90,9 @@ case class Context(l: List[(String, Binding)] = List()) {
 }
 
 object Syntax {
+  import Binding._
+  import Ty._
+  import Term._
 
   private def tyMap(onVar: (Int, TyVar) => Ty, c: Int, ty: Ty): Ty = {
     def walk(c: Int, ty: Ty): Ty =
@@ -203,6 +212,9 @@ import util.Document._
 object PrettyPrinter {
   import scala.language.implicitConversions
   import util.Print._, util.Print.text2doc
+  import Binding._
+  import Ty._
+  import Term._
 
   def prOType(ctx: Context, tyS: Ty): Document =
     tyS match {
