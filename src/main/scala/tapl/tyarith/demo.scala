@@ -6,6 +6,7 @@ object TyArithDemo extends util.Demo[Unit, Command] {
   import PrettyPrinter._
   import scala.language.implicitConversions
   import util.Print._, util.Print.text2doc
+  import Command._
 
   val width = 60
 

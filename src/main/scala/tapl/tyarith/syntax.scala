@@ -1,20 +1,23 @@
 package tapl.tyarith
 
-sealed trait Ty
-case object TyBool extends Ty
-case object TyNat extends Ty
+enum Ty {
+  case TyBool
+  case TyNat
+}
 
-sealed trait Term
-case object TmTrue extends Term
-case object TmFalse extends Term
-case class TmIf(cond: Term, t1: Term, t2: Term) extends Term
-case object TmZero extends Term
-case class TmSucc(t: Term) extends Term
-case class TmPred(t: Term) extends Term
-case class TmIsZero(t: Term) extends Term
+enum Term {
+  case TmTrue
+  case TmFalse
+  case TmIf(cond: Term, t1: Term, t2: Term)
+  case TmZero
+  case TmSucc(t: Term)
+  case TmPred(t: Term)
+  case TmIsZero(t: Term)
+}
 
-sealed trait Command
-case class Eval(t: Term) extends Command
+enum Command {
+  case Eval(t: Term) extends Command
+}
 
 import util.Document
 import util.Document._
@@ -22,6 +25,8 @@ import util.Document._
 object PrettyPrinter {
   import scala.language.implicitConversions
   import util.Print._, util.Print.text2doc
+  import Term._
+  import Ty._
 
   def ptyType(outer: Boolean, ty: Ty): Document =
     ty match {
