@@ -6,6 +6,8 @@ object FullSimpleDemo extends util.Demo[Context, Command] {
   import Typer._
   import util.Print._, util.Print.text2doc
   import PrettyPrinter._
+  import Binding._
+  import Command._
 
   val width = 60
 
