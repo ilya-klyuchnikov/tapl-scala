@@ -1,6 +1,7 @@
 package tapl.recon
 
 object Util {
+  import Term._
 
   def isNumericVal(ctx: Context, t: Term): Boolean =
     t match {
@@ -22,6 +23,7 @@ object Util {
 object Evaluator {
   import Util._
   import Syntax._
+  import Term._
 
   private def eval1(ctx: Context, t: Term): Term =
     t match {
@@ -71,6 +73,10 @@ object Evaluator {
 }
 
 object Typer {
+  import Binding._
+  import Term._
+  import Ty._
+
   type Constr = List[(Ty, Ty)]
   type IdConstr = List[(TyId, Ty)]
   type UVarGenerator = Unit => NextUVar

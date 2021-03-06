@@ -1,32 +1,38 @@
 package tapl.recon
 
-sealed trait Ty
-case class TyId(id: String) extends Ty
-case class TyArr(t1: Ty, t2: Ty) extends Ty
-case object TyBool extends Ty
-case object TyNat extends Ty
+enum Ty {
+  case TyId(id: String)
+  case TyArr(t1: Ty, t2: Ty)
+  case TyBool
+  case TyNat
+}
 
-sealed trait Term
-case class TmVar(i: Int, cl: Int) extends Term
-case object TmTrue extends Term
-case object TmFalse extends Term
-case class TmIf(cond: Term, t1: Term, t2: Term) extends Term
-case object TmZero extends Term
-case class TmSucc(t: Term) extends Term
-case class TmPred(t: Term) extends Term
-case class TmIsZero(t: Term) extends Term
-case class TmAbs(v: String, ty: Option[Ty], t: Term) extends Term
-case class TmApp(t1: Term, t2: Term) extends Term
+enum Term {
+  case TmVar(i: Int, cl: Int)
+  case TmTrue
+  case TmFalse
+  case TmIf(cond: Term, t1: Term, t2: Term)
+  case TmZero
+  case TmSucc(t: Term)
+  case TmPred(t: Term)
+  case TmIsZero(t: Term)
+  case TmAbs(v: String, ty: Option[Ty], t: Term)
+  case TmApp(t1: Term, t2: Term)
+}
 
-sealed trait Binding
-case object NameBind extends Binding
-case class VarBind(t: Ty) extends Binding
+enum Binding {
+  case NameBind
+  case VarBind(t: Ty)
+}
 
-sealed trait Command
-case class Eval(t: Term) extends Command
-case class Bind(n: String, b: Binding) extends Command
+enum Command {
+  case Eval(t: Term)
+  case Bind(n: String, b: Binding)
+}
 
 case class Context(l: List[(String, Binding)] = List()) {
+  import Binding._
+
   val length: Int = l.length
   def addBinding(s: String, bind: Binding): Context = Context((s, bind) :: l)
   def addName(s: String): Context = addBinding(s, NameBind)
@@ -57,6 +63,7 @@ case class Context(l: List[(String, Binding)] = List()) {
 }
 
 object Syntax {
+  import Term._
 
   private def tmMap(onVar: (Int, TmVar) => Term, c: Int, t: Term): Term = {
     def walk(c: Int, t: Term): Term =
@@ -106,6 +113,10 @@ import util.Document._
 object PrettyPrinter {
   import scala.language.implicitConversions
   import util.Print._, util.Print.text2doc
+
+  import Binding._
+  import Term._
+  import Ty._
 
   def ptyType(outer: Boolean, ctx: Context, ty: Ty): Document =
     ty match {
