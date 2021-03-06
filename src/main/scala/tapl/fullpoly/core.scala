@@ -1,6 +1,7 @@
 package tapl.fullpoly
 
 object Util {
+  import Term._
 
   def isNumericVal(ctx: Context, t: Term): Boolean =
     t match {
@@ -27,6 +28,8 @@ object Util {
 object Evaluator {
   import Util._
   import Syntax._
+  import Binding._
+  import Term._
 
   private def eval1(ctx: Context, t: Term): Term =
     t match {
@@ -128,6 +131,9 @@ object Evaluator {
 
 object Typer {
   import Syntax._
+  import Binding._
+  import Term._
+  import Ty._
 
   private def isTyAbb(ctx: Context, i: Int) =
     ctx.getBinding(i) match {

@@ -1,34 +1,40 @@
 package tapl.fullerror
 
-sealed trait Ty
-case class TyVar(i: Int, cl: Int) extends Ty
-case object TyTop extends Ty
-case object TyBot extends Ty
-case class TyArr(t1: Ty, t2: Ty) extends Ty
-case object TyBool extends Ty
+enum Ty {
+  case TyVar(i: Int, cl: Int)
+  case TyTop
+  case TyBot
+  case TyArr(t1: Ty, t2: Ty)
+  case TyBool
+}
 
-sealed trait Term
-case class TmVar(i: Int, cl: Int) extends Term
-case class TmAbs(v: String, ty: Ty, t: Term) extends Term
-case class TmApp(t1: Term, t2: Term) extends Term
-case object TmTrue extends Term
-case object TmFalse extends Term
-case class TmIf(cond: Term, t1: Term, t2: Term) extends Term
-case object TmError extends Term
-case class TmTry(t1: Term, t2: Term) extends Term
+enum Term {
+  case TmVar(i: Int, cl: Int)
+  case TmAbs(v: String, ty: Ty, t: Term)
+  case TmApp(t1: Term, t2: Term)
+  case TmTrue
+  case TmFalse
+  case TmIf(cond: Term, t1: Term, t2: Term)
+  case TmError
+  case TmTry(t1: Term, t2: Term)
+}
 
-sealed trait Command
-case class Eval(t: Term) extends Command
-case class Bind(n: String, b: Binding) extends Command
+enum Command {
+  case Eval(t: Term)
+  case Bind(n: String, b: Binding)
+}
 
-sealed trait Binding
-case object NameBind extends Binding
-case object TyVarBind extends Binding
-case class VarBind(t: Ty) extends Binding
-case class TmAbbBind(t: Term, ty: Option[Ty]) extends Binding
-case class TyAbbBind(ty: Ty) extends Binding
+enum Binding {
+  case NameBind
+  case TyVarBind
+  case VarBind(t: Ty)
+  case TmAbbBind(t: Term, ty: Option[Ty])
+  case TyAbbBind(ty: Ty)
+}
 
 case class Context(l: List[(String, Binding)] = List()) {
+  import Binding._
+
   val length: Int =
     l.length
 
@@ -71,6 +77,9 @@ case class Context(l: List[(String, Binding)] = List()) {
 }
 
 object Syntax {
+  import Binding._
+  import Term._
+  import Ty._
 
   private def tyMap(onVar: (Int, TyVar) => Ty, c: Int, ty: Ty): Ty = {
     def walk(c: Int, ty: Ty): Ty =
@@ -170,7 +179,12 @@ import util.Document._
 
 // outer means that the term is the top-level term
 object PrettyPrinter {
-  import util.Print._
+  import scala.language.implicitConversions
+  import util.Print._, util.Print.text2doc
+
+  import Binding._
+  import Term._
+  import Ty._
 
   def ptyType(outer: Boolean, ctx: Context, ty: Ty): Document =
     ty match {
@@ -180,7 +194,7 @@ object PrettyPrinter {
   def ptyArrowType(outer: Boolean, ctx: Context, tyT: Ty): Document =
     tyT match {
       case TyArr(tyT1, tyT2) =>
-        g2(ptyAType(false, ctx, tyT1) :: " ->" :/: ptyArrowType(outer, ctx, tyT2))
+        g2(ptyAType(false, ctx, tyT1) ::: " ->" :/: ptyArrowType(outer, ctx, tyT2))
       case tyT =>
         ptyAType(outer, ctx, tyT)
     }
@@ -197,7 +211,7 @@ object PrettyPrinter {
       case TyBool =>
         "Bool"
       case tyT =>
-        "(" :: ptyType(outer, ctx, tyT) :: ")"
+        "(" ::: ptyType(outer, ctx, tyT) ::: ")"
     }
 
   def ptyTy(ctx: Context, ty: Ty) = ptyType(true, ctx, ty)
@@ -206,7 +220,7 @@ object PrettyPrinter {
     t match {
       case TmAbs(x, tyT1, t2) =>
         val (ctx1, x1) = ctx.pickFreshName(x)
-        val abs = g0("lambda" :/: x1 :: ":" :/: ptyType(false, ctx, tyT1) :: ".")
+        val abs = g0("lambda" :/: x1 ::: ":" :/: ptyType(false, ctx, tyT1) ::: ".")
         val body = ptmTerm(outer, ctx1, t2)
         g2(abs :/: body)
       case TmIf(t1, t2, t3) =>
@@ -215,7 +229,7 @@ object PrettyPrinter {
         val elseB = g2("else" :/: ptmTerm(outer, ctx, t2))
         g0(ifB :/: thenB :/: elseB)
       case TmTry(t1, t2) =>
-        g0("try " :: ptmTerm(false, ctx, t1) :/: "with " :: ptmTerm(false, ctx, t1))
+        g0("try " ::: ptmTerm(false, ctx, t1) :/: "with " ::: ptmTerm(false, ctx, t1))
       case t => ptmAppTerm(outer, ctx, t)
 
     }
@@ -242,7 +256,7 @@ object PrettyPrinter {
       case TmError =>
         "error"
       case t =>
-        "(" :: ptmTerm(outer, ctx, t) :: ")"
+        "(" ::: ptmTerm(outer, ctx, t) ::: ")"
     }
 
   def pBinding(ctx: Context, bind: Binding): Document =
@@ -252,11 +266,11 @@ object PrettyPrinter {
       case TyVarBind =>
         empty
       case VarBind(ty) =>
-        ": " :: ptyTy(ctx, ty)
+        ": " ::: ptyTy(ctx, ty)
       case TmAbbBind(t, tyT) =>
-        "= " :: ptm(ctx, t)
+        "= " ::: ptm(ctx, t)
       case TyAbbBind(tyT) =>
-        "= " :: ptyTy(ctx, tyT)
+        "= " ::: ptyTy(ctx, tyT)
     }
 
   def pBindingTy(ctx: Context, b: Binding): Document =
@@ -266,11 +280,11 @@ object PrettyPrinter {
       case TyVarBind =>
         empty
       case VarBind(ty) =>
-        ": " :: ptyTy(ctx, ty)
+        ": " ::: ptyTy(ctx, ty)
       case TmAbbBind(t, Some(ty)) =>
-        ": " :: ptyTy(ctx, ty)
+        ": " ::: ptyTy(ctx, ty)
       case TmAbbBind(t, None) =>
-        ": " :: ptyTy(ctx, Typer.typeof(ctx, t))
+        ": " ::: ptyTy(ctx, Typer.typeof(ctx, t))
       case TyAbbBind(ty) =>
         ":: *"
     }

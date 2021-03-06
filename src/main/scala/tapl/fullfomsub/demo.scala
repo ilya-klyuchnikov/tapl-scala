@@ -1,11 +1,15 @@
 package tapl.fullfomsub
 
 object FullFomSubDemo extends util.Demo[Context, Command] {
+  import scala.language.implicitConversions
   import Evaluator._
   import Typer._
   import Syntax._
-  import util.Print._
+  import util.Print._, util.Print.text2doc
   import PrettyPrinter._
+  import Term._
+  import Binding._
+  import Command._
 
   val width = 60
 
@@ -43,11 +47,11 @@ object FullFomSubDemo extends util.Demo[Context, Command] {
     cmd match {
       case Eval(t1) =>
         val ty1 = Typer.typeof(ctx, t1)
-        val doc1 = g2(ptmATerm(true, ctx, t1) :: ":" :/: ptyTy(ctx, ty1) :: ";")
+        val doc1 = g2(ptmATerm(true, ctx, t1) ::: ":" :/: ptyTy(ctx, ty1) ::: ";")
 
         val t2 = eval(ctx, t1)
         val ty2 = Typer.typeof(ctx, t2)
-        val doc2 = g2(ptmATerm(true, ctx, t2) :: ":" :/: ptyTy(ctx, ty2) :: ";")
+        val doc2 = g2(ptmATerm(true, ctx, t2) ::: ":" :/: ptyTy(ctx, ty2) ::: ";")
 
         println("====================")
         println(print(doc1, width))
@@ -60,7 +64,7 @@ object FullFomSubDemo extends util.Demo[Context, Command] {
       case Bind(x, bind) =>
         val bind1 = checkBinding(ctx, bind)
         val bind2 = evalBinding(ctx, bind1)
-        val doc1 = x :: pBindingTy(ctx, bind2) :: ";"
+        val doc1 = x ::: pBindingTy(ctx, bind2) ::: ";"
         println("====================")
         println(print(doc1, width))
 
@@ -69,7 +73,7 @@ object FullFomSubDemo extends util.Demo[Context, Command] {
       case SomeBind(tyX, x, t1) =>
         val tyT = typeof(ctx, t1)
         lcst(ctx, tyT) match {
-          case TySome(_, tyBound, tyBody) =>
+          case Ty.TySome(_, tyBound, tyBody) =>
             val t2 = eval(ctx, t1)
             val b = t2 match {
               case TmPack(_, t12, _) => (TmAbbBind(termShift(1, t12), Some(tyBody)))

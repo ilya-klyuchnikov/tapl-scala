@@ -3,6 +3,7 @@ package tapl.simplebool
 object Evaluator {
   import Util._
   import Syntax._
+  import Term._
 
   def eval1(ctx: Context, t: Term): Term =
     t match {
@@ -35,6 +36,10 @@ object Evaluator {
 }
 
 object Typer {
+  import Binding._
+  import Term._
+  import Ty._
+
   def typeof(ctx: Context, t: Term): Ty =
     t match {
       case TmVar(i, _) =>
@@ -74,6 +79,8 @@ object Typer {
 }
 
 object Util {
+  import Term._
+
   def isVal(ctx: Context, t: Term): Boolean =
     t match {
       case TmAbs(_, _, _) => true

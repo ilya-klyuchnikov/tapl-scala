@@ -1,22 +1,24 @@
 package tapl.untyped
 
-sealed trait Term {
-  final def prettyString(ctx: Context = Context()): String =
-    util.Print.print(PrettyPrinter.ptm(ctx, this), 60)
+enum Term {
+  // i - index, cl - context length
+  case TmVar(i: Int, cl: Int)
+  case TmAbs(v: String, t: Term)
+  case TmApp(t1: Term, t2: Term)
 }
-// i - index, cl - context length
-case class TmVar(i: Int, cl: Int) extends Term
-case class TmAbs(v: String, t: Term) extends Term
-case class TmApp(t1: Term, t2: Term) extends Term
 
-sealed trait Command
-case class Eval(t: Term) extends Command
-case class Bind(n: String, b: Binding) extends Command
+enum Command {
+  case Eval(t: Term)
+  case Bind(n: String, b: Binding)
+}
 
-sealed trait Binding
-case object NameBind extends Binding
+enum Binding {
+  case NameBind
+}
 
 case class Context(l: List[(String, Binding)] = List()) {
+  import Binding._
+
   val length: Int =
     l.length
 
@@ -50,6 +52,8 @@ case class Context(l: List[(String, Binding)] = List()) {
 }
 
 object Syntax {
+  import Term._
+
   private def tmMap[A](onVar: (Int, TmVar) => Term, c: Int, t: Term): Term = {
     def walk(c: Int, t: Term): Term =
       t match {
@@ -88,13 +92,17 @@ import util.Document._
 
 // outer means that the term is the top-level term
 object PrettyPrinter {
-  import util.Print._
+  import scala.language.implicitConversions
+  import util.Print._, util.Print.text2doc
+
+  import Binding._
+  import Term._
 
   def ptmTerm(outer: Boolean, ctx: Context, t: Term): Document =
     t match {
       case TmAbs(x, t2) =>
         val (ctx1, x1) = ctx.pickFreshName(x)
-        val abs = g0("\\" :: x1 :: ".")
+        val abs = g0("\\" ::: x1 ::: ".")
         val body = ptmTerm(outer, ctx1, t2)
         g2(abs :/: body)
       case t => ptmAppTerm(outer, ctx, t)
@@ -117,7 +125,7 @@ object PrettyPrinter {
         if (ctx.length == n) ctx.index2Name(x)
         else text("[bad index: " + x + "/" + n + " in {" + ctx.l.mkString(", ") + "}]")
       case t =>
-        "(" :: ptmTerm(outer, ctx, t) :: ")"
+        "(" ::: ptmTerm(outer, ctx, t) ::: ")"
     }
 
   def pBinding(bind: Binding): Document =

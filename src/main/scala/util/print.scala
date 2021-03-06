@@ -1,13 +1,11 @@
 package util
 
 import java.io.StringWriter
-import scala.language.implicitConversions
 import Document._
 
 import scala.annotation.tailrec
 
 object Print {
-  implicit def text2doc(s: String): Document = text(s)
   def g0(doc: Document): Document = group(doc)
   def g2(doc: Document): Document = group(nest(2, doc))
 
@@ -16,6 +14,8 @@ object Print {
     d.format(w, sw)
     sw.toString
   }
+  given text2doc: Conversion[String, Document] =
+    text(_)
 }
 
 import java.io.Writer
@@ -30,10 +30,14 @@ case class DocCons(hd: Document, tl: Document) extends Document
 /** scala.text https://www.scala-lang.org/api/2.12.12/scala/text/index.html
   */
 sealed abstract class Document {
-  def ::(hd: Document): Document = DocCons(hd, this)
-  def ::(hd: String): Document = DocCons(DocText(hd), this)
-  def :/:(hd: Document): Document = hd :: DocBreak :: this
-  def :/:(hd: String): Document = hd :: DocBreak :: this
+  import scala.language.implicitConversions
+  import Print._
+  import Print.text2doc
+
+  def :::(hd: Document): Document = DocCons(hd, this)
+  def :::(hd: String): Document = DocCons(DocText(hd), this)
+  def :/:(hd: Document): Document = hd ::: DocBreak ::: this
+  def :/:(hd: String): Document = hd ::: DocBreak ::: this
 
   /**
     * Format this document on `writer` and try to set line
@@ -97,8 +101,6 @@ sealed abstract class Document {
         case (i, b, DocGroup(d)) :: z =>
           val fitsFlat = fits(width - k, (i, false, d) :: z)
           fmt(k, (i, !fitsFlat, d) :: z)
-        case _ =>
-          ()
       }
 
     fmt(0, (0, false, DocGroup(this)) :: Nil)

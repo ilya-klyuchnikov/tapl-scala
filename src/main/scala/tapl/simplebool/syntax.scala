@@ -1,33 +1,36 @@
 package tapl.simplebool
 
-sealed trait Term {
-  final def prettyString(ctx: Context = Context()): String =
-    util.Print.print(PrettyPrinter.ptm(ctx, this), 60)
+enum Term {
+  // i - index, cl - context length
+  case TmVar(i: Int, cl: Int)
+  case TmAbs(v: String, ty: Ty, t: Term)
+  case TmApp(t1: Term, t2: Term)
+  case TmTrue
+  case TmFalse
+  case TmIf(cond: Term, t1: Term, t2: Term)
 }
-// i - index, cl - context length
-case class TmVar(i: Int, cl: Int) extends Term
-case class TmAbs(v: String, ty: Ty, t: Term) extends Term
-case class TmApp(t1: Term, t2: Term) extends Term
-case object TmTrue extends Term
-case object TmFalse extends Term
-case class TmIf(cond: Term, t1: Term, t2: Term) extends Term
 
-sealed trait Ty
-case class TyArr(t1: Ty, t2: Ty) extends Ty
-case object TyBool extends Ty
+enum Ty {
+  case TyArr(t1: Ty, t2: Ty)
+  case TyBool
+}
 
-sealed trait Command
-case class Eval(t: Term) extends Command
-case class Bind(n: String, b: Binding) extends Command
+enum Command {
+  case Eval(t: Term)
+  case Bind(n: String, b: Binding)
+}
 
-sealed trait Binding
-// Binds variable and a name. Used during parsing
-// propagate names.
-case object NameBind extends Binding
-// Binds a variable to a type. Used during typechecking.
-case class VarBind(t: Ty) extends Binding
+enum Binding {
+  // Binds variable and a name. Used during parsing
+  // propagate names.
+  case NameBind
+  // Binds a variable to a type. Used during typechecking.
+  case VarBind(t: Ty)
+}
 
 case class Context(l: List[(String, Binding)] = List()) {
+  import Binding._
+
   val length: Int =
     l.length
 
@@ -70,6 +73,8 @@ case class Context(l: List[(String, Binding)] = List()) {
 }
 
 object Syntax {
+  import Term._
+
   private def tmMap[A](onVar: (Int, TmVar) => Term, c: Int, t: Term): Term = {
     def walk(c: Int, t: Term): Term =
       t match {
@@ -110,7 +115,11 @@ import util.Document._
 
 // outer means that the term is the top-level term
 object PrettyPrinter {
-  import util.Print._
+  import scala.language.implicitConversions
+  import util.Print._, util.Print.text2doc
+  import Binding._
+  import Term._
+  import Ty._
 
   def ptyType(outer: Boolean, ty: Ty): Document =
     ty match {
@@ -120,7 +129,7 @@ object PrettyPrinter {
   def ptyArrowType(outer: Boolean, tyT: Ty): Document =
     tyT match {
       case TyArr(tyT1, tyT2) =>
-        g0(ptyAType(false, tyT1) :: " ->" :/: ptyArrowType(outer, tyT2))
+        g0(ptyAType(false, tyT1) ::: " ->" :/: ptyArrowType(outer, tyT2))
       case tyT =>
         ptyAType(outer, tyT)
     }
@@ -128,7 +137,7 @@ object PrettyPrinter {
   def ptyAType(outer: Boolean, tyT: Ty): Document =
     tyT match {
       case TyBool => "Bool"
-      case tyT    => "(" :: ptyType(outer, tyT) :: ")"
+      case tyT    => "(" ::: ptyType(outer, tyT) ::: ")"
     }
 
   def ptyTy(ty: Ty) = ptyType(true, ty)
@@ -137,7 +146,7 @@ object PrettyPrinter {
     t match {
       case TmAbs(x, tyT1, t2) =>
         val (ctx1, x1) = ctx.pickFreshName(x)
-        val abs = g0("\\" :: x1 :: ":" :: ptyType(false, tyT1) :: ".")
+        val abs = g0("\\" ::: x1 ::: ":" ::: ptyType(false, tyT1) ::: ".")
         val body = ptmTerm(outer, ctx1, t2)
         g2(abs :/: body)
       case TmIf(t1, t2, t3) =>
@@ -169,12 +178,12 @@ object PrettyPrinter {
       case TmFalse =>
         "false"
       case t =>
-        "(" :: ptmTerm(outer, ctx, t) :: ")"
+        "(" ::: ptmTerm(outer, ctx, t) ::: ")"
     }
 
   def pBinding(bind: Binding): Document =
     bind match {
       case NameBind    => empty
-      case VarBind(ty) => ": " :: ptyTy(ty)
+      case VarBind(ty) => ": " ::: ptyTy(ty)
     }
 }

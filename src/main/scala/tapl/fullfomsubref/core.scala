@@ -2,6 +2,7 @@ package tapl.fullfomsubref
 import util.Print
 
 object Util {
+  import Term._
 
   def isNumericVal(ctx: Context, t: Term): Boolean =
     t match {
@@ -44,6 +45,8 @@ case class Store(l: List[Term] = List()) {
 object Evaluator {
   import Util._
   import Syntax._
+  import Binding._
+  import Term._
 
   private def eval1(ctx: Context, store: Store, t: Term): (Term, Store) =
     t match {
@@ -202,7 +205,11 @@ object Evaluator {
 }
 
 object Typer {
+  import Binding._
+  import Kind._
   import Syntax._
+  import Term._
+  import Ty._
 
   private def isTyAbb(ctx: Context, i: Int) =
     ctx.getBinding(i) match {

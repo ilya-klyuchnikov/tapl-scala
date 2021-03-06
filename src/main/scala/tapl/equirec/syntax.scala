@@ -1,26 +1,32 @@
 package tapl.equirec
 
-sealed trait Ty
-case class TyId(id: String) extends Ty
-case class TyVar(i: Int, cl: Int) extends Ty
-case class TyArr(t1: Ty, t2: Ty) extends Ty
-case class TyRec(id: String, ty: Ty) extends Ty
+enum Ty {
+  case TyId(id: String)
+  case TyVar(i: Int, cl: Int)
+  case TyArr(t1: Ty, t2: Ty)
+  case TyRec(id: String, ty: Ty)
+}
 
-sealed trait Term
-case class TmVar(i: Int, cl: Int) extends Term
-case class TmAbs(v: String, ty: Ty, t: Term) extends Term
-case class TmApp(t1: Term, t2: Term) extends Term
+enum Term {
+  case TmVar(i: Int, cl: Int)
+  case TmAbs(v: String, ty: Ty, t: Term)
+  case TmApp(t1: Term, t2: Term)
+}
 
-sealed trait Binding
-case object NameBind extends Binding
-case object TyVarBind extends Binding
-case class VarBind(t: Ty) extends Binding
+enum Binding {
+  case NameBind
+  case TyVarBind
+  case VarBind(t: Ty)
+}
 
-sealed trait Command
-case class Eval(t: Term) extends Command
-case class Bind(n: String, b: Binding) extends Command
+enum Command {
+  case Eval(t: Term)
+  case Bind(n: String, b: Binding)
+}
 
 case class Context(l: List[(String, Binding)] = List()) {
+  import Binding._
+
   val length: Int = l.length
   def addBinding(s: String, bind: Binding): Context = Context((s, bind) :: l)
   def addName(s: String): Context = addBinding(s, NameBind)
@@ -53,6 +59,9 @@ case class Context(l: List[(String, Binding)] = List()) {
 }
 
 object Syntax {
+  import Binding._
+  import Term._
+  import Ty._
 
   private def tyMap(onVar: (Int, TyVar) => Ty, c: Int, ty: Ty): Ty = {
     def walk(c: Int, ty: Ty): Ty =
@@ -143,13 +152,18 @@ import util.Document._
 
 // outer means that the term is the top-level term
 object PrettyPrinter {
-  import util.Print._
+  import scala.language.implicitConversions
+  import util.Print._, util.Print.text2doc
+
+  import Binding._
+  import Term._
+  import Ty._
 
   def ptyType(outer: Boolean, ctx: Context, ty: Ty): Document =
     ty match {
       case TyRec(x, tyT) =>
         val (ctx1, x1) = ctx.pickFreshName(x)
-        g2("Rec " :: x :: "." :/: ptyType(outer, ctx1, tyT))
+        g2("Rec " ::: x ::: "." :/: ptyType(outer, ctx1, tyT))
       case ty =>
         ptyArrowType(outer, ctx, ty)
     }
@@ -157,7 +171,7 @@ object PrettyPrinter {
   def ptyArrowType(outer: Boolean, ctx: Context, tyT: Ty): Document =
     tyT match {
       case TyArr(tyT1, tyT2) =>
-        g2(ptyAType(false, ctx, tyT1) :: " ->" :/: ptyArrowType(outer, ctx, tyT2))
+        g2(ptyAType(false, ctx, tyT1) ::: " ->" :/: ptyArrowType(outer, ctx, tyT2))
       case tyT =>
         ptyAType(outer, ctx, tyT)
     }
@@ -168,7 +182,7 @@ object PrettyPrinter {
       case TyVar(x, n) =>
         if (ctx.length == n) ctx.index2Name(x)
         else text("[bad index: " + x + "/" + n + " in {" + ctx.l.mkString(", ") + "}]")
-      case tyT => "(" :: ptyType(outer, ctx, tyT) :: ")"
+      case tyT => "(" ::: ptyType(outer, ctx, tyT) ::: ")"
     }
 
   def ptyTy(ctx: Context, ty: Ty) = ptyType(true, ctx, ty)
@@ -177,7 +191,7 @@ object PrettyPrinter {
     t match {
       case TmAbs(x, tyT1, t2) =>
         val (ctx1, x1) = ctx.pickFreshName(x)
-        val abs = g0("lambda" :/: x1 :: ":" :/: ptyType(false, ctx, tyT1) :: ".")
+        val abs = g0("lambda" :/: x1 ::: ":" :/: ptyType(false, ctx, tyT1) ::: ".")
         val body = ptmTerm(outer, ctx1, t2)
         g2(abs :/: body)
       case t => ptmAppTerm(outer, ctx, t)
@@ -197,7 +211,7 @@ object PrettyPrinter {
         if (ctx.length == n) ctx.index2Name(x)
         else text("[bad index: " + x + "/" + n + " in {" + ctx.l.mkString(", ") + "}]")
       case t =>
-        "(" :: ptmTerm(outer, ctx, t) :: ")"
+        "(" ::: ptmTerm(outer, ctx, t) ::: ")"
     }
 
   def ptm(ctx: Context, t: Term) = ptmTerm(true, ctx, t)
@@ -209,7 +223,7 @@ object PrettyPrinter {
       case TyVarBind =>
         empty
       case VarBind(ty) =>
-        ": " :: ptyTy(ctx, ty)
+        ": " ::: ptyTy(ctx, ty)
     }
 
   def pBindingTy(ctx: Context, b: Binding): Document =
@@ -219,7 +233,7 @@ object PrettyPrinter {
       case TyVarBind =>
         empty
       case VarBind(ty) =>
-        ": " :: ptyTy(ctx, ty)
+        ": " ::: ptyTy(ctx, ty)
     }
 
 }

@@ -4,77 +4,84 @@ package tapl.fullfomsubref
 // and checkers from the book.
 // (Except recursive datatypes??)
 
-sealed trait Kind
-case object KnStar extends Kind
-case class KnArr(k1: Kind, k2: Kind) extends Kind
+enum Kind {
+  case KnStar
+  case KnArr(k1: Kind, k2: Kind)
+}
 
-sealed trait Ty
-case class TyId(id: String) extends Ty
-case class TyVar(i: Int, cl: Int) extends Ty
-case object TyBool extends Ty
-case object TyTop extends Ty
-case object TyBot extends Ty
-case class TyArr(t1: Ty, t2: Ty) extends Ty
-case class TyRecord(els: List[(String, Ty)]) extends Ty
-case class TyVariant(els: List[(String, Ty)]) extends Ty
-case object TyString extends Ty
-case object TyUnit extends Ty
-case object TyNat extends Ty
-case class TyAll(n: String, t1: Ty, ty2: Ty) extends Ty
-case class TySome(n: String, ty1: Ty, ty2: Ty) extends Ty
-case class TyAbs(v: String, k: Kind, ty: Ty) extends Ty
-case class TyApp(ty1: Ty, ty2: Ty) extends Ty
-case class TyRef(ty: Ty) extends Ty
-case class TySource(ty: Ty) extends Ty
-case class TySink(ty: Ty) extends Ty
+enum Ty {
+  case TyId(id: String)
+  case TyVar(i: Int, cl: Int)
+  case TyBool
+  case TyTop
+  case TyBot
+  case TyArr(t1: Ty, t2: Ty)
+  case TyRecord(els: List[(String, Ty)])
+  case TyVariant(els: List[(String, Ty)])
+  case TyString
+  case TyUnit
+  case TyNat
+  case TyAll(n: String, t1: Ty, ty2: Ty)
+  case TySome(n: String, ty1: Ty, ty2: Ty)
+  case TyAbs(v: String, k: Kind, ty: Ty)
+  case TyApp(ty1: Ty, ty2: Ty)
+  case TyRef(ty: Ty)
+  case TySource(ty: Ty)
+  case TySink(ty: Ty)
+}
 
-sealed trait Term
-case class TmVar(i: Int, cl: Int) extends Term
-case class TmAbs(v: String, ty: Ty, t: Term) extends Term
-case class TmApp(t1: Term, t2: Term) extends Term
-case object TmTrue extends Term
-case object TmFalse extends Term
-case class TmIf(cond: Term, t1: Term, t2: Term) extends Term
-case class TmRecord(fields: List[(String, Term)]) extends Term
-case class TmProj(t: Term, proj: String) extends Term
-case class TmLet(l: String, t1: Term, t2: Term) extends Term
-// float
-// timesfloat
-case class TmAscribe(t: Term, ty: Ty) extends Term
-case class TmString(s: String) extends Term
-case object TmUnit extends Term
-case class TmFix(t: Term) extends Term
-case class TmCase(sel: Term, branches: List[(String, String, Term)]) extends Term
-case class TmTag(tag: String, t: Term, ty: Ty) extends Term
-case class TmLoc(i: Int) extends Term
-case class TmRef(t: Term) extends Term
-case class TmDeref(t: Term) extends Term
-case class TmAssign(t1: Term, t2: Term) extends Term
-case object TmError extends Term
-case class TmTry(t1: Term, t2: Term) extends Term
-case class TmTAbs(v: String, ty: Ty, t: Term) extends Term
-case class TmTApp(t: Term, ty: Ty) extends Term
-case object TmZero extends Term
-case class TmSucc(t: Term) extends Term
-case class TmPred(t: Term) extends Term
-case class TmIsZero(t: Term) extends Term
-case class TmPack(ty: Ty, t: Term, as: Ty) extends Term
-case class TmUnPack(n1: String, n2: String, t1: Term, t2: Term) extends Term
+enum Term {
+  case TmVar(i: Int, cl: Int)
+  case TmAbs(v: String, ty: Ty, t: Term)
+  case TmApp(t1: Term, t2: Term)
+  case TmTrue
+  case TmFalse
+  case TmIf(cond: Term, t1: Term, t2: Term)
+  case TmRecord(fields: List[(String, Term)])
+  case TmProj(t: Term, proj: String)
+  case TmLet(l: String, t1: Term, t2: Term)
+  // float
+  // timesfloat
+  case TmAscribe(t: Term, ty: Ty)
+  case TmString(s: String)
+  case TmUnit
+  case TmFix(t: Term)
+  case TmCase(sel: Term, branches: List[(String, String, Term)])
+  case TmTag(tag: String, t: Term, ty: Ty)
+  case TmLoc(i: Int)
+  case TmRef(t: Term)
+  case TmDeref(t: Term)
+  case TmAssign(t1: Term, t2: Term)
+  case TmError
+  case TmTry(t1: Term, t2: Term)
+  case TmTAbs(v: String, ty: Ty, t: Term)
+  case TmTApp(t: Term, ty: Ty)
+  case TmZero
+  case TmSucc(t: Term)
+  case TmPred(t: Term)
+  case TmIsZero(t: Term)
+  case TmPack(ty: Ty, t: Term, as: Ty)
+  case TmUnPack(n1: String, n2: String, t1: Term, t2: Term)
+}
 
-sealed trait Binding
-case object NameBind extends Binding
-case class TyVarBind(t: Ty) extends Binding
-case class VarBind(t: Ty) extends Binding
-case class TyAbbBind(ty: Ty, k: Option[Kind]) extends Binding
-case class TmAbbBind(t: Term, ty: Option[Ty]) extends Binding
+enum Binding {
+  case NameBind
+  case TyVarBind(t: Ty)
+  case VarBind(t: Ty)
+  case TyAbbBind(ty: Ty, k: Option[Kind])
+  case TmAbbBind(t: Term, ty: Option[Ty])
+}
 
-sealed trait Command
-//case class Import(path: String) extends Command
-case class Eval(t: Term) extends Command
-case class Bind(n: String, b: Binding) extends Command
-case class SomeBind(n1: String, n2: String, t: Term) extends Command
+enum Command {
+  //case Import(path: String)
+  case Eval(t: Term)
+  case Bind(n: String, b: Binding)
+  case SomeBind(n1: String, n2: String, t: Term)
+}
 
 case class Context(l: List[(String, Binding)] = List()) {
+  import Binding._
+
   val length: Int = l.length
   def addBinding(s: String, bind: Binding): Context = Context((s, bind) :: l)
   def addName(s: String): Context = addBinding(s, NameBind)
@@ -110,6 +117,10 @@ case class Context(l: List[(String, Binding)] = List()) {
 }
 
 object Syntax {
+  import Binding._
+  import Kind._
+  import Term._
+  import Ty._
 
   private def tyMap(onVar: (Int, TyVar) => Ty, c: Int, ty: Ty): Ty = {
     def walk(c: Int, ty: Ty): Ty =
@@ -249,7 +260,13 @@ import util.Document
 import util.Document._
 
 object PrettyPrinter {
-  import util.Print._
+  import scala.language.implicitConversions
+  import util.Print._, util.Print.text2doc
+
+  import Binding._
+  import Kind._
+  import Term._
+  import Ty._
 
   def pknKind(outer: Boolean, ctx: Context, k: Kind): Document =
     k match {
@@ -267,7 +284,7 @@ object PrettyPrinter {
   def pknAKind(outer: Boolean, ctx: Context, k: Kind): Document =
     k match {
       case KnStar => "*"
-      case knK    => "(" :: pknKind(outer, ctx, knK) :: ")"
+      case knK    => "(" ::: pknKind(outer, ctx, knK) ::: ")"
     }
 
   def pkn(ctx: Context, k: Kind): Document =
@@ -276,29 +293,29 @@ object PrettyPrinter {
   def prokn(ctx: Context, knk: Kind): Document =
     knk match {
       case KnStar => empty
-      case _      => "::" :: pknKind(false, ctx, knk)
+      case _      => ":::" ::: pknKind(false, ctx, knk)
     }
 
   def prOTy(ctx: Context, ty: Ty): Document =
     ty match {
       case TyTop => empty
-      case _     => "<:" :: ptyType(false, ctx, ty)
+      case _     => "<:" ::: ptyType(false, ctx, ty)
     }
 
   def ptyType(outer: Boolean, ctx: Context, ty: Ty): Document =
     ty match {
       case TyAll(tyX, tyT1, tyT2) =>
         val (ctx1, tyX1) = ctx.pickFreshName(tyX)
-        g2("All " :: tyX1 :: prOTy(ctx, tyT1) :: "." :/: ptyType(outer, ctx1, tyT2))
+        g2("All " ::: tyX1 ::: prOTy(ctx, tyT1) ::: "." :/: ptyType(outer, ctx1, tyT2))
       case TyRef(tyT) =>
-        "Ref " :: ptyAType(false, ctx, tyT)
+        "Ref " ::: ptyAType(false, ctx, tyT)
       case TySource(tyT) =>
-        "Source " :: ptyAType(false, ctx, tyT)
+        "Source " ::: ptyAType(false, ctx, tyT)
       case TySink(tyT) =>
-        "Sink " :: ptyAType(false, ctx, tyT)
+        "Sink " ::: ptyAType(false, ctx, tyT)
       case TyAbs(tyX, knK1, tyT2) =>
         val (ctx1, tyX1) = ctx.pickFreshName(tyX)
-        g2("lambda " :: tyX1 :: prokn(ctx, knK1) :: "." :/: ptyType(outer, ctx1, tyT2))
+        g2("lambda " ::: tyX1 ::: prokn(ctx, knK1) ::: "." :/: ptyType(outer, ctx1, tyT2))
       case ty =>
         ptyArrowType(outer, ctx, ty)
     }
@@ -306,7 +323,7 @@ object PrettyPrinter {
   def ptyArrowType(outer: Boolean, ctx: Context, tyT: Ty): Document =
     tyT match {
       case TyArr(tyT1, tyT2) =>
-        g2(ptyAType(false, ctx, tyT1) :: " ->" :/: ptyArrowType(outer, ctx, tyT2))
+        g2(ptyAType(false, ctx, tyT1) ::: " ->" :/: ptyArrowType(outer, ctx, tyT2))
       case tyT =>
         ptyAppType(outer, ctx, tyT)
     }
@@ -337,25 +354,25 @@ object PrettyPrinter {
           if (i.toString() == li) {
             ptyType(false, ctx, tyTi)
           } else {
-            g0(li :: ":" :/: ptyType(false, ctx, tyTi))
+            g0(li ::: ":" :/: ptyType(false, ctx, tyTi))
           }
         g2(
-          "{" :: fields.zipWithIndex
+          "{" ::: fields.zipWithIndex
             .map { case ((li, tyTi), i) => pf(i + 1, li, tyTi) }
-            .reduceLeftOption(_ :: "," :/: _)
-            .getOrElse(empty) :: "}"
+            .reduceLeftOption(_ ::: "," :/: _)
+            .getOrElse(empty) ::: "}"
         )
       case TyVariant(fields) =>
         def pf(i: Int, li: String, tyTi: Ty): Document =
           if (i.toString() == li) {
             ptyType(false, ctx, tyTi)
           } else {
-            li :: ":" :/: ptyType(false, ctx, tyTi)
+            li ::: ":" :/: ptyType(false, ctx, tyTi)
           }
-        "<" :: fields.zipWithIndex
+        "<" ::: fields.zipWithIndex
           .map { case ((li, tyTi), i) => pf(i + 1, li, tyTi) }
-          .reduceLeftOption(_ :: "," :/: _)
-          .getOrElse(empty) :: ">"
+          .reduceLeftOption(_ ::: "," :/: _)
+          .getOrElse(empty) ::: ">"
       case TyString =>
         "String"
       case TyUnit =>
@@ -364,9 +381,9 @@ object PrettyPrinter {
         "Nat"
       case TySome(tyX, tyT1, tyT2) =>
         val (ctx1, tyX1) = ctx.pickFreshName(tyX)
-        g2("{Some " :: tyX1 :: prOTy(ctx, tyT1) :: "," :/: ptyType(false, ctx1, tyT2) :: "}")
+        g2("{Some " ::: tyX1 ::: prOTy(ctx, tyT1) ::: "," :/: ptyType(false, ctx1, tyT2) ::: "}")
       case tyT =>
-        "(" :: ptyType(outer, ctx, tyT) :: ")"
+        "(" ::: ptyType(outer, ctx, tyT) ::: ")"
     }
 
   def ptyTy(ctx: Context, ty: Ty) = ptyType(true, ctx, ty)
@@ -377,7 +394,7 @@ object PrettyPrinter {
 
       case TmAbs(x, tyT1, t2) =>
         val (ctx1, x1) = ctx.pickFreshName(x)
-        val abs = g0("lambda" :/: x1 :: ":" :/: ptyType(false, ctx, tyT1) :: ".")
+        val abs = g0("lambda" :/: x1 ::: ":" :/: ptyType(false, ctx, tyT1) ::: ".")
         val body = ptmTerm(outer, ctx1, t2)
         g2(abs :/: body)
       case TmIf(t1, t2, t3) =>
@@ -387,37 +404,37 @@ object PrettyPrinter {
         g0(ifB :/: thenB :/: elseB)
       case TmLet(x, t1, t2) =>
         g0(
-          "let " :: x :: " = " :: ptmTerm(false, ctx, t1) :/: "in" :/: ptmTerm(
+          "let " ::: x ::: " = " ::: ptmTerm(false, ctx, t1) :/: "in" :/: ptmTerm(
             false,
             ctx.addName(x),
             t2,
           )
         )
       case TmFix(t1) =>
-        g2("fix " :: ptmTerm(false, ctx, t1))
+        g2("fix " ::: ptmTerm(false, ctx, t1))
       case TmCase(t, cases) =>
         def pc(li: String, xi: String, ti: Term): Document = {
           val (ctx1, x1) = ctx.pickFreshName(xi)
-          "<" :: li :: "=" :: xi :: ">==>" :: ptmTerm(false, ctx1, ti)
+          "<" ::: li ::: "=" ::: xi ::: ">==>" ::: ptmTerm(false, ctx1, ti)
         }
         g2(
-          "case " :: ptmTerm(false, ctx, t) :: " of" :/:
-            cases.map { case (x, y, z) => pc(x, y, z) }.foldRight(empty: Document)(_ :/: "|" :: _)
+          "case " ::: ptmTerm(false, ctx, t) ::: " of" :/:
+            cases.map { case (x, y, z) => pc(x, y, z) }.foldRight(empty: Document)(_ :/: "|" ::: _)
         )
       case TmAssign(t1, t2) =>
         g2(ptmAppTerm(false, ctx, t1) :/: ":=" :/: ptmAppTerm(false, ctx, t2))
       case TmTry(t1, t2) =>
-        g0("try " :: ptmTerm(false, ctx, t1) :/: "with " :: ptmTerm(false, ctx, t1))
+        g0("try " ::: ptmTerm(false, ctx, t1) :/: "with " ::: ptmTerm(false, ctx, t1))
       case TmTAbs(x, ty, t) =>
         val (ctx1, x1) = ctx.pickFreshName(x)
-        val abs = g0("lambda" :/: x1 :: prOTy(ctx, ty) :: ".")
+        val abs = g0("lambda" :/: x1 ::: prOTy(ctx, ty) ::: ".")
         val body = ptmTerm(outer, ctx1, t)
         g2(abs :/: body)
       case TmUnPack(tyX, x, t1, t2) =>
         val (ctx1, tyX1) = ctx.pickFreshName(tyX)
         val (ctx2, x1) = ctx1.pickFreshName(x)
         g2(
-          "let {" :: tyX1 :: ", " :: x :: "} =" :/: ptmTerm(false, ctx, t1) :/: "in " :: ptmTerm(
+          "let {" ::: tyX1 ::: ", " ::: x ::: "} =" :/: ptmTerm(false, ctx, t1) :/: "in " ::: ptmTerm(
             outer,
             ctx2,
             t2,
@@ -432,15 +449,15 @@ object PrettyPrinter {
       case TmApp(t1, t2) =>
         g2(ptmAppTerm(false, ctx, t1) :/: ptmATerm(false, ctx, t2))
       case TmRef(t1) =>
-        "ref " :: ptmATerm(false, ctx, t1)
+        "ref " ::: ptmATerm(false, ctx, t1)
       case TmDeref(t1) =>
-        "!" :: ptmATerm(false, ctx, t1)
+        "!" ::: ptmATerm(false, ctx, t1)
       case TmTApp(t, tyS) =>
-        g2(ptmAppTerm(false, ctx, t) :/: "[" :: ptyType(false, ctx, tyS) :: "]")
+        g2(ptmAppTerm(false, ctx, t) :/: "[" ::: ptyType(false, ctx, tyS) ::: "]")
       case TmPred(t1) =>
-        "pred " :: ptmATerm(false, ctx, t1)
+        "pred " ::: ptmATerm(false, ctx, t1)
       case TmIsZero(t1) =>
-        "iszero " :: ptmATerm(false, ctx, t1)
+        "iszero " ::: ptmATerm(false, ctx, t1)
       case t =>
         ptmPathTerm(outer, ctx, t)
     }
@@ -448,7 +465,7 @@ object PrettyPrinter {
   def ptmPathTerm(outer: Boolean, ctx: Context, t: Term): Document =
     t match {
       case TmProj(t1, l) =>
-        ptmATerm(false, ctx, t1) :: "." :: l
+        ptmATerm(false, ctx, t1) ::: "." ::: l
       case t1 =>
         ptmAscribeTerm(outer, ctx, t1)
     }
@@ -456,7 +473,7 @@ object PrettyPrinter {
   def ptmAscribeTerm(outer: Boolean, ctx: Context, t: Term): Document =
     t match {
       case TmAscribe(t1, tyT1) =>
-        g0(ptmAppTerm(false, ctx, t1) :/: "as " :: ptyType(false, ctx, tyT1))
+        g0(ptmAppTerm(false, ctx, t1) :/: "as " ::: ptyType(false, ctx, tyT1))
       case t1 =>
         ptmATerm(outer, ctx, t1)
     }
@@ -475,16 +492,16 @@ object PrettyPrinter {
           if (i.toString() == li) {
             ptmTerm(false, ctx, t)
           } else {
-            li :: "=" :: ptmTerm(false, ctx, t)
+            li ::: "=" ::: ptmTerm(false, ctx, t)
           }
-        "{" :: fields.zipWithIndex
+        "{" ::: fields.zipWithIndex
           .map { case ((li, tyTi), i) => pf(i + 1, li, tyTi) }
-          .reduceLeftOption(_ :: "," :/: _)
-          .getOrElse(empty) :: "}"
+          .reduceLeftOption(_ ::: "," :/: _)
+          .getOrElse(empty) ::: "}"
       case TmTag(l, t, ty) =>
-        g2("<" :: l :: "=" :: ptmTerm(false, ctx, t) :: ">" :/: "as " :: ptyType(outer, ctx, ty))
+        g2("<" ::: l ::: "=" ::: ptmTerm(false, ctx, t) ::: ">" :/: "as " ::: ptyType(outer, ctx, ty))
       case TmString(s) =>
-        "\"" :: s :: "\""
+        "\"" ::: s ::: "\""
       case TmUnit =>
         "unit"
       case TmLoc(l) =>
@@ -501,19 +518,19 @@ object PrettyPrinter {
             case TmSucc(s) =>
               pf(i + 1, s)
             case _ =>
-              "(succ " :: ptmATerm(false, ctx, t1) :: ")"
+              "(succ " ::: ptmATerm(false, ctx, t1) ::: ")"
           }
         pf(1, t1)
       case TmPack(tyT1, t2, tyT3) =>
         g2(
-          "{*" :: ptyType(false, ctx, tyT1) :: "," :/: ptmTerm(
+          "{*" ::: ptyType(false, ctx, tyT1) ::: "," :/: ptmTerm(
             false,
             ctx,
             t2,
-          ) :: "}" :/: "as " :: ptyType(outer, ctx, tyT3)
+          ) ::: "}" :/: "as " ::: ptyType(outer, ctx, tyT3)
         )
       case t =>
-        "(" :: ptmTerm(outer, ctx, t) :: ")"
+        "(" ::: ptmTerm(outer, ctx, t) ::: ")"
     }
 
   def ptm(ctx: Context, t: Term) = ptmTerm(true, ctx, t)
@@ -523,13 +540,13 @@ object PrettyPrinter {
       case NameBind =>
         empty
       case TyVarBind(tyS) =>
-        "<: " :: prOTy(ctx, tyS)
+        "<: " ::: prOTy(ctx, tyS)
       case VarBind(ty) =>
-        ": " :: ptyTy(ctx, ty)
+        ": " ::: ptyTy(ctx, ty)
       case TmAbbBind(t, tyT) =>
-        "= " :: ptm(ctx, t)
+        "= " ::: ptm(ctx, t)
       case TyAbbBind(tyT, _) =>
-        "= " :: ptyTy(ctx, tyT)
+        "= " ::: ptyTy(ctx, tyT)
     }
 
 }

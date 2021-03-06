@@ -1,8 +1,9 @@
 package tapl.equirec
 
 object EquirecDemo extends util.Demo[Context, Command] {
+  import scala.language.implicitConversions
   import Evaluator._
-  import util.Print._
+  import util.Print._, util.Print.text2doc
   import PrettyPrinter._
 
   val width = 60
@@ -15,13 +16,13 @@ object EquirecDemo extends util.Demo[Context, Command] {
 
   def processCommand(ctx: Context, cmd: Command): Context =
     cmd match {
-      case Eval(t1) =>
+      case Command.Eval(t1) =>
         val ty1 = Typer.typeof(ctx, t1)
-        val doc1 = g2(ptmATerm(true, ctx, t1) :: ":" :/: ptyTy(ctx, ty1) :: ";")
+        val doc1 = g2(ptmATerm(true, ctx, t1) ::: ":" :/: ptyTy(ctx, ty1) ::: ";")
 
         val t2 = eval(ctx, t1)
         val ty2 = Typer.typeof(ctx, t2)
-        val doc2 = g2(ptmATerm(true, ctx, t2) :: ":" :/: ptyTy(ctx, ty2) :: ";")
+        val doc2 = g2(ptmATerm(true, ctx, t2) ::: ":" :/: ptyTy(ctx, ty2) ::: ";")
 
         println("====================")
         println(print(doc1, width))
@@ -31,8 +32,8 @@ object EquirecDemo extends util.Demo[Context, Command] {
 
         ctx
 
-      case Bind(x, bind) =>
-        val doc1 = x :: pBindingTy(ctx, bind) :: ";"
+      case Command.Bind(x, bind) =>
+        val doc1 = x ::: pBindingTy(ctx, bind) ::: ";"
         println("====================")
         println(print(doc1, width))
         ctx.addBinding(x, bind)

@@ -1,26 +1,32 @@
 package tapl.tyarith
 
-sealed trait Ty
-case object TyBool extends Ty
-case object TyNat extends Ty
+enum Ty {
+  case TyBool
+  case TyNat
+}
 
-sealed trait Term
-case object TmTrue extends Term
-case object TmFalse extends Term
-case class TmIf(cond: Term, t1: Term, t2: Term) extends Term
-case object TmZero extends Term
-case class TmSucc(t: Term) extends Term
-case class TmPred(t: Term) extends Term
-case class TmIsZero(t: Term) extends Term
+enum Term {
+  case TmTrue
+  case TmFalse
+  case TmIf(cond: Term, t1: Term, t2: Term)
+  case TmZero
+  case TmSucc(t: Term)
+  case TmPred(t: Term)
+  case TmIsZero(t: Term)
+}
 
-sealed trait Command
-case class Eval(t: Term) extends Command
+enum Command {
+  case Eval(t: Term) extends Command
+}
 
 import util.Document
 import util.Document._
 
 object PrettyPrinter {
-  import util.Print._
+  import scala.language.implicitConversions
+  import util.Print._, util.Print.text2doc
+  import Term._
+  import Ty._
 
   def ptyType(outer: Boolean, ty: Ty): Document =
     ty match {
@@ -31,7 +37,6 @@ object PrettyPrinter {
     ty match {
       case TyBool => "Bool"
       case TyNat  => "Nat"
-      case ty1    => "(" :: ptyAType(outer, ty1) :: ")"
     }
 
   def ptyTy(ty: Ty) = ptyType(true, ty)
@@ -51,9 +56,9 @@ object PrettyPrinter {
   def ptmAppTerm(outer: Boolean, t: Term): Document =
     t match {
       case TmPred(t1) =>
-        "pred " :: ptmATerm(false, t1)
+        "pred " ::: ptmATerm(false, t1)
       case TmIsZero(t1) =>
-        "iszero " :: ptmATerm(false, t1)
+        "iszero " ::: ptmATerm(false, t1)
       case t =>
         ptmATerm(outer, t)
     }
@@ -74,11 +79,11 @@ object PrettyPrinter {
             case TmSucc(s) =>
               pf(i + 1, s)
             case _ =>
-              "(succ " :: ptmATerm(false, t1) :: ")"
+              "(succ " ::: ptmATerm(false, t1) ::: ")"
           }
         pf(1, t1)
       case t =>
-        "(" :: ptmTerm(outer, t) :: ")"
+        "(" ::: ptmTerm(outer, t) ::: ")"
     }
 
   def ptm(t: Term) = ptmTerm(true, t)
