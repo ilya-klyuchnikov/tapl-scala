@@ -7,6 +7,10 @@ object FullPolyDemo extends util.Demo[Context, Command] {
   import Syntax._
   import util.Print._, util.Print.text2doc
   import PrettyPrinter._
+  import Binding._
+  import Command._
+  import Term._
+  import Ty._
 
   val width = 60
 
