@@ -1,30 +1,36 @@
 package tapl.simplebool
 
-sealed trait Term
-// i - index, cl - context length
-case class TmVar(i: Int, cl: Int) extends Term
-case class TmAbs(v: String, ty: Ty, t: Term) extends Term
-case class TmApp(t1: Term, t2: Term) extends Term
-case object TmTrue extends Term
-case object TmFalse extends Term
-case class TmIf(cond: Term, t1: Term, t2: Term) extends Term
+enum Term {
+  // i - index, cl - context length
+  case TmVar(i: Int, cl: Int)
+  case TmAbs(v: String, ty: Ty, t: Term)
+  case TmApp(t1: Term, t2: Term)
+  case TmTrue
+  case TmFalse
+  case TmIf(cond: Term, t1: Term, t2: Term)
+}
 
-sealed trait Ty
-case class TyArr(t1: Ty, t2: Ty) extends Ty
-case object TyBool extends Ty
+enum Ty {
+  case TyArr(t1: Ty, t2: Ty)
+  case TyBool
+}
 
-sealed trait Command
-case class Eval(t: Term) extends Command
-case class Bind(n: String, b: Binding) extends Command
+enum Command {
+  case Eval(t: Term)
+  case Bind(n: String, b: Binding)
+}
 
-sealed trait Binding
-// Binds variable and a name. Used during parsing
-// propagate names.
-case object NameBind extends Binding
-// Binds a variable to a type. Used during typechecking.
-case class VarBind(t: Ty) extends Binding
+enum Binding {
+  // Binds variable and a name. Used during parsing
+  // propagate names.
+  case NameBind
+  // Binds a variable to a type. Used during typechecking.
+  case VarBind(t: Ty)
+}
 
 case class Context(l: List[(String, Binding)] = List()) {
+  import Binding._
+
   val length: Int =
     l.length
 
@@ -67,6 +73,8 @@ case class Context(l: List[(String, Binding)] = List()) {
 }
 
 object Syntax {
+  import Term._
+
   private def tmMap[A](onVar: (Int, TmVar) => Term, c: Int, t: Term): Term = {
     def walk(c: Int, t: Term): Term =
       t match {
@@ -109,6 +117,9 @@ import util.Document._
 object PrettyPrinter {
   import scala.language.implicitConversions
   import util.Print._, util.Print.text2doc
+  import Binding._
+  import Term._
+  import Ty._
 
   def ptyType(outer: Boolean, ty: Ty): Document =
     ty match {

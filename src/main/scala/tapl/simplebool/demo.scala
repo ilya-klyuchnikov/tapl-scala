@@ -5,6 +5,7 @@ object SimpleBoolDemo extends util.Demo[Context, Command] {
   import PrettyPrinter._
   import scala.language.implicitConversions
   import util.Print._, util.Print.text2doc
+  import Command._
 
   val width = 60
 
