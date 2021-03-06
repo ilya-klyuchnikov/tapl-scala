@@ -7,6 +7,7 @@ object FullReconDemo extends util.Demo[(Context, UVarGenerator, IdConstr), Comma
   import Evaluator._
   import util.Print._, util.Print.text2doc
   import PrettyPrinter._
+  import Command._
 
   val width = 60
 
