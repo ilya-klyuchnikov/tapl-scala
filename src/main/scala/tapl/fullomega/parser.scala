@@ -5,6 +5,12 @@ import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 
 object FullOmegaParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
+  import Binding._
+  import Command._
+  import Kind._
+  import Term._
+  import Ty._
+
   lexical.reserved ++= Seq(
     "lambda",
     "Bool",

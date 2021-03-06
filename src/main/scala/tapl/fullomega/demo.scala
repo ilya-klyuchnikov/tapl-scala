@@ -8,6 +8,11 @@ object FullOmegaDemo extends util.Demo[(Context, Store), Command] {
   import util.Print._, util.Print.text2doc
   import PrettyPrinter._
 
+  import Command._
+  import Binding._
+  import Term._
+  import Ty._
+
   val width = 60
 
   override val initialContext: (Context, Store) = (Context(), Store())
