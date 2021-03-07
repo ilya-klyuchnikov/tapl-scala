@@ -84,15 +84,6 @@ object BotParsers extends StandardTokenParsers with PackratParsers with Implicit
       "Bot" ^^ { _ => ctx: Context => TyBot } |
       "Top" ^^ { _ => ctx: Context => TyTop }
 
-  lazy val fieldTypes: PackratParser[Res[List[(String, Ty)]]] =
-    repsep(fieldType, ",") ^^ { fs => ctx: Context =>
-      fs.zipWithIndex.map { case (ft, i) => ft(ctx, i + 1) }
-    }
-
-  lazy val fieldType: PackratParser[(Context, Int) => (String, Ty)] =
-    lcid ~ (":" ~> typ) ^^ { case id ~ ty => (ctx: Context, i: Int) => (id, ty(ctx)) } |
-      typ ^^ { ty => (ctx: Context, i: Int) => (i.toString, ty(ctx)) }
-
   lazy val arrowType: PackratParser[Res[Ty]] =
     (aType <~ "->") ~ arrowType ^^ { case t1 ~ t2 => ctx: Context => TyArr(t1(ctx), t2(ctx)) } |
       aType
@@ -116,7 +107,7 @@ object BotParsers extends StandardTokenParsers with PackratParsers with Implicit
 
   lazy val phraseTopLevel: PackratParser[Res1[List[Command]]] = phrase(topLevel)
 
-  def input(s: String) =
+  def input(s: String): Res1[List[Command]] =
     phraseTopLevel(new lexical.Scanner(s)) match {
       case t if t.successful => t.get
       case t                 => sys.error(t.toString)
