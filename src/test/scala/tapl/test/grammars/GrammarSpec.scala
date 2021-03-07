@@ -4,6 +4,7 @@ import org.antlr.v4.runtime._
 import java.nio.file.Paths
 
 import tapl.arith.ArithDemo
+import tapl.bot.BotDemo
 import tapl.grammars._
 
 class GrammarSpec extends org.scalatest.funspec.AnyFunSpec {
@@ -13,6 +14,15 @@ class GrammarSpec extends org.scalatest.funspec.AnyFunSpec {
       val lexer = new ArithLexer(stream)
       val tokens = new CommonTokenStream(lexer)
       val parser = new ArithParser(tokens)
+      parser.addErrorListener(new FailErrorListener)
+      parser.program()
+    }
+
+    it("Bot.g4") {
+      val stream = CharStreams.fromPath(Paths.get(BotDemo.defaultExample))
+      val lexer = new BotLexer(stream)
+      val tokens = new CommonTokenStream(lexer)
+      val parser = new BotParser(tokens)
       parser.addErrorListener(new FailErrorListener)
       parser.program()
     }
