@@ -1,7 +1,7 @@
 grammar Arith;
 
 program
-    : (command ';')+
+    : (command ';')+ EOF
     ;
 
 command
