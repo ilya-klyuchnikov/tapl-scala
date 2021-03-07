@@ -1,30 +1,36 @@
 grammar Arith;
 
 program
-    : (command ';')+ EOF
+    : (cmds+=command ';')+ EOF
     ;
 
 command
-    : term
+    : t=term
+    # CommandEval
     ;
 
 term
-    : appTerm
-    | 'if' term 'then' term 'else' term
-    ;
-
-appTerm
-    : aTerm
-    | 'succ' aTerm
-    | 'pred' aTerm
-    | 'iszero' aTerm
+    : t=aTerm
+    # TmAtomic
+    | 'succ' t=aTerm
+    # TmSucc
+    | 'pred' t=aTerm
+    # TmPred
+    | 'iszero' t=aTerm
+    # TmIszero
+    | 'if' cond=term 'then' t1=term 'else' t2=term
+    # TmIf
     ;
 
 aTerm
-    : '(' term ')'
+    : '(' inner=term ')'
+    # TmParens
     | 'true'
+    # TmTrue
     | 'false'
-    | NUM
+    # TmFalse
+    | num=NUM
+    # TmNum
     ;
 
 NUM
