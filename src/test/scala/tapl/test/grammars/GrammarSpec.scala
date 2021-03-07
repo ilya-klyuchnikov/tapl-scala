@@ -1,11 +1,14 @@
 package tapl.test.grammars
 
 import org.antlr.v4.runtime._
-import java.nio.file.Paths
+import org.antlr.v4.runtime.tree.ParseTreeWalker
 
-import tapl.arith.ArithDemo
+import java.nio.file.Paths
+import tapl.arith.{ArithAstListener, ArithDemo, ArithParsers}
 import tapl.bot.BotDemo
 import tapl.grammars._
+
+import scala.io.Source
 
 class GrammarSpec extends org.scalatest.funspec.AnyFunSpec {
   describe("Antlr grammars should recognize examples") {
@@ -15,7 +18,14 @@ class GrammarSpec extends org.scalatest.funspec.AnyFunSpec {
       val tokens = new CommonTokenStream(lexer)
       val parser = new ArithParser(tokens)
       parser.addErrorListener(new FailErrorListener)
-      parser.program()
+      val tree = parser.program()
+      val walker = new ParseTreeWalker
+      val listener = new ArithAstListener
+      walker.walk(listener, tree)
+      val antlrProgram = listener.program
+      val scalaProgram = ArithParsers.input(Source.fromFile(ArithDemo.defaultExample).mkString(""))
+
+      assert(antlrProgram === scalaProgram)
     }
 
     it("Bot.g4") {
