@@ -1,43 +1,56 @@
 grammar Bot;
 
 program
-    : (command ';')+ EOF
+    : (cmds+=command ';')+ EOF
     ;
 
 command
     : LCID ':' typ
+    # CommandBind
     | term
+    # CommandEval
     ;
 
 typ
-    : arrowType
+    : ty=arrowType
+    # Ty1
     ;
 
 aType
-    : '(' typ ')'
+    : '(' ty=typ ')'
+    # TyParens
     | 'Bot'
+    # TyBot
     | 'Top'
+    # TyTop
     ;
 
 arrowType
-    : aType '->' arrowType
+    : t1=aType '->' t2=arrowType
+    # TyArrow
     | aType
+    # Ty2
     ;
 
 term
-    : appTerm
-    | 'lambda' LCID ':' typ '.' term
-    | 'lambda' '_' ':' typ '.' term
+    : t=appTerm
+    # Tm1
+    | 'lambda' v=(LCID | '_') ':' ty=typ '.' t=term
+    # TmAbs
     ;
 
 appTerm
-    : appTerm aTerm
-    | aTerm
+    : t1=appTerm t2=aTerm
+    # TmApp
+    | t=aTerm
+    # TmAtomic
     ;
 
 aTerm
-    : '(' term ')'
-    | LCID
+    : '(' t=term ')'
+    # TmParens
+    | id=LCID
+    # TmVar
     ;
 
 NUM
