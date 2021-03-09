@@ -1,8 +1,8 @@
 package tapl.untyped
 
 import scala.util.parsing.combinator.ImplicitConversions
-import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
+import util.PackratParsers
 
 // This parser is done exactly in the same way as in TAPL.
 // The oddity of this parser (elementary parsers return functions) is driven by the desire

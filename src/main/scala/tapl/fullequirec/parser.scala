@@ -1,8 +1,8 @@
 package tapl.fullequirec
 
 import scala.util.parsing.combinator.ImplicitConversions
-import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
+import util.PackratParsers
 
 object FullEquirecParsers
     extends StandardTokenParsers
