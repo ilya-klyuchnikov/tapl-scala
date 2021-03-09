@@ -236,7 +236,7 @@ to update each parser involved in the recursion.
          * transformed reader
          */
         val inMem: PackratReader[Elem] = in match {
-          case in: PackratReader[_] => in.asInstanceOf[PackratReader[Elem]]
+          case in: PackratReader[Elem] => in
           case in => new PackratReader(in)
         }
 
