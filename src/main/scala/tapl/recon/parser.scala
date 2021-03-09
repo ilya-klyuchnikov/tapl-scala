@@ -1,8 +1,8 @@
 package tapl.recon
 
 import scala.util.parsing.combinator.ImplicitConversions
-import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
+import util.PackratParsers
 
 object ReconParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
   import Binding._

@@ -1,8 +1,8 @@
 package tapl.fullpoly
 
 import scala.util.parsing.combinator.ImplicitConversions
-import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
+import util.PackratParsers
 
 object FullPolyParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
   import Binding._

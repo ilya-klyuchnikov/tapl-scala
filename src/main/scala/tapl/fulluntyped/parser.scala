@@ -1,8 +1,8 @@
 package tapl.fulluntyped
 
 import scala.util.parsing.combinator.ImplicitConversions
-import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
+import util.PackratParsers
 
 object FullUntypedParsers
     extends StandardTokenParsers

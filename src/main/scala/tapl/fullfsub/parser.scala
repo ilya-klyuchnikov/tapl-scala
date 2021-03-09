@@ -1,8 +1,8 @@
 package tapl.fullfsub
 
 import scala.util.parsing.combinator.ImplicitConversions
-import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
+import util.PackratParsers
 
 object FullFSubParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
   import Binding._

@@ -1,8 +1,8 @@
 package tapl.fullomega
 
 import scala.util.parsing.combinator.ImplicitConversions
-import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
+import util.PackratParsers
 
 object FullOmegaParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
   import Binding._
