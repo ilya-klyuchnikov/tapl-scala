@@ -235,7 +235,10 @@ to update each parser involved in the recursion.
         /*
          * transformed reader
          */
-        val inMem = in.asInstanceOf[PackratReader[Elem]]
+        val inMem: PackratReader[Elem] = in match {
+          case in: PackratReader[_] => in.asInstanceOf[PackratReader[Elem]]
+          case in => new PackratReader(in)
+        }
 
         //look in the global cache if in a recursion
         val m = recall(p, inMem)
