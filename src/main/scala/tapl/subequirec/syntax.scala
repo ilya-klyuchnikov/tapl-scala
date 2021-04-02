@@ -141,7 +141,7 @@ object Syntax {
     tmMap(f, typeShiftAbove(d, _, _), c, t)
   }
 
-  def termShift(d: Int, t: Term): Term =
+  private def termShift(d: Int, t: Term): Term =
     termShiftAbove(d, 0, t)
 
   def typeShift(d: Int, ty: Ty): Ty =
