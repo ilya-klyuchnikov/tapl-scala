@@ -92,10 +92,7 @@ object FullRefParsers extends StandardTokenParsers with PackratParsers with Impl
       success({ ctx: Context => TyVarBind })
 
   // TYPES
-  lazy val typ: PackratParser[Res[Ty]] = arrowType |
-    "Ref" ~> aType ^^ { ty => ctx: Context => TyRef(ty(ctx)) } |
-    "Source" ~> aType ^^ { ty => ctx: Context => TySource(ty(ctx)) } |
-    "Sink" ~> aType ^^ { ty => ctx: Context => TySink(ty(ctx)) }
+  lazy val typ: PackratParser[Res[Ty]] = arrowType
   lazy val aType: PackratParser[Res[Ty]] =
     "(" ~> typ <~ ")" |
       ucid ^^ { tn => ctx: Context =>
@@ -148,17 +145,11 @@ object FullRefParsers extends StandardTokenParsers with PackratParsers with Impl
           ctx: Context =>
             TmLet(id, TmFix(TmAbs(id, ty(ctx), t1(ctx.addName(id)))), t2(ctx.addName(id)))
       }
-    } |
-      (appTerm <~ ":=") ~ appTerm ^^ {
-        case t1 ~ t2 => ctx: Context => TmAssign(t1(ctx), t2(ctx))
-      } |
-      appTerm
+    } | appTerm
 
   lazy val appTerm: PackratParser[Res[Term]] =
     appTerm ~ pathTerm ^^ { case t1 ~ t2 => ctx: Context => TmApp(t1(ctx), t2(ctx)) } |
       "fix" ~> pathTerm ^^ { t => ctx: Context => TmFix(t(ctx)) } |
-      "ref" ~> pathTerm ^^ { t => ctx: Context => TmRef(t(ctx)) } |
-      "!" ~> pathTerm ^^ { t => ctx: Context => TmDeref(t(ctx)) } |
       "succ" ~> pathTerm ^^ { t => ctx: Context => TmSucc(t(ctx)) } |
       "pred" ~> pathTerm ^^ { t => ctx: Context => TmPred(t(ctx)) } |
       "iszero" ~> pathTerm ^^ { t => ctx: Context => TmIsZero(t(ctx)) } |

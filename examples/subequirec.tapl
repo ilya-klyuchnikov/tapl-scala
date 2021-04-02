@@ -42,5 +42,3 @@ lambda x:Nat. succ x;
 
 T = Nat->Nat;
 lambda f:T. lambda x:Nat. f (f x);
-
-c = let x = ref 1 in {get = lambda _:Unit. !x, inc = lambda _:Unit. x := succ(!x)};

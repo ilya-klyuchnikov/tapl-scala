@@ -14,7 +14,6 @@ object Util {
       case TmString(_)                 => true
       case TmUnit                      => true
       case TmTag(_, t1, _)             => isVal(ctx, t1)
-      case TmLoc(_)                    => true
       case TmTrue                      => true
       case TmFalse                     => true
       case t1 if isNumericVal(ctx, t1) => true
@@ -90,37 +89,6 @@ object Evaluator {
       case TmCase(t1, bs) =>
         val (t11, store1) = eval1(ctx, store, t1)
         (TmCase(t11, bs), store1)
-      case TmRef(t1) =>
-        if (!isVal(ctx, t1)) {
-          val (t11, store1) = eval1(ctx, store, t1)
-          (TmRef(t11), store1)
-        } else {
-          val (l, store1) = store.extend(t1)
-          (TmLoc(l), store1)
-        }
-      case TmDeref(t1) =>
-        if (!isVal(ctx, t1)) {
-          val (t11, store1) = eval1(ctx, store, t1)
-          (TmDeref(t11), store1)
-        } else {
-          t1 match {
-            case TmLoc(l) => (store.lookup(l), store)
-            case _        => throw new NoRuleApplies(t)
-          }
-        }
-      case TmAssign(t1, t2) =>
-        if (!isVal(ctx, t1)) {
-          val (t11, store1) = eval1(ctx, store, t1)
-          (TmAssign(t11, t2), store1)
-        } else if (!isVal(ctx, t2)) {
-          val (t21, store1) = eval1(ctx, store, t2)
-          (TmAssign(t1, t21), store1)
-        } else {
-          t1 match {
-            case TmLoc(l) => (TmUnit, store.update(l, t2))
-            case _        => throw new NoRuleApplies(t)
-          }
-        }
       case TmLet(x, v1, t2) if isVal(ctx, v1) =>
         (termSubstTop(v1, t2), store)
       case TmLet(x, t1, t2) =>
@@ -224,12 +192,9 @@ object Typer {
       case (TyBot, TyBot) => true
       case (TyArr(tyS1, tyS2), TyArr(tyT1, tyT2)) =>
         tyEqv(ctx, tyS1, tyT1) && tyEqv(ctx, tyS2, tyT2)
-      case (TyString, TyString)             => true
-      case (TyId(b1), TyId(b2))             => b1 == b2
-      case (TyUnit, TyUnit)                 => true
-      case (TyRef(tyT1), TyRef(tyT2))       => tyEqv(ctx, tyT1, tyT2)
-      case (TySource(tyT1), TySource(tyT2)) => tyEqv(ctx, tyT1, tyT2)
-      case (TySink(tyT1), TySink(tyT2))     => tyEqv(ctx, tyT1, tyT2)
+      case (TyString, TyString) => true
+      case (TyId(b1), TyId(b2)) => b1 == b2
+      case (TyUnit, TyUnit)     => true
       case (TyVar(i, _), _) if isTyAbb(ctx, i) =>
         tyEqv(ctx, getTyAbb(ctx, i), tyT)
       case (_, TyVar(i, _)) if isTyAbb(ctx, i) =>
@@ -280,12 +245,7 @@ object Typer {
               case None            => false
             }
         }
-      case (TyRef(tyT1), TyRef(tyT2))       => subtype(ctx, tyT1, tyT2) && subtype(ctx, tyT2, tyT1)
-      case (TyRef(tyT1), TySource(tyT2))    => subtype(ctx, tyT1, tyT2)
-      case (TySource(tyT1), TySource(tyT2)) => subtype(ctx, tyT1, tyT2)
-      case (TyRef(tyT1), TySink(tyT2))      => subtype(ctx, tyT2, tyT1)
-      case (TySink(tyT1), TySink(tyT2))     => subtype(ctx, tyT2, tyT1)
-      case (_, _)                           => false
+      case (_, _) => false
     }
 
   }
@@ -311,25 +271,6 @@ object Typer {
           TyRecord(commonFs)
         case (TyArr(tyS1, tyS2), TyArr(tyT1, tyT2)) =>
           TyArr(meet(ctx, tyS1, tyT1), join(ctx, tyS2, tyT2))
-        case (TyRef(tyT1), TyRef(tyT2)) =>
-          if (subtype(ctx, tyT1, tyT2) && subtype(ctx, tyT2, tyT1)) {
-            TyRef(ty1)
-          } else {
-            // TODO (* Warning: this is incomplete... *)
-            TySource(join(ctx, tyT1, tyT2))
-          }
-        case (TySource(tyT1), TySource(tyT2)) =>
-          TySource(join(ctx, tyT1, tyT2))
-        case (TyRef(tyT1), TySource(tyT2)) =>
-          TySource(join(ctx, tyT1, tyT2))
-        case (TySource(tyT1), TyRef(tyT2)) =>
-          TySource(join(ctx, tyT1, tyT2))
-        case (TySink(tyT1), TySink(tyT2)) =>
-          TySink(meet(ctx, tyT1, tyT2))
-        case (TyRef(tyT1), TySink(tyT2)) =>
-          TySink(meet(ctx, tyT1, tyT2))
-        case (TySink(tyT1), TyRef(tyT2)) =>
-          TySink(meet(ctx, tyT1, tyT2))
         case _ => TyTop
       }
     }
@@ -363,27 +304,6 @@ object Typer {
           TyRecord(allFs)
         case (TyArr(tyS1, tyS2), TyArr(tyT1, tyT2)) =>
           TyArr(join(ctx, tyS1, tyT1), meet(ctx, tyS2, tyT2))
-        case (TyRef(tyT1), TyRef(tyT2)) =>
-          if (subtype(ctx, tyT1, tyT2) && subtype(ctx, tyT2, tyT1)) {
-            TyRef(ty1)
-          } else {
-            // TODO (* Warning: this is incomplete... *)
-            // The alternative here is:
-            // TySink(join(ctx, tyT1, tyT2))
-            TySource(meet(ctx, tyT1, tyT2))
-          }
-        case (TySource(tyT1), TySource(tyT2)) =>
-          TySource(meet(ctx, tyT1, tyT2))
-        case (TyRef(tyT1), TySource(tyT2)) =>
-          TySource(meet(ctx, tyT1, tyT2))
-        case (TySource(tyT1), TyRef(tyT2)) =>
-          TySource(meet(ctx, tyT1, tyT2))
-        case (TySink(tyT1), TySink(tyT2)) =>
-          TySink(join(ctx, tyT1, tyT2))
-        case (TyRef(tyT1), TySink(tyT2)) =>
-          TySink(join(ctx, tyT1, tyT2))
-        case (TySink(tyT1), TyRef(tyT2)) =>
-          TySink(join(ctx, tyT1, tyT2))
         case _ => TyBot
       }
     }
@@ -504,35 +424,6 @@ object Typer {
         TyString
       case TmUnit =>
         TyUnit
-      case TmRef(t1) =>
-        TyRef(typeof(ctx, t1))
-      case TmLoc(l) =>
-        sys.error("locations are not supposed to occur in source programs!")
-      case TmDeref(t1) =>
-        simplifyTy(ctx, typeof(ctx, t1)) match {
-          case TyRef(tyT1)    => tyT1
-          case TyBot          => TyBot
-          case TySource(tyT1) => tyT1
-          case _              => sys.error("argument of ! is not a Ref")
-        }
-      case TmAssign(t1, t2) =>
-        simplifyTy(ctx, typeof(ctx, t1)) match {
-          case TyRef(tyT1) =>
-            if (subtype(ctx, typeof(ctx, t2), tyT1))
-              TyUnit
-            else
-              sys.error("arguments of := are incompatible")
-          case TySink(tyT1) =>
-            if (subtype(ctx, typeof(ctx, t2), tyT1))
-              TyUnit
-            else
-              sys.error("arguments of := are incompatible")
-          case TyBot =>
-            val _ = typeof(ctx, t2)
-            TyBot
-          case _ =>
-            sys.error("argument of ! is not a Ref")
-        }
       case TmZero =>
         TyNat
       case TmSucc(t1) =>

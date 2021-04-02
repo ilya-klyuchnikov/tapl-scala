@@ -10,11 +10,8 @@ case class TyVariant(els: List[(String, Ty)]) extends Ty
 case object TyBool extends Ty
 case object TyString extends Ty
 case object TyNat extends Ty
-case class TyRef(ty: Ty) extends Ty
 case object TyTop extends Ty
 case object TyBot extends Ty
-case class TySource(ty: Ty) extends Ty
-case class TySink(ty: Ty) extends Ty
 
 sealed trait Term
 case object TmTrue extends Term
@@ -36,10 +33,6 @@ case object TmZero extends Term
 case class TmSucc(t: Term) extends Term
 case class TmPred(t: Term) extends Term
 case class TmIsZero(t: Term) extends Term
-case class TmLoc(i: Int) extends Term
-case class TmRef(t: Term) extends Term
-case class TmDeref(t: Term) extends Term
-case class TmAssign(t1: Term, t2: Term) extends Term
 
 sealed trait Binding
 case object NameBind extends Binding
@@ -103,9 +96,6 @@ object Syntax {
         case TyVariant(fieldTys) => TyVariant(fieldTys.map { case (li, tyi) => (li, walk(c, tyi)) })
         case TyTop               => TyTop
         case TyBot               => TyBot
-        case TyRef(ty1)          => TyRef(walk(c, ty1))
-        case TySource(ty1)       => TySource(walk(c, ty1))
-        case TySink(ty1)         => TySink(walk(c, ty1))
       }
     walk(c, ty)
   }
@@ -133,10 +123,6 @@ object Syntax {
         case TmTag(lbl, t1, tyT) => TmTag(lbl, walk(c, t1), onType(c, tyT))
         case TmCase(t, cases) =>
           TmCase(walk(c, t), cases.map { case (li, xi, ti) => (li, xi, walk(c + 1, ti)) })
-        case TmLoc(_)         => t
-        case TmRef(t1)        => TmRef(walk(c, t1))
-        case TmDeref(t1)      => TmDeref(walk(c, t1))
-        case TmAssign(t1, t2) => TmAssign(walk(c, t1), walk(c, t2))
       }
     walk(c, t)
   }
@@ -215,12 +201,7 @@ object PrettyPrinter {
   import util.Print._
 
   def ptyType(outer: Boolean, ctx: Context, ty: Ty): Document =
-    ty match {
-      case TyRef(tyT)    => "Ref " :: ptyAType(false, ctx, tyT)
-      case TySource(tyT) => "Source " :: ptyAType(false, ctx, tyT)
-      case TySink(tyT)   => "Sink " :: ptyAType(false, ctx, tyT)
-      case ty            => ptyArrowType(outer, ctx, ty)
-    }
+    ptyArrowType(outer, ctx, ty)
 
   def ptyArrowType(outer: Boolean, ctx: Context, tyT: Ty): Document =
     tyT match {
@@ -281,7 +262,6 @@ object PrettyPrinter {
 
   def ptmTerm(outer: Boolean, ctx: Context, t: Term): Document =
     t match {
-
       case TmIf(t1, t2, t3) =>
         val ifB = g2("if" :/: ptmTerm(outer, ctx, t1))
         val thenB = g2("then" :/: ptmTerm(outer, ctx, t2))
@@ -311,20 +291,13 @@ object PrettyPrinter {
         )
       case TmFix(t1) =>
         g2("fix " :: ptmTerm(false, ctx, t1))
-      case TmAssign(t1, t2) =>
-        g2(ptmAppTerm(false, ctx, t1) :/: ":=" :/: ptmAppTerm(false, ctx, t2))
       case t => ptmAppTerm(outer, ctx, t)
-
     }
 
   def ptmAppTerm(outer: Boolean, ctx: Context, t: Term): Document =
     t match {
       case TmApp(t1, t2) =>
         g2(ptmAppTerm(false, ctx, t1) :/: ptmATerm(false, ctx, t2))
-      case TmRef(t1) =>
-        "ref " :: ptmATerm(false, ctx, t1)
-      case TmDeref(t1) =>
-        "!" :: ptmATerm(false, ctx, t1)
       case TmPred(t1) =>
         "pred " :: ptmATerm(false, ctx, t1)
       case TmIsZero(t1) =>
@@ -388,8 +361,6 @@ object PrettyPrinter {
               "(succ " :: ptmATerm(false, ctx, t1) :: ")"
           }
         pf(1, t1)
-      case TmLoc(l) =>
-        "<loc #" + l + ">"
       case t =>
         "(" :: ptmTerm(outer, ctx, t) :: ")"
     }
