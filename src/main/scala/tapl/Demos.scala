@@ -5,7 +5,6 @@ object Demos {
     tapl.arith.ArithDemo.main(Array())
     tapl.bot.BotDemo.main(Array())
     tapl.equirec.EquirecDemo.main(Array())
-    tapl.equirec.EquirecDemo.main(Array())
     tapl.fullequirec.FullEquirecDemo.main(Array())
     tapl.fullerror.FullErrorDemo.main(Array())
     tapl.fullfomsub.FullFomSubDemo.main(Array())
@@ -22,6 +21,7 @@ object Demos {
     tapl.rcdsubbot.RcdSubBotDemo.main(Array())
     tapl.recon.ReconDemo.main(Array())
     tapl.simplebool.SimpleBoolDemo.main(Array())
+    tapl.subequirec.SubEquirecDemo.main(Array())
     tapl.tyarith.TyArithDemo.main(Array())
     tapl.untyped.UntypedDemo.main(Array())
   }
