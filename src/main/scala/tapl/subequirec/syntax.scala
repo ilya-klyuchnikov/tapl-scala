@@ -1,15 +1,15 @@
 package tapl.subequirec
 
 sealed trait Ty
-case class TyVar(i: Int, cl: Int) extends Ty
 case class TyId(id: String) extends Ty
-case class TyArr(t1: Ty, t2: Ty) extends Ty
-case object TyUnit extends Ty
+case class TyVar(i: Int, cl: Int) extends Ty
 case class TyRecord(els: List[(String, Ty)]) extends Ty
+case class TyArr(t1: Ty, t2: Ty) extends Ty
+case object TyNat extends Ty
 case class TyVariant(els: List[(String, Ty)]) extends Ty
 case object TyBool extends Ty
 case object TyString extends Ty
-case object TyNat extends Ty
+case object TyUnit extends Ty
 case object TyTop extends Ty
 case object TyBot extends Ty
 
@@ -17,22 +17,22 @@ sealed trait Term
 case object TmTrue extends Term
 case object TmFalse extends Term
 case class TmIf(cond: Term, t1: Term, t2: Term) extends Term
-case class TmCase(sel: Term, branches: List[(String, String, Term)]) extends Term
-case class TmTag(tag: String, t: Term, ty: Ty) extends Term
 case class TmVar(i: Int, cl: Int) extends Term
-case class TmAbs(v: String, ty: Ty, t: Term) extends Term
-case class TmApp(t1: Term, t2: Term) extends Term
-case class TmLet(l: String, t1: Term, t2: Term) extends Term
-case class TmFix(t: Term) extends Term
 case class TmString(s: String) extends Term
-case object TmUnit extends Term
 case class TmAscribe(t: Term, ty: Ty) extends Term
 case class TmRecord(fields: List[(String, Term)]) extends Term
 case class TmProj(t: Term, proj: String) extends Term
+case class TmAbs(v: String, ty: Ty, t: Term) extends Term
+case class TmApp(t1: Term, t2: Term) extends Term
 case object TmZero extends Term
 case class TmSucc(t: Term) extends Term
 case class TmPred(t: Term) extends Term
 case class TmIsZero(t: Term) extends Term
+case class TmCase(sel: Term, branches: List[(String, String, Term)]) extends Term
+case class TmTag(tag: String, t: Term, ty: Ty) extends Term
+case class TmLet(l: String, t1: Term, t2: Term) extends Term
+case object TmUnit extends Term
+case class TmFix(t: Term) extends Term
 
 sealed trait Binding
 case object NameBind extends Binding
@@ -85,9 +85,9 @@ object Syntax {
   private def tyMap(onVar: (Int, TyVar) => Ty, c: Int, ty: Ty): Ty = {
     def walk(c: Int, ty: Ty): Ty =
       ty match {
+        case TyString            => TyString
         case tv: TyVar           => onVar(c, tv)
         case id: TyId            => id
-        case TyString            => TyString
         case TyUnit              => TyUnit
         case TyRecord(fieldTys)  => TyRecord(fieldTys.map { case (li, tyi) => (li, walk(c, tyi)) })
         case TyBool              => TyBool
@@ -262,6 +262,7 @@ object PrettyPrinter {
 
   def ptmTerm(outer: Boolean, ctx: Context, t: Term): Document =
     t match {
+
       case TmIf(t1, t2, t3) =>
         val ifB = g2("if" :/: ptmTerm(outer, ctx, t1))
         val thenB = g2("then" :/: ptmTerm(outer, ctx, t2))
@@ -292,6 +293,7 @@ object PrettyPrinter {
       case TmFix(t1) =>
         g2("fix " :: ptmTerm(false, ctx, t1))
       case t => ptmAppTerm(outer, ctx, t)
+
     }
 
   def ptmAppTerm(outer: Boolean, ctx: Context, t: Term): Document =
