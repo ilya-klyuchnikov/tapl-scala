@@ -332,7 +332,7 @@ object Typer {
                 "result of body not compatible with domain " + t + " : " + tyT12 + " != " + tyT11
               )
           case _ =>
-            throw new Exception("error type expected in " + t1)
+            throw new Exception("arrow type expected in " + t1)
         }
     }
 }
