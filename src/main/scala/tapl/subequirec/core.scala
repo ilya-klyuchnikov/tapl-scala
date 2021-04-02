@@ -11,17 +11,16 @@ object Util {
 
   def isVal(ctx: Context, t: Term): Boolean =
     t match {
-      case TmString(_)                 => true
-      case TmUnit                      => true
-      case TmTag(_, t1, _)             => isVal(ctx, t1)
       case TmTrue                      => true
       case TmFalse                     => true
+      case TmString(_)                 => true
       case t1 if isNumericVal(ctx, t1) => true
       case TmAbs(_, _, _)              => true
       case TmRecord(fields)            => fields.forall { case (_, ti) => isVal(ctx, ti) }
+      case TmTag(_, t1, _)             => isVal(ctx, t1)
+      case TmUnit                      => true
       case _                           => false
     }
-
 }
 
 object Evaluator {
@@ -30,11 +29,37 @@ object Evaluator {
 
   private def eval1(ctx: Context, t: Term): Term =
     t match {
+      case TmIf(TmTrue, t2, t3) =>
+        t2
+      case TmIf(TmFalse, t2, t3) =>
+        t3
+      case TmIf(t1, t2, t3) =>
+        val t11 = eval1(ctx, t1)
+        TmIf(t11, t2, t3)
+      case TmVar(n, _) =>
+        ctx.getBinding(n) match {
+          case TmAbbBind(t1, _) => t1
+          case _                => throw new NoRuleApplies(t)
+        }
       case TmAscribe(v1, tyT) if isVal(ctx, v1) =>
         v1
       case TmAscribe(t1, tyT) =>
-        val t11 = eval1(ctx, t1)
-        TmAscribe(t11, tyT)
+        TmAscribe(eval1(ctx, t1), tyT)
+      case TmRecord(fields) =>
+        def evalAField(l: List[(String, Term)]): List[(String, Term)] =
+          l match {
+            case Nil                               => throw new NoRuleApplies(t)
+            case (l, v1) :: rest if isVal(ctx, v1) => (l, v1) :: evalAField(rest)
+            case (l, t1) :: rest                   => (l, eval1(ctx, t1)) :: rest
+          }
+        TmRecord(evalAField(fields))
+      case TmProj(v1 @ TmRecord(fields), l) if isVal(ctx, v1) =>
+        fields.find { _._1 == l } match {
+          case Some((_, ti)) => ti
+          case None          => throw new NoRuleApplies(t)
+        }
+      case TmProj(t1, l) =>
+        TmProj(eval1(ctx, t1), l)
       case TmApp(TmAbs(x, ty, t), v2) if isVal(ctx, v2) =>
         termSubstTop(v2, t)
       case TmApp(v1, t2) if isVal(ctx, v1) =>
@@ -43,51 +68,6 @@ object Evaluator {
       case TmApp(t1, t2) =>
         val t11 = eval1(ctx, t1)
         TmApp(t11, t2)
-      case TmRecord(fields) =>
-        def evalAField(l: List[(String, Term)]): (List[(String, Term)]) =
-          l match {
-            case Nil =>
-              throw new NoRuleApplies(t)
-            case (l, vi) :: rest if isVal(ctx, vi) =>
-              val rest1 = evalAField(rest)
-              (l, vi) :: rest1
-            case (l, ti) :: rest =>
-              val ti1 = eval1(ctx, ti)
-              (l, ti1) :: rest
-          }
-        val fields1 = evalAField(fields)
-        TmRecord(fields1)
-      case TmProj(v1 @ TmRecord(fields), l) if isVal(ctx, v1) =>
-        fields.find { _._1 == l } match {
-          case Some((_, ti)) => ti
-          case None          => throw new NoRuleApplies(t)
-        }
-      case TmProj(t1, l) =>
-        val t11 = eval1(ctx, t1)
-        TmProj(t11, l)
-      case TmTag(l, t1, tyT) =>
-        val t11 = eval1(ctx, t1)
-        TmTag(l, t11, tyT)
-      case TmCase(TmTag(li, v11, _), bs) if isVal(ctx, v11) =>
-        bs find { _._1 == li } match {
-          case Some((_, x, body)) => termSubstTop(v11, body)
-          case None               => throw new NoRuleApplies(t)
-        }
-      case TmCase(t1, bs) =>
-        val t11 = eval1(ctx, t1)
-        TmCase(t11, bs)
-      case TmLet(x, v1, t2) if isVal(ctx, v1) =>
-        termSubstTop(v1, t2)
-      case TmLet(x, t1, t2) =>
-        val t11 = eval1(ctx, t1)
-        TmLet(x, t11, t2)
-      case TmIf(TmTrue, t2, t3) =>
-        t2
-      case TmIf(TmFalse, t2, t3) =>
-        t3
-      case TmIf(t1, t2, t3) =>
-        val t11 = eval1(ctx, t1)
-        TmIf(t11, t2, t3)
       case TmSucc(t1) =>
         val t11 = eval1(ctx, t1)
         TmSucc(t11)
@@ -105,19 +85,26 @@ object Evaluator {
       case TmIsZero(t1) =>
         val t2 = eval1(ctx, t1)
         TmIsZero(t2)
+      case TmTag(l, t1, tyT) =>
+        TmTag(l, eval1(ctx, t1), tyT)
+      case TmCase(TmTag(li, v11, _), bs) if isVal(ctx, v11) =>
+        bs find { _._1 == li } match {
+          case Some((_, x, body)) => termSubstTop(v11, body)
+          case None               => throw new NoRuleApplies(t)
+        }
+      case TmCase(t1, bs) =>
+        TmCase(eval1(ctx, t1), bs)
+      case TmLet(x, v1, t2) if isVal(ctx, v1) =>
+        termSubstTop(v1, t2)
+      case TmLet(x, v1, t2) =>
+        TmLet(x, eval1(ctx, v1), t2)
       case t @ TmFix(v1) if isVal(ctx, v1) =>
         v1 match {
           case TmAbs(_, _, t12) => termSubstTop(t, t12)
           case _                => throw new NoRuleApplies(t)
         }
       case TmFix(t1) =>
-        val t2 = eval1(ctx, t1)
-        TmFix(t2)
-      case TmVar(n, _) =>
-        ctx.getBinding(n) match {
-          case TmAbbBind(t1, _) => t1
-          case _                => throw new NoRuleApplies(t)
-        }
+        TmFix(eval1(ctx, t1))
       case _ =>
         throw new NoRuleApplies(t)
     }
@@ -133,8 +120,7 @@ object Evaluator {
   def evalBinding(ctx: Context, bind: Binding): Binding =
     bind match {
       case TmAbbBind(t, tyT) =>
-        val t1 = eval(ctx, t)
-        TmAbbBind(t1, tyT)
+        TmAbbBind(eval(ctx, t), tyT)
       case b =>
         b
     }
@@ -165,8 +151,8 @@ object Typer {
 
   def simplifyTy(ctx: Context, ty: Ty): Ty =
     try {
-      val tyT1 = computeTy(ctx, ty)
-      simplifyTy(ctx, tyT1)
+      val ty1 = computeTy(ctx, ty)
+      simplifyTy(ctx, ty1)
     } catch {
       case _: NoRuleApplies => ty
     }
@@ -175,20 +161,18 @@ object Typer {
     val tyS = simplifyTy(ctx, ty1)
     val tyT = simplifyTy(ctx, ty2)
     (tyS, tyT) match {
-      case (TyTop, TyTop) => true
-      case (TyBot, TyBot) => true
-      case (TyArr(tyS1, tyS2), TyArr(tyT1, tyT2)) =>
-        tyEqv(ctx, tyS1, tyT1) && tyEqv(ctx, tyS2, tyT2)
       case (TyString, TyString) => true
-      case (TyId(b1), TyId(b2)) => b1 == b2
       case (TyUnit, TyUnit)     => true
+      case (TyId(b1), TyId(b2)) => b1 == b2
       case (TyVar(i, _), _) if isTyAbb(ctx, i) =>
         tyEqv(ctx, getTyAbb(ctx, i), tyT)
       case (_, TyVar(i, _)) if isTyAbb(ctx, i) =>
         tyEqv(ctx, tyS, getTyAbb(ctx, i))
       case (TyVar(i, _), TyVar(j, _)) => i == j
-      case (TyBool, TyBool)           => true
-      case (TyNat, TyNat)             => true
+      case (TyArr(tyS1, tyS2), TyArr(tyT1, tyT2)) =>
+        tyEqv(ctx, tyS1, tyT1) && tyEqv(ctx, tyS2, tyT2)
+      case (TyBool, TyBool) => true
+      case (TyNat, TyNat)   => true
       case (TyRecord(fields1), TyRecord(fields2)) =>
         fields1.length == fields2.length && fields2.forall {
           case (li2, tyTi2) =>
@@ -201,7 +185,9 @@ object Typer {
         fields1.length == fields2.length && (fields1 zip fields2).forall {
           case (f1, f2) => (f1._1 == f2._1) && tyEqv(ctx, f1._2, f2._2)
         }
-      case _ => false
+      case (TyTop, TyTop) => true
+      case (TyBot, TyBot) => true
+      case _              => false
     }
   }
 
