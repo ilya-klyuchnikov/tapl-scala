@@ -18,12 +18,8 @@ object SubEquirecDemo extends util.Demo[Context, Command] {
     bind match {
       case NameBind =>
         NameBind
-      case TyVarBind =>
-        TyVarBind
       case VarBind(tyT) =>
         VarBind(tyT)
-      case TyAbbBind(tyT) =>
-        TyAbbBind(tyT)
       case TmAbbBind(t, None) =>
         TmAbbBind(t, Some(typeof(ctx, t)))
       case TmAbbBind(t, Some(tyT)) =>
@@ -32,10 +28,13 @@ object SubEquirecDemo extends util.Demo[Context, Command] {
           TmAbbBind(t, Some(tyT))
         else
           throw new Exception("type of binding doesn't match declared type in " + bind)
+      case TyVarBind =>
+        TyVarBind
+      case TyAbbBind(tyT) =>
+        TyAbbBind(tyT)
     }
 
-  def processCommand(in: Context, cmd: Command): Context = {
-    val ctx = in
+  def processCommand(ctx: Context, cmd: Command): Context =
     cmd match {
       case Eval(t1) =>
         val ty1 = Typer.typeof(ctx, t1)
@@ -64,6 +63,5 @@ object SubEquirecDemo extends util.Demo[Context, Command] {
         println(print(doc1, width))
         ctx.addBinding(x, bind2)
     }
-  }
 
 }
