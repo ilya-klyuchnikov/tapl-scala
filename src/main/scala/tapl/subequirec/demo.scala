@@ -12,7 +12,7 @@ object SubEquirecDemo extends util.Demo[Context, Command] {
   override val defaultExample: String = "examples/subequirec.tapl"
 
   override def parseInput(s: String): List[Command] =
-    FullRefParsers.input(s)(Context())._1
+    SubEquirecParsers.input(s)(Context())._1
 
   private def checkBinding(ctx: Context, bind: Binding): Binding =
     bind match {

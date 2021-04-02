@@ -4,7 +4,7 @@ import scala.util.parsing.combinator.ImplicitConversions
 import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 
-object FullRefParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
+object SubEquirecParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
   lexical.reserved ++= Seq(
     "lambda",
     "Bool",
@@ -31,10 +31,6 @@ object FullRefParsers extends StandardTokenParsers with PackratParsers with Impl
     "_",
     "Top",
     "Bot",
-    "Ref",
-    "Source",
-    "Sink",
-    "ref",
   )
   lexical.delimiters ++= Seq(
     "(",
@@ -53,8 +49,6 @@ object FullRefParsers extends StandardTokenParsers with PackratParsers with Impl
     "==>",
     ",",
     "|",
-    "!",
-    ":=",
   )
 
   // lower-case identifier
@@ -128,11 +122,11 @@ object FullRefParsers extends StandardTokenParsers with PackratParsers with Impl
       ("case" ~> term) ~ ("of" ~> cases) ^^ {
         case t ~ cs => ctx: Context => TmCase(t(ctx), cs(ctx))
       } |
-      ("lambda" ~> lcid) ~ (":" ~> typ) ~ ("." ~> term) ^^ {
-        case v ~ ty ~ t => ctx: Context => TmAbs(v, ty(ctx), t(ctx.addName(v)))
-      } |
       ("lambda" ~ "_") ~> (":" ~> typ) ~ ("." ~> term) ^^ {
         case ty ~ t => ctx: Context => TmAbs("_", ty(ctx), t(ctx.addName("_")))
+      } |
+      ("lambda" ~> lcid) ~ (":" ~> typ) ~ ("." ~> term) ^^ {
+        case v ~ ty ~ t => ctx: Context => TmAbs(v, ty(ctx), t(ctx.addName(v)))
       } |
       ("let" ~> lcid) ~ ("=" ~> term) ~ ("in" ~> term) ^^ {
         case id ~ t1 ~ t2 => ctx: Context => TmLet(id, t1(ctx), t2(ctx.addName(id)))
