@@ -127,7 +127,7 @@ object FullEquirecParsers
       ("case" ~> term) ~ ("of" ~> cases) ^^ {
         case t ~ cs => ctx: Context => TmCase(t(ctx), cs(ctx))
       } |
-      (("lambda" ~ "_") ~> (":" ~> typ)) ~ ("." ~> term) ^^ {
+      ("lambda" ~ "_") ~> (":" ~> typ) ~ ("." ~> term) ^^ {
         case ty ~ t => ctx: Context => TmAbs("_", ty(ctx), t(ctx.addName("_")))
       } |
       ("lambda" ~> lcid) ~ (":" ~> typ) ~ ("." ~> term) ^^ {
