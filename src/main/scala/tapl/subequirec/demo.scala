@@ -1,6 +1,6 @@
 package tapl.subequirec
 
-object SubEquirecDemo extends util.Demo[(Context, Store), Command] {
+object SubEquirecDemo extends util.Demo[Context, Command] {
   import Evaluator._
   import Typer._
   import util.Print._
@@ -8,7 +8,7 @@ object SubEquirecDemo extends util.Demo[(Context, Store), Command] {
 
   val width = 60
 
-  override val initialContext: (Context, Store) = (Context(), Store())
+  override val initialContext: Context = Context()
   override val defaultExample: String = "examples/subequirec.tapl"
 
   override def parseInput(s: String): List[Command] =
@@ -34,14 +34,14 @@ object SubEquirecDemo extends util.Demo[(Context, Store), Command] {
           throw new Exception("type of binding doesn't match declared type in " + bind)
     }
 
-  def processCommand(in: (Context, Store), cmd: Command): (Context, Store) = {
-    val (ctx, store) = in
+  def processCommand(in: Context, cmd: Command): Context = {
+    val ctx = in
     cmd match {
       case Eval(t1) =>
         val ty1 = Typer.typeof(ctx, t1)
         val doc1 = g2(ptmATerm(true, ctx, t1) :: ":" :/: ptyTy(ctx, ty1) :: ";")
 
-        val (t2, store1) = eval(ctx, store, t1)
+        val t2 = eval(ctx, t1)
         val ty2 = Typer.typeof(ctx, t2)
         val doc2 = g2(ptmATerm(true, ctx, t2) :: ":" :/: ptyTy(ctx, ty2) :: ";")
 
@@ -51,18 +51,18 @@ object SubEquirecDemo extends util.Demo[(Context, Store), Command] {
         println("""\/""")
         println(print(doc2, width))
 
-        (ctx, store1)
+        ctx
 
       case Bind(x, bind) =>
         println()
         val bind1 = checkBinding(ctx, bind)
-        val (bind2, store1) = evalBinding(ctx, store, bind1)
+        val bind2 = evalBinding(ctx, bind1)
         val doc0 = x :: pBinding(ctx, bind2) :: ";"
         val doc1 = x :: pBindingTy(ctx, bind2) :: ";"
         println("====================")
         println(print(doc0, width))
         println(print(doc1, width))
-        (ctx.addBinding(x, bind2), store1.shift(1))
+        ctx.addBinding(x, bind2)
     }
   }
 

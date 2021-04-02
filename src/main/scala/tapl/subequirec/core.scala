@@ -24,132 +24,119 @@ object Util {
 
 }
 
-case class Store(l: List[Term] = List()) {
-  import Syntax._
-
-  def extend(v: Term): (Int, Store) =
-    (l.length, Store(l :+ v))
-  def lookup(i: Int): Term =
-    l(i)
-  def update(n: Int, v: Term): Store =
-    Store(l.updated(n, v))
-  def shift(i: Int): Store =
-    Store(l.map(termShift(i, _)))
-}
-
 object Evaluator {
   import Util._
   import Syntax._
 
-  private def eval1(ctx: Context, store: Store, t: Term): (Term, Store) =
+  private def eval1(ctx: Context, t: Term): Term =
     t match {
       case TmAscribe(v1, tyT) if isVal(ctx, v1) =>
-        (v1, store)
+        v1
       case TmAscribe(t1, tyT) =>
-        val (t11, store1) = eval1(ctx, store, t1)
-        (TmAscribe(t11, tyT), store1)
+        val t11 = eval1(ctx, t1)
+        TmAscribe(t11, tyT)
       case TmApp(TmAbs(x, ty, t), v2) if isVal(ctx, v2) =>
-        (termSubstTop(v2, t), store)
+        termSubstTop(v2, t)
       case TmApp(v1, t2) if isVal(ctx, v1) =>
-        val (t21, store1) = eval1(ctx, store, t2)
-        (TmApp(v1, t21), store1)
+        val t21 = eval1(ctx, t2)
+        TmApp(v1, t21)
       case TmApp(t1, t2) =>
-        val (t11, store1) = eval1(ctx, store, t1)
-        (TmApp(t11, t2), store1)
+        val t11 = eval1(ctx, t1)
+        TmApp(t11, t2)
       case TmRecord(fields) =>
-        def evalAField(l: List[(String, Term)]): (List[(String, Term)], Store) =
+        def evalAField(l: List[(String, Term)]): (List[(String, Term)]) =
           l match {
             case Nil =>
               throw new NoRuleApplies(t)
             case (l, vi) :: rest if isVal(ctx, vi) =>
-              val (rest1, store1) = evalAField(rest)
-              ((l, vi) :: rest1, store1)
+              val rest1 = evalAField(rest)
+              (l, vi) :: rest1
             case (l, ti) :: rest =>
-              val (ti1, store1) = eval1(ctx, store, ti)
-              ((l, ti1) :: rest, store1)
+              val ti1 = eval1(ctx, ti)
+              (l, ti1) :: rest
           }
-        val (fields1, store1) = evalAField(fields)
-        (TmRecord(fields1), store1)
+        val fields1 = evalAField(fields)
+        TmRecord(fields1)
       case TmProj(v1 @ TmRecord(fields), l) if isVal(ctx, v1) =>
         fields.find { _._1 == l } match {
-          case Some((_, ti)) => (ti, store)
+          case Some((_, ti)) => ti
           case None          => throw new NoRuleApplies(t)
         }
       case TmProj(t1, l) =>
-        val (t11, store1) = eval1(ctx, store, t1)
-        (TmProj(t11, l), store1)
+        val t11 = eval1(ctx, t1)
+        TmProj(t11, l)
       case TmTag(l, t1, tyT) =>
-        val (t11, store1) = eval1(ctx, store, t1)
-        (TmTag(l, t11, tyT), store1)
+        val t11 = eval1(ctx, t1)
+        TmTag(l, t11, tyT)
       case TmCase(TmTag(li, v11, _), bs) if isVal(ctx, v11) =>
         bs find { _._1 == li } match {
-          case Some((_, x, body)) => (termSubstTop(v11, body), store)
+          case Some((_, x, body)) => termSubstTop(v11, body)
           case None               => throw new NoRuleApplies(t)
         }
       case TmCase(t1, bs) =>
-        val (t11, store1) = eval1(ctx, store, t1)
-        (TmCase(t11, bs), store1)
+        val t11 = eval1(ctx, t1)
+        TmCase(t11, bs)
       case TmLet(x, v1, t2) if isVal(ctx, v1) =>
-        (termSubstTop(v1, t2), store)
+        termSubstTop(v1, t2)
       case TmLet(x, t1, t2) =>
-        val (t11, store1) = eval1(ctx, store, t1)
-        (TmLet(x, t11, t2), store1)
+        val t11 = eval1(ctx, t1)
+        TmLet(x, t11, t2)
       case TmIf(TmTrue, t2, t3) =>
-        (t2, store)
+        t2
       case TmIf(TmFalse, t2, t3) =>
-        (t3, store)
+        t3
       case TmIf(t1, t2, t3) =>
-        val (t11, store1) = eval1(ctx, store, t1)
-        (TmIf(t11, t2, t3), store1)
+        val t11 = eval1(ctx, t1)
+        TmIf(t11, t2, t3)
       case TmSucc(t1) =>
-        val (t11, store1) = eval1(ctx, store, t1)
-        (TmSucc(t11), store1)
+        val t11 = eval1(ctx, t1)
+        TmSucc(t11)
       case TmPred(TmZero) =>
-        (TmZero, store)
+        TmZero
       case TmPred(TmSucc(nv1)) if isNumericVal(ctx, nv1) =>
-        (nv1, store)
+        nv1
       case TmPred(t1) =>
-        val (t2, store1) = eval1(ctx, store, t1)
-        (TmPred(t2), store)
+        val t2 = eval1(ctx, t1)
+        TmPred(t2)
       case TmIsZero(TmZero) =>
-        (TmTrue, store)
+        TmTrue
       case TmIsZero(TmSucc(nv1)) if isNumericVal(ctx, nv1) =>
-        (TmFalse, store)
+        TmFalse
       case TmIsZero(t1) =>
-        val (t2, store1) = eval1(ctx, store, t1)
-        (TmIsZero(t2), store)
+        val t2 = eval1(ctx, t1)
+        TmIsZero(t2)
       case t @ TmFix(v1) if isVal(ctx, v1) =>
         v1 match {
-          case TmAbs(_, _, t12) => (termSubstTop(t, t12), store)
+          case TmAbs(_, _, t12) => termSubstTop(t, t12)
           case _                => throw new NoRuleApplies(t)
         }
       case TmFix(t1) =>
-        val (t2, store1) = eval1(ctx, store, t1)
-        (TmFix(t2), store1)
+        val t2 = eval1(ctx, t1)
+        TmFix(t2)
       case TmVar(n, _) =>
         ctx.getBinding(n) match {
-          case TmAbbBind(t1, _) => (t1, store)
+          case TmAbbBind(t1, _) => t1
           case _                => throw new NoRuleApplies(t)
         }
       case _ =>
         throw new NoRuleApplies(t)
     }
 
-  def eval(ctx: Context, store: Store, t: Term): (Term, Store) =
+  def eval(ctx: Context, t: Term): Term =
     try {
-      val (t1, store1) = eval1(ctx, store, t)
-      eval(ctx, store1, t1)
+      val t1 = eval1(ctx, t)
+      eval(ctx, t1)
     } catch {
-      case _: NoRuleApplies => (t, store)
+      case _: NoRuleApplies => t
     }
 
-  def evalBinding(ctx: Context, store: Store, bind: Binding): (Binding, Store) =
+  def evalBinding(ctx: Context, bind: Binding): Binding =
     bind match {
       case TmAbbBind(t, tyT) =>
-        val (t1, store1) = eval(ctx, store, t)
-        (TmAbbBind(t1, tyT), store1)
+        val t1 = eval(ctx, t)
+        TmAbbBind(t1, tyT)
       case b =>
-        (b, store)
+        b
     }
 }
 
