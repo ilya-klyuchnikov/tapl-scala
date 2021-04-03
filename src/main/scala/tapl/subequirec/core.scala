@@ -225,19 +225,12 @@ object Typer {
           case TyArr(tyT11, tyT12) =>
             if (subtype(ctx, tyT2, tyT11))
               tyT12
-            else {
-              println(tyT1)
-              println(tyT2)
-              println(simplifyTy(ctx, tyT1))
+            else
               throw new Exception("parameter mismatch in " + t + " : " + tyT2 + " != " + tyT11)
-            }
           case TyBot => TyBot
-          case z => {
-            println(tyT1)
-            println(tyT2)
-            println(simplifyTy(ctx, tyT1))
+          case z =>
+            println(z)
             throw new Exception("arrow type expected in " + t1)
-          }
         }
       case TmTrue =>
         TyBool
