@@ -120,10 +120,9 @@ object FullEquirecParsers
 
   // TERMS
   lazy val term: PackratParser[Res[Term]] =
-    appTerm |
-      ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ {
-        case t1 ~ t2 ~ t3 => ctx: Context => TmIf(t1(ctx), t2(ctx), t3(ctx))
-      } |
+    ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ {
+      case t1 ~ t2 ~ t3 => ctx: Context => TmIf(t1(ctx), t2(ctx), t3(ctx))
+    } |
       ("case" ~> term) ~ ("of" ~> cases) ^^ {
         case t ~ cs => ctx: Context => TmCase(t(ctx), cs(ctx))
       } |
@@ -144,7 +143,7 @@ object FullEquirecParsers
           ctx: Context =>
             TmLet(id, TmFix(TmAbs(id, ty(ctx), t1(ctx.addName(id)))), t2(ctx.addName(id)))
       }
-    }
+    } | appTerm
 
   lazy val appTerm: PackratParser[Res[Term]] =
     appTerm ~ pathTerm ^^ { case t1 ~ t2 => ctx: Context => TmApp(t1(ctx), t2(ctx)) } |
