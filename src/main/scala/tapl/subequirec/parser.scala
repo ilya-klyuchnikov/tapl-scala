@@ -28,6 +28,7 @@ object SubEquirecParsers extends StandardTokenParsers with PackratParsers with I
     "fix",
     "iszero",
     "letrec",
+    "Rec",
     "_",
     "Top",
     "Bot",
@@ -86,7 +87,11 @@ object SubEquirecParsers extends StandardTokenParsers with PackratParsers with I
       success({ ctx: Context => TyVarBind })
 
   // TYPES
-  lazy val typ: PackratParser[Res[Ty]] = arrowType
+  lazy val typ: PackratParser[Res[Ty]] =
+    arrowType |
+      ("Rec" ~> ucid) ~ ("." ~> typ) ^^ {
+        case id ~ ty => ctx: Context => TyRec(id, ty(ctx.addName(id)))
+      }
   lazy val aType: PackratParser[Res[Ty]] =
     "(" ~> typ <~ ")" |
       ucid ^^ { tn => ctx: Context =>
