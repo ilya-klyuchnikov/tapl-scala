@@ -10,7 +10,6 @@ case class TyVariant(els: List[(String, Ty)]) extends Ty
 case object TyBool extends Ty
 case object TyString extends Ty
 case object TyUnit extends Ty
-// The main addition of this chapter is:
 case class TyRec(id: String, ty: Ty) extends Ty
 
 sealed trait Term
@@ -38,7 +37,6 @@ sealed trait Binding
 case object NameBind extends Binding
 case object TyVarBind extends Binding
 case class VarBind(t: Ty) extends Binding
-// abbreviations
 case class TmAbbBind(t: Term, ty: Option[Ty]) extends Binding
 case class TyAbbBind(ty: Ty) extends Binding
 
