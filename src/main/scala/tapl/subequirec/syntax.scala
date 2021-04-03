@@ -12,6 +12,7 @@ case object TyString extends Ty
 case object TyUnit extends Ty
 case object TyTop extends Ty
 case object TyBot extends Ty
+case class TyRec(id: String, ty: Ty) extends Ty
 
 sealed trait Term
 case object TmTrue extends Term
@@ -96,10 +97,12 @@ object Syntax {
         case TyVariant(fieldTys) => TyVariant(fieldTys.map { case (li, tyi) => (li, walk(c, tyi)) })
         case TyTop               => TyTop
         case TyBot               => TyBot
+        case TyRec(x, tyT)       => TyRec(x, walk(c + 1, tyT))
       }
     walk(c, ty)
   }
 
+  // see chapter 23 for explanation about onType
   private def tmMap(onVar: (Int, TmVar) => Term, onType: (Int, Ty) => Ty, c: Int, t: Term): Term = {
     def walk(c: Int, t: Term): Term =
       t match {
@@ -201,7 +204,13 @@ object PrettyPrinter {
   import util.Print._
 
   def ptyType(outer: Boolean, ctx: Context, ty: Ty): Document =
-    ptyArrowType(outer, ctx, ty)
+    ty match {
+      case TyRec(x, tyT) =>
+        val (ctx1, x1) = ctx.pickFreshName(x)
+        g2("Rec " :: x :: "." :/: ptyType(outer, ctx1, tyT))
+      case ty =>
+        ptyArrowType(outer, ctx, ty)
+    }
 
   def ptyArrowType(outer: Boolean, ctx: Context, tyT: Ty): Document =
     tyT match {
