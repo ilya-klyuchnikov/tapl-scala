@@ -151,7 +151,7 @@ object Typer {
         throw new NoRuleApplies(null)
     }
 
-  def simplifyTy(ctx: Context, ty: Ty): Ty =
+  private def simplifyTy(ctx: Context, ty: Ty): Ty =
     try {
       val ty1 = computeTy(ctx, ty)
       simplifyTy(ctx, ty1)
