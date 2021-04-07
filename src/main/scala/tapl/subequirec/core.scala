@@ -149,7 +149,7 @@ object Typer {
         throw new NoRuleApplies(null)
     }
 
-  def simplifyTy(ctx: Context, ty: Ty): Ty =
+  private def simplifyTy(ctx: Context, ty: Ty): Ty =
     try {
       val ty1 = computeTy(ctx, ty)
       simplifyTy(ctx, ty1)
@@ -157,7 +157,7 @@ object Typer {
       case _: NoRuleApplies => ty
     }
 
-  def tyEqv(ctx: Context, ty1: Ty, ty2: Ty): Boolean = {
+  private def tyEqv(ctx: Context, ty1: Ty, ty2: Ty): Boolean = {
     val tyS = simplifyTy(ctx, ty1)
     val tyT = simplifyTy(ctx, ty2)
     (tyS, tyT) match {
@@ -356,7 +356,7 @@ object Typer {
 
   }
 
-  def join(ctx: Context, ty1: Ty, ty2: Ty): Ty =
+  private def join(ctx: Context, ty1: Ty, ty2: Ty): Ty =
     if (subtype(ctx, ty1, ty2)) {
       ty2
     } else if (subtype(ctx, ty2, ty1)) {
@@ -381,7 +381,7 @@ object Typer {
       }
     }
 
-  def meet(ctx: Context, ty1: Ty, ty2: Ty): Ty =
+  private def meet(ctx: Context, ty1: Ty, ty2: Ty): Ty =
     if (subtype(ctx, ty1, ty2)) {
       ty1
     } else if (subtype(ctx, ty2, ty1)) {
