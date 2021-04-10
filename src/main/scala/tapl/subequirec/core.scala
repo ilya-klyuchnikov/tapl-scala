@@ -135,7 +135,7 @@ object Typer {
       case _            => false
     }
 
-  private def getTyAbb(ctx: Context, i: Int) =
+  private def getTyAbb(ctx: Context, i: Int): Ty =
     ctx.getBinding(i) match {
       case TyAbbBind(ty) => ty
       case _             => throw new NoRuleApplies(null)
