@@ -6,16 +6,14 @@ lambda x:Bot. x x;
 
 lambda x:<a:Bool,b:Bool>. x;
 
-
 lambda x:Top. x;
 (lambda x:Top. x) (lambda x:Top. x);
 
-(lambda x:Top->Top. x) (lambda x:Top. x);
+(lambda x:Top -> Top. x) (lambda x:Top. x);
 
 
 (lambda r:{x:Top->Top}. r.x r.x)
-  {x=lambda z:Top.z, y=lambda z:Top.z};
-
+  {x = lambda z: Top. z, y = lambda z:Top. z};
 
 "hello";
 
@@ -30,7 +28,6 @@ let x=true in x;
 {true, false};
 {true, false}.1;
 
-
 if true then {x=true,y=false,a=false} else {y=false,x={},b=false};
 
 lambda x:Bool. x;
@@ -40,5 +37,67 @@ lambda x:Bool. x;
 lambda x:Nat. succ x;
 (lambda x:Nat. succ (succ x)) (succ 0);
 
-T = Nat->Nat;
+T = Nat -> Nat;
 lambda f:T. lambda x:Nat. f (f x);
+
+// -------------
+
+NatList = Rec X. <nil:Unit, cons:{Nat,X}>;
+
+nil = <nil=unit> as NatList;
+
+hd = lambda l:NatList.
+case l of
+      <nil=u> ==> 0
+    | <cons=p> ==> p.1;
+
+ChainA = Rec X. <nil:Unit, a:X>;
+ChainB = Rec X. <nil:Unit, b:X>;
+ChainAB = Rec X. <nil: Unit, a:X, b: X>;
+
+chain0a = <nil = unit> as ChainA;
+chain0b = <nil = unit> as ChainB;
+chain0ab = <nil = unit> as ChainAB;
+chain1a = <a = chain0a> as ChainA;
+chain1b = <b = chain0b> as ChainB;
+chain1a_ab = chain1a as ChainAB;
+chain1a_ab = chain1b as ChainAB;
+
+ChainA_ChainB = <a:ChainA, b:ChainB>;
+
+// the return type is Top
+unChain1 = lambda c: ChainA_ChainB.
+    case c of
+      <a=chain> ==> chain
+    | <b=chain> ==> chain;
+
+// the inferred return type is ChainAB
+unChain2 = lambda c: ChainA_ChainB.
+    case c of
+      <a=chain> ==> chain as ChainAB
+    | <b=chain> ==> chain;
+
+// the inferred return type is also ChainAB
+// this is also just a coincidence
+unChain3 = lambda c: ChainA_ChainB.
+    case c of
+      <a=chain> ==> chain
+    | <b=chain> ==> chain as ChainAB;
+
+// -------------
+
+f1 = lambda b: Bool.
+    if b then {x = 1} else {y = 2, x = 2};
+
+TreeA  = Rec X. <empty: Unit, node: {val: Nat, a: X}>;
+TreeB  = Rec X. <empty: Unit, node: {val: Nat, b: X}>;
+TreeAB = Rec X. <empty: Unit, node: {val: Nat, a: X, b: X}>;
+
+treeA  : TreeA;
+treeB  : TreeB;
+treeAB : TreeAB;
+
+// fails
+// treeAasAB = treeA as TreeAB;
+treeABasA = treeAB as TreeA;
+treeABasB = treeAB as TreeA;
