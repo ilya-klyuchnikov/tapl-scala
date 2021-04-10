@@ -143,6 +143,8 @@ object Typer {
 
   private def computeTy(ctx: Context, tyT: Ty) =
     tyT match {
+      case tyS @ TyRec(x, tyS1) =>
+        typeSubstTop(tyS, tyS1)
       case TyVar(i, _) if isTyAbb(ctx, i) =>
         getTyAbb(ctx, i)
       case _ =>
@@ -157,39 +159,43 @@ object Typer {
       case _: NoRuleApplies => ty
     }
 
-  private def tyEqv(ctx: Context, ty1: Ty, ty2: Ty): Boolean = {
-    val tyS = simplifyTy(ctx, ty1)
-    val tyT = simplifyTy(ctx, ty2)
-    (tyS, tyT) match {
+  private def tyEqv(seen: List[(Ty, Ty)], ctx: Context, tyS: Ty, tyT: Ty): Boolean =
+    seen.contains((tyS, tyT)) || ((tyS, tyT) match {
       case (TyString, TyString) => true
+      case (TyRec(x, tyS1), _) =>
+        tyEqv((tyS, tyT) :: seen, ctx, typeSubstTop(tyS, tyS1), tyT)
+      case (_, TyRec(x, tyT1)) =>
+        tyEqv((tyS, tyT) :: seen, ctx, tyS, typeSubstTop(tyT, tyT1))
       case (TyUnit, TyUnit)     => true
       case (TyId(b1), TyId(b2)) => b1 == b2
       case (TyVar(i, _), _) if isTyAbb(ctx, i) =>
-        tyEqv(ctx, getTyAbb(ctx, i), tyT)
+        tyEqv(seen, ctx, getTyAbb(ctx, i), tyT)
       case (_, TyVar(i, _)) if isTyAbb(ctx, i) =>
-        tyEqv(ctx, tyS, getTyAbb(ctx, i))
+        tyEqv(seen, ctx, tyS, getTyAbb(ctx, i))
       case (TyVar(i, _), TyVar(j, _)) => i == j
       case (TyArr(tyS1, tyS2), TyArr(tyT1, tyT2)) =>
-        tyEqv(ctx, tyS1, tyT1) && tyEqv(ctx, tyS2, tyT2)
+        tyEqv(seen, ctx, tyS1, tyT1) && tyEqv(seen, ctx, tyS2, tyT2)
       case (TyBool, TyBool) => true
       case (TyNat, TyNat)   => true
       case (TyRecord(fields1), TyRecord(fields2)) =>
         fields1.length == fields2.length && fields2.forall {
           case (li2, tyTi2) =>
             fields1.find { _._1 == li2 } match {
-              case Some((li1, tyTi1)) => tyEqv(ctx, tyTi1, tyTi2)
+              case Some((li1, tyTi1)) => tyEqv(seen, ctx, tyTi1, tyTi2)
               case None               => false
             }
         }
       case (TyVariant(fields1), TyVariant(fields2)) =>
         fields1.length == fields2.length && (fields1 zip fields2).forall {
-          case (f1, f2) => (f1._1 == f2._1) && tyEqv(ctx, f1._2, f2._2)
+          case (f1, f2) => (f1._1 == f2._1) && tyEqv(seen, ctx, f1._2, f2._2)
         }
       case (TyTop, TyTop) => true
       case (TyBot, TyBot) => true
       case _              => false
-    }
-  }
+    })
+
+  private def tyEqv(ctx: Context, tyS: Ty, tyT: Ty): Boolean =
+    tyEqv(List(), ctx, tyS, tyT)
 
   def typeof(ctx: Context, t: Term): Ty =
     t match {
@@ -324,22 +330,25 @@ object Typer {
 
   // ---------------------------------
 
-  def subtype(ctx: Context, ty1: Ty, ty2: Ty): Boolean = {
-    if (tyEqv(ctx, ty1, ty2)) {
-      return true
-    }
-    val tyS = simplifyTy(ctx, ty1)
-    val tyT = simplifyTy(ctx, ty2)
-    (tyS, tyT) match {
+  private def subtype(seen: List[(Ty, Ty)], ctx: Context, tyS: Ty, tyT: Ty): Boolean =
+    seen.contains((tyS, tyT)) || tyEqv(ctx, tyS, tyT) || ((tyS, tyT) match {
       case (_, TyTop) => true
       case (TyBot, _) => true
+      case (TyRec(x, tyS1), _) =>
+        subtype((tyS, tyT) :: seen, ctx, typeSubstTop(tyS, tyS1), tyT)
+      case (_, TyRec(x, tyT1)) =>
+        subtype((tyS, tyT) :: seen, ctx, tyS, typeSubstTop(tyT, tyT1))
+      case (TyVar(i, _), _) if isTyAbb(ctx, i) =>
+        subtype(seen, ctx, getTyAbb(ctx, i), tyT)
+      case (_, TyVar(i, _)) if isTyAbb(ctx, i) =>
+        subtype(seen, ctx, tyS, getTyAbb(ctx, i))
       case (TyArr(tyS1, tyS2), TyArr(tyT1, tyT2)) =>
-        subtype(ctx, tyT1, tyS1) && subtype(ctx, tyS2, tyT2)
+        subtype(seen, ctx, tyT1, tyS1) && subtype(seen, ctx, tyS2, tyT2)
       case (TyRecord(fS), TyRecord(fT)) =>
         fT.forall {
           case (li, tyTi) =>
             fS.find { _._1 == li } match {
-              case Some((_, tySi)) => subtype(ctx, tySi, tyTi)
+              case Some((_, tySi)) => subtype(seen, ctx, tySi, tyTi)
               case None            => false
             }
         }
@@ -347,14 +356,15 @@ object Typer {
         fS.forall {
           case (li, tySi) =>
             fT.find { _._1 == li } match {
-              case Some((_, tyTi)) => subtype(ctx, tySi, tyTi)
+              case Some((_, tyTi)) => subtype(seen, ctx, tySi, tyTi)
               case None            => false
             }
         }
       case (_, _) => false
-    }
+    })
 
-  }
+  def subtype(ctx: Context, tyS: Ty, tyT: Ty): Boolean =
+    subtype(List(), ctx, tyS, tyT)
 
   private def join(ctx: Context, ty1: Ty, ty2: Ty): Ty =
     if (subtype(ctx, ty1, ty2)) {
@@ -394,7 +404,6 @@ object Typer {
           val labelS = fS.map { _._1 }
           val labelT = fT.map { _._1 }
           val allLabels = (labelS concat labelT).distinct
-          // there was an error by Pierce!!
           val allFs = allLabels.flatMap { li =>
             (fS.find { _._1 == li }, fT.find { _._1 == li }) match {
               case (Some((_, tySi)), Some((_, tyTi))) =>
