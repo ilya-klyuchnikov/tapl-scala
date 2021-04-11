@@ -203,7 +203,8 @@ object SubEquirecParsers extends StandardTokenParsers with PackratParsers with I
       case _ => TmSucc(num(x - 1))
     }
 
-  lazy val phraseTopLevel: PackratParser[Res1[List[Command]]] = phrase(topLevel)
+  lazy val phraseTopLevel: PackratParser[Res1[List[Command]]] =
+    phrase(topLevel)
 
   def input(s: String): Res1[List[Command]] =
     phraseTopLevel(new lexical.Scanner(s)) match {

@@ -76,7 +76,7 @@ case class Context(l: List[(String, Binding)] = List()) {
       case VarBind(ty)            => ty
       case TmAbbBind(_, Some(ty)) => ty
       case TmAbbBind(_, None) =>
-        throw new Exception("No type recorder for variable " + index2Name(i))
+        throw new Exception("No type recorded for variable " + index2Name(i))
       case _ => throw new Exception("Wrong kind of binding for " + index2Name(i))
     }
 }
@@ -150,7 +150,7 @@ object Syntax {
   def typeShift(d: Int, ty: Ty): Ty =
     typeShiftAbove(d, 0, ty)
 
-  def bindingShift(d: Int, bind: Binding) =
+  def bindingShift(d: Int, bind: Binding): Binding =
     bind match {
       case NameBind  => NameBind
       case TyVarBind => TyVarBind

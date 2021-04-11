@@ -1,15 +1,19 @@
 package tapl.subequirec
 
-object Util {
+import scala.annotation.tailrec
 
-  def isNumericVal(ctx: Context, t: Term): Boolean =
+object Evaluator {
+  import Syntax._
+
+  @tailrec
+  private def isNumericVal(ctx: Context, t: Term): Boolean =
     t match {
       case TmZero     => true
       case TmSucc(t1) => isNumericVal(ctx, t1)
       case _          => false
     }
 
-  def isVal(ctx: Context, t: Term): Boolean =
+  private def isVal(ctx: Context, t: Term): Boolean =
     t match {
       case TmTrue                      => true
       case TmFalse                     => true
@@ -21,11 +25,6 @@ object Util {
       case TmUnit                      => true
       case _                           => false
     }
-}
-
-object Evaluator {
-  import Util._
-  import Syntax._
 
   private def eval1(ctx: Context, t: Term): Term =
     t match {
