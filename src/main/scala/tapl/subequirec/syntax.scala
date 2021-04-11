@@ -199,28 +199,27 @@ object Syntax {
 import util.Document
 import util.Document._
 
-// outer means that the term is the top-level term
 object PrettyPrinter {
   import util.Print._
 
-  def ptyType(outer: Boolean, ctx: Context, ty: Ty): Document =
+  def ptyType(ctx: Context, ty: Ty): Document =
     ty match {
       case TyRec(x, tyT) =>
         val (ctx1, x1) = ctx.pickFreshName(x)
-        g2("Rec " :: x :: "." :/: ptyType(outer, ctx1, tyT))
+        g2("Rec " :: x :: "." :/: ptyType(ctx1, tyT))
       case ty =>
-        ptyArrowType(outer, ctx, ty)
+        ptyArrowType(ctx, ty)
     }
 
-  def ptyArrowType(outer: Boolean, ctx: Context, tyT: Ty): Document =
+  def ptyArrowType(ctx: Context, tyT: Ty): Document =
     tyT match {
       case TyArr(tyT1, tyT2) =>
-        g2(ptyAType(false, ctx, tyT1) :: " ->" :/: ptyArrowType(outer, ctx, tyT2))
+        g2(ptyAType(ctx, tyT1) :: " ->" :/: ptyArrowType(ctx, tyT2))
       case tyT =>
-        ptyAType(outer, ctx, tyT)
+        ptyAType(ctx, tyT)
     }
 
-  def ptyAType(outer: Boolean, ctx: Context, tyT: Ty): Document =
+  def ptyAType(ctx: Context, tyT: Ty): Document =
     tyT match {
       case TyVar(x, n) =>
         if (ctx.length == n) ctx.index2Name(x)
@@ -236,9 +235,9 @@ object PrettyPrinter {
       case TyVariant(fields) =>
         def pf(i: Int, li: String, tyTi: Ty): Document =
           if (i.toString() == li) {
-            ptyType(false, ctx, tyTi)
+            ptyType(ctx, tyTi)
           } else {
-            li :: ":" :/: ptyType(false, ctx, tyTi)
+            li :: ":" :/: ptyType(ctx, tyTi)
           }
         "<" :: fields.zipWithIndex
           .map { case ((li, tyTi), i) => pf(i + 1, li, tyTi) }
@@ -251,9 +250,9 @@ object PrettyPrinter {
       case TyRecord(fields) =>
         def pf(i: Int, li: String, tyTi: Ty): Document =
           if (i.toString() == li) {
-            ptyType(false, ctx, tyTi)
+            ptyType(ctx, tyTi)
           } else {
-            g0(li :: ":" :/: ptyType(false, ctx, tyTi))
+            g0(li :: ":" :/: ptyType(ctx, tyTi))
           }
         g2(
           "{" :: fields.zipWithIndex
@@ -264,83 +263,82 @@ object PrettyPrinter {
       case TyNat =>
         "Nat"
       case tyT =>
-        "(" :: ptyType(outer, ctx, tyT) :: ")"
+        "(" :: ptyType(ctx, tyT) :: ")"
     }
 
-  def ptyTy(ctx: Context, ty: Ty) = ptyType(true, ctx, ty)
+  def ptyTy(ctx: Context, ty: Ty): Document = ptyType(ctx, ty)
 
-  def ptmTerm(outer: Boolean, ctx: Context, t: Term): Document =
+  def ptmTerm(ctx: Context, t: Term): Document =
     t match {
 
       case TmIf(t1, t2, t3) =>
-        val ifB = g2("if" :/: ptmTerm(outer, ctx, t1))
-        val thenB = g2("then" :/: ptmTerm(outer, ctx, t2))
-        val elseB = g2("else" :/: ptmTerm(outer, ctx, t3))
+        val ifB = g2("if" :/: ptmTerm(ctx, t1))
+        val thenB = g2("then" :/: ptmTerm(ctx, t2))
+        val elseB = g2("else" :/: ptmTerm(ctx, t3))
         g0(ifB :/: thenB :/: elseB)
       case TmCase(t, cases) =>
         def pc(li: String, xi: String, ti: Term): Document = {
           val (ctx1, x1) = ctx.pickFreshName(xi)
-          "<" :: li :: "=" :: xi :: ">==>" :: ptmTerm(false, ctx1, ti)
+          "<" :: li :: "=" :: xi :: ">==>" :: ptmTerm(ctx1, ti)
         }
         g2(
-          "case " :: ptmTerm(false, ctx, t) :: " of" :/:
+          "case " :: ptmTerm(ctx, t) :: " of" :/:
             cases.map { case (x, y, z) => pc(x, y, z) }.foldRight(empty: Document)(_ :/: "|" :: _)
         )
       case TmAbs(x, tyT1, t2) =>
         val (ctx1, x1) = ctx.pickFreshName(x)
-        val abs = g0("lambda" :/: x1 :: ":" :/: ptyType(false, ctx, tyT1) :: ".")
-        val body = ptmTerm(outer, ctx1, t2)
+        val abs = g0("lambda" :/: x1 :: ":" :/: ptyType(ctx, tyT1) :: ".")
+        val body = ptmTerm(ctx1, t2)
         g2(abs :/: body)
       case TmLet(x, t1, t2) =>
         g0(
-          "let " :: x :: " = " :: ptmTerm(false, ctx, t1) :/: "in" :/: ptmTerm(
-            false,
+          "let " :: x :: " = " :: ptmTerm(ctx, t1) :/: "in" :/: ptmTerm(
             ctx.addName(x),
             t2,
           )
         )
       case TmFix(t1) =>
-        g2("fix " :: ptmTerm(false, ctx, t1))
-      case t => ptmAppTerm(outer, ctx, t)
+        g2("fix " :: ptmTerm(ctx, t1))
+      case t => ptmAppTerm(ctx, t)
 
     }
 
-  def ptmAppTerm(outer: Boolean, ctx: Context, t: Term): Document =
+  def ptmAppTerm(ctx: Context, t: Term): Document =
     t match {
       case TmApp(t1, t2) =>
-        g2(ptmAppTerm(false, ctx, t1) :/: ptmATerm(false, ctx, t2))
+        g2(ptmAppTerm(ctx, t1) :/: ptmATerm(ctx, t2))
       case TmPred(t1) =>
-        "pred " :: ptmATerm(false, ctx, t1)
+        "pred " :: ptmATerm(ctx, t1)
       case TmIsZero(t1) =>
-        "iszero " :: ptmATerm(false, ctx, t1)
+        "iszero " :: ptmATerm(ctx, t1)
       case t =>
-        ptmPathTerm(outer, ctx, t)
+        ptmPathTerm(ctx, t)
     }
 
-  def ptmPathTerm(outer: Boolean, ctx: Context, t: Term): Document =
+  def ptmPathTerm(ctx: Context, t: Term): Document =
     t match {
       case TmProj(t1, l) =>
-        ptmATerm(false, ctx, t1) :: "." :: l
+        ptmATerm(ctx, t1) :: "." :: l
       case t1 =>
-        ptmAscribeTerm(outer, ctx, t1)
+        ptmAscribeTerm(ctx, t1)
     }
 
-  def ptmAscribeTerm(outer: Boolean, ctx: Context, t: Term): Document =
+  def ptmAscribeTerm(ctx: Context, t: Term): Document =
     t match {
       case TmAscribe(t1, tyT1) =>
-        g0(ptmAppTerm(false, ctx, t1) :/: "as " :: ptyType(false, ctx, tyT1))
+        g0(ptmAppTerm(ctx, t1) :/: "as " :: ptyType(ctx, tyT1))
       case t1 =>
-        ptmATerm(outer, ctx, t1)
+        ptmATerm(ctx, t1)
     }
 
-  def ptmATerm(outer: Boolean, ctx: Context, t: Term): Document =
+  def ptmATerm(ctx: Context, t: Term): Document =
     t match {
       case TmTrue =>
         "true"
       case TmFalse =>
         "false"
       case TmTag(l, t, ty) =>
-        g2("<" :: l :: "=" :: ptmTerm(false, ctx, t) :: ">" :/: "as " :: ptyType(outer, ctx, ty))
+        g2("<" :: l :: "=" :: ptmTerm(ctx, t) :: ">" :/: "as " :: ptyType(ctx, ty))
       case TmVar(x, n) =>
         if (ctx.length == n) ctx.index2Name(x)
         else text("[bad index: " + x + "/" + n + " in {" + ctx.l.mkString(", ") + "}]")
@@ -351,9 +349,9 @@ object PrettyPrinter {
       case TmRecord(fields) =>
         def pf(i: Int, li: String, t: Term): Document =
           if (i.toString() == li) {
-            ptmTerm(false, ctx, t)
+            ptmTerm(ctx, t)
           } else {
-            li :: "=" :: ptmTerm(false, ctx, t)
+            li :: "=" :: ptmTerm(ctx, t)
           }
         "{" :: fields.zipWithIndex
           .map { case ((li, tyTi), i) => pf(i + 1, li, tyTi) }
@@ -369,14 +367,14 @@ object PrettyPrinter {
             case TmSucc(s) =>
               pf(i + 1, s)
             case _ =>
-              "(succ " :: ptmATerm(false, ctx, t1) :: ")"
+              "(succ " :: ptmATerm(ctx, t1) :: ")"
           }
         pf(1, t1)
       case t =>
-        "(" :: ptmTerm(outer, ctx, t) :: ")"
+        "(" :: ptmTerm(ctx, t) :: ")"
     }
 
-  def ptm(ctx: Context, t: Term) = ptmTerm(true, ctx, t)
+  def ptm(ctx: Context, t: Term) = ptmTerm(ctx, t)
 
   def pBinding(ctx: Context, bind: Binding): Document =
     bind match {
