@@ -301,7 +301,11 @@ object PrettyPrinter {
         val (ctx1, tyX1) = ctx.pickFreshName(tyX)
         val (ctx2, x1) = ctx1.pickFreshName(x)
         g2(
-          "let {" ::: tyX1 ::: ", " ::: x ::: "} =" :/: ptmTerm(false, ctx, t1) :/: "in " ::: ptmTerm(
+          "let {" ::: tyX1 ::: ", " ::: x ::: "} =" :/: ptmTerm(
+            false,
+            ctx,
+            t1,
+          ) :/: "in " ::: ptmTerm(
             outer,
             ctx2,
             t2,

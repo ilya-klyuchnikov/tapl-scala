@@ -170,12 +170,11 @@ object Typer {
       case (TyBool, TyBool) => true
       case (TyNat, TyNat)   => true
       case (TyRecord(fields1), TyRecord(fields2)) =>
-        fields1.length == fields2.length && fields2.forall {
-          case (li2, tyTi2) =>
-            fields1.find { _._1 == li2 } match {
-              case Some((li1, tyTi1)) => tyEqv(ctx, tyTi1, tyTi2)
-              case None               => false
-            }
+        fields1.length == fields2.length && fields2.forall { case (li2, tyTi2) =>
+          fields1.find { _._1 == li2 } match {
+            case Some((li1, tyTi1)) => tyEqv(ctx, tyTi1, tyTi2)
+            case None               => false
+          }
         }
       case _ => false
     }
@@ -192,12 +191,11 @@ object Typer {
       case (TyArr(tyS1, tyS2), TyArr(tyT1, tyT2)) =>
         subtype(ctx, tyT1, tyS1) && subtype(ctx, tyS2, tyT2)
       case (TyRecord(fS), TyRecord(fT)) =>
-        fT.forall {
-          case (li, tyTi) =>
-            fS.find { _._1 == li } match {
-              case Some((_, tySi)) => subtype(ctx, tySi, tyTi)
-              case None            => false
-            }
+        fT.forall { case (li, tyTi) =>
+          fS.find { _._1 == li } match {
+            case Some((_, tySi)) => subtype(ctx, tySi, tyTi)
+            case None            => false
+          }
         }
       case (_, _) => false
     }

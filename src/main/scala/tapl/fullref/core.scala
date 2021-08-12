@@ -244,16 +244,15 @@ object Typer {
       case (TyBool, TyBool)           => true
       case (TyNat, TyNat)             => true
       case (TyRecord(fields1), TyRecord(fields2)) =>
-        fields1.length == fields2.length && fields2.forall {
-          case (li2, tyTi2) =>
-            fields1.find { _._1 == li2 } match {
-              case Some((li1, tyTi1)) => tyEqv(ctx, tyTi1, tyTi2)
-              case None               => false
-            }
+        fields1.length == fields2.length && fields2.forall { case (li2, tyTi2) =>
+          fields1.find { _._1 == li2 } match {
+            case Some((li1, tyTi1)) => tyEqv(ctx, tyTi1, tyTi2)
+            case None               => false
+          }
         }
       case (TyVariant(fields1), TyVariant(fields2)) =>
-        fields1.length == fields2.length && (fields1 zip fields2).forall {
-          case (f1, f2) => (f1._1 == f2._1) && tyEqv(ctx, f1._2, f2._2)
+        fields1.length == fields2.length && (fields1 zip fields2).forall { case (f1, f2) =>
+          (f1._1 == f2._1) && tyEqv(ctx, f1._2, f2._2)
         }
       case _ => false
     }
@@ -271,20 +270,18 @@ object Typer {
       case (TyArr(tyS1, tyS2), TyArr(tyT1, tyT2)) =>
         subtype(ctx, tyT1, tyS1) && subtype(ctx, tyS2, tyT2)
       case (TyRecord(fS), TyRecord(fT)) =>
-        fT.forall {
-          case (li, tyTi) =>
-            fS.find { _._1 == li } match {
-              case Some((_, tySi)) => subtype(ctx, tySi, tyTi)
-              case None            => false
-            }
+        fT.forall { case (li, tyTi) =>
+          fS.find { _._1 == li } match {
+            case Some((_, tySi)) => subtype(ctx, tySi, tyTi)
+            case None            => false
+          }
         }
       case (TyVariant(fS), TyVariant(fT)) =>
-        fS.forall {
-          case (li, tySi) =>
-            fT.find { _._1 == li } match {
-              case Some((_, tyTi)) => subtype(ctx, tySi, tyTi)
-              case None            => false
-            }
+        fS.forall { case (li, tySi) =>
+          fT.find { _._1 == li } match {
+            case Some((_, tyTi)) => subtype(ctx, tySi, tyTi)
+            case None            => false
+          }
         }
       case (TyRef(tyT1), TyRef(tyT2))       => subtype(ctx, tyT1, tyT2) && subtype(ctx, tyT2, tyT1)
       case (TyRef(tyT1), TySource(tyT2))    => subtype(ctx, tyT1, tyT2)
@@ -407,8 +404,7 @@ object Typer {
         val tyT2 = typeof(ctx, t2)
         simplifyTy(ctx, tyT1) match {
           case TyArr(tyT11, tyT12) =>
-            if (subtype(ctx, tyT2, tyT11))
-              tyT12
+            if (subtype(ctx, tyT2, tyT11)) tyT12
             else {
               println(tyT1)
               println(tyT2)
@@ -452,21 +448,19 @@ object Typer {
       case TmCase(t, cases) =>
         simplifyTy(ctx, typeof(ctx, t)) match {
           case TyVariant(fieldTys) =>
-            cases.foreach {
-              case (l, _, _) =>
-                fieldTys.find(_._1 == l) match {
-                  case Some(_) =>
-                  case None    => throw new Exception("label" + l + " is not in type")
-                }
+            cases.foreach { case (l, _, _) =>
+              fieldTys.find(_._1 == l) match {
+                case Some(_) =>
+                case None    => throw new Exception("label" + l + " is not in type")
+              }
             }
-            val casetypes = cases map {
-              case (li, xi, ti) =>
-                val tyTi = fieldTys.find(_._1 == li) match {
-                  case Some(ty) => ty._2
-                  case None     => throw new Exception("label" + li + " is not found")
-                }
-                val ctx1 = ctx.addBinding(xi, VarBind(tyTi))
-                typeShift(-1, typeof(ctx1, ti))
+            val casetypes = cases map { case (li, xi, ti) =>
+              val tyTi = fieldTys.find(_._1 == li) match {
+                case Some(ty) => ty._2
+                case None     => throw new Exception("label" + li + " is not found")
+              }
+              val ctx1 = ctx.addBinding(xi, VarBind(tyTi))
+              typeShift(-1, typeof(ctx1, ti))
             }
             casetypes.foldLeft(TyBot: Ty) { join(ctx, _, _) }
           case TyBot => TyBot

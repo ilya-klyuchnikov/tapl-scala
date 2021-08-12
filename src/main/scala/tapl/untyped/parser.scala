@@ -26,16 +26,17 @@ object UntypedParsers extends StandardTokenParsers with PackratParsers with Impl
   type Res1[A] = Context => (A, Context)
 
   lazy val topLevel: PackratParser[Res1[List[Command]]] =
-    ((command <~ ";") ~ topLevel) ^^ {
-      case f ~ g =>
-        (ctx: Context) =>
-          val (cmd1, ctx1) = f(ctx)
-          val (cmds, ctx2) = g(ctx1)
-          (cmd1 :: cmds, ctx2)
+    ((command <~ ";") ~ topLevel) ^^ { case f ~ g =>
+      (ctx: Context) =>
+        val (cmd1, ctx1) = f(ctx)
+        val (cmds, ctx2) = g(ctx1)
+        (cmd1 :: cmds, ctx2)
     } | success { (ctx: Context) => (List(), ctx) }
 
   lazy val command: PackratParser[Res1[Command]] =
-    lcid ~ binder ^^ { case id ~ bind => (ctx: Context) => (Bind(id, bind(ctx)), ctx.addName(id)) } |
+    lcid ~ binder ^^ { case id ~ bind =>
+      (ctx: Context) => (Bind(id, bind(ctx)), ctx.addName(id))
+    } |
       term ^^ { t => (ctx: Context) =>
         val t1 = t(ctx); (Eval(t1), ctx)
       }
@@ -46,8 +47,8 @@ object UntypedParsers extends StandardTokenParsers with PackratParsers with Impl
 
   lazy val term: PackratParser[Res[Term]] =
     appTerm |
-      ("\\" ~> lcid) ~ ("." ~> term) ^^ {
-        case v ~ t => (ctx: Context) => TmAbs(v, t(ctx.addName(v)))
+      ("\\" ~> lcid) ~ ("." ~> term) ^^ { case v ~ t =>
+        (ctx: Context) => TmAbs(v, t(ctx.addName(v)))
       } |
       ("\\" ~ "_") ~> ("." ~> term) ^^ { t => (ctx: Context) => TmAbs("_", t(ctx.addName("_"))) }
 

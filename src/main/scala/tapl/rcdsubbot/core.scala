@@ -68,12 +68,11 @@ object Typer {
         case (TyArr(tyS1, tyS2), TyArr(tyT1, tyT2)) =>
           subtype(tyT1, tyS1) && subtype(tyS2, tyT2)
         case (TyRecord(fS), TyRecord(fT)) =>
-          fT.forall {
-            case (li2, tyTi) =>
-              fS.find { _._1 == li2 } match {
-                case Some((_, tySi)) => subtype(tySi, tyTi)
-                case None            => false
-              }
+          fT.forall { case (li2, tyTi) =>
+            fS.find { _._1 == li2 } match {
+              case Some((_, tySi)) => subtype(tySi, tyTi)
+              case None            => false
+            }
           }
         case _ => false
       })

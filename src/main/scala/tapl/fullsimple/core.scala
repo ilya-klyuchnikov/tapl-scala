@@ -180,16 +180,15 @@ object Typer {
       case (TyBool, TyBool) => true
       case (TyNat, TyNat)   => true
       case (TyRecord(fields1), TyRecord(fields2)) =>
-        fields1.length == fields2.length && fields2.forall {
-          case (li2, tyTi2) =>
-            fields1.find { _._1 == li2 } match {
-              case Some((li1, tyTi1)) => tyEqv(ctx, tyTi1, tyTi2)
-              case None               => false
-            }
+        fields1.length == fields2.length && fields2.forall { case (li2, tyTi2) =>
+          fields1.find { _._1 == li2 } match {
+            case Some((li1, tyTi1)) => tyEqv(ctx, tyTi1, tyTi2)
+            case None               => false
+          }
         }
       case (TyVariant(fields1), TyVariant(fields2)) =>
-        fields1.length == fields2.length && (fields1 zip fields2).forall {
-          case (f1, f2) => (f1._1 == f2._1) && tyEqv(ctx, f1._2, f2._2)
+        fields1.length == fields2.length && (fields1 zip fields2).forall { case (f1, f2) =>
+          (f1._1 == f2._1) && tyEqv(ctx, f1._2, f2._2)
         }
       case _ => false
     }
@@ -215,21 +214,19 @@ object Typer {
       case TmCase(t, cases) =>
         simplifyTy(ctx, typeof(ctx, t)) match {
           case TyVariant(fieldTys) =>
-            cases.foreach {
-              case (l, _, _) =>
-                fieldTys.find(_._1 == l) match {
-                  case Some(_) =>
-                  case None    => throw new Exception("label" + l + " is not in type")
-                }
+            cases.foreach { case (l, _, _) =>
+              fieldTys.find(_._1 == l) match {
+                case Some(_) =>
+                case None    => throw new Exception("label" + l + " is not in type")
+              }
             }
-            val casetypes = cases map {
-              case (li, xi, ti) =>
-                val tyTi = fieldTys.find(_._1 == li) match {
-                  case Some(ty) => ty._2
-                  case None     => throw new Exception("label" + li + " is not found")
-                }
-                val ctx1 = ctx.addBinding(xi, VarBind(tyTi))
-                typeShift(-1, typeof(ctx1, ti))
+            val casetypes = cases map { case (li, xi, ti) =>
+              val tyTi = fieldTys.find(_._1 == li) match {
+                case Some(ty) => ty._2
+                case None     => throw new Exception("label" + li + " is not found")
+              }
+              val ctx1 = ctx.addBinding(xi, VarBind(tyTi))
+              typeShift(-1, typeof(ctx1, ti))
             }
             val tyT1 :: restTy = casetypes
             restTy.foreach { tyI =>

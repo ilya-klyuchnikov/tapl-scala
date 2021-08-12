@@ -125,16 +125,16 @@ object Syntax {
   private def tyMap(onVar: (Int, TyVar) => Ty, c: Int, ty: Ty): Ty = {
     def walk(c: Int, ty: Ty): Ty =
       ty match {
-        case id: TyId                => id
-        case tv: TyVar               => onVar(c, tv)
-        case TyArr(ty1, ty2)         => TyArr(walk(c, ty1), walk(c, ty2))
-        case TyBool                  => TyBool
-        case TyTop                   => TyTop
-        case TyBot                   => TyBot
-        case TyRecord(fieldTys)      => TyRecord(fieldTys.map { case (li, tyi) => (li, walk(c, tyi)) })
-        case TyVariant(fieldTys)     => TyVariant(fieldTys.map { case (li, tyi) => (li, walk(c, tyi)) })
-        case TyString                => TyString
-        case TyUnit                  => TyUnit
+        case id: TyId            => id
+        case tv: TyVar           => onVar(c, tv)
+        case TyArr(ty1, ty2)     => TyArr(walk(c, ty1), walk(c, ty2))
+        case TyBool              => TyBool
+        case TyTop               => TyTop
+        case TyBot               => TyBot
+        case TyRecord(fieldTys)  => TyRecord(fieldTys.map { case (li, tyi) => (li, walk(c, tyi)) })
+        case TyVariant(fieldTys) => TyVariant(fieldTys.map { case (li, tyi) => (li, walk(c, tyi)) })
+        case TyString            => TyString
+        case TyUnit              => TyUnit
         case TyAll(tyX, knK1, tyT2)  => TyAll(tyX, knK1, walk(c + 1, tyT2))
         case TyNat                   => TyNat
         case TySome(tyX, knK1, tyT2) => TySome(tyX, knK1, walk(c + 1, tyT2))
@@ -434,7 +434,11 @@ object PrettyPrinter {
         val (ctx1, tyX1) = ctx.pickFreshName(tyX)
         val (ctx2, x1) = ctx1.pickFreshName(x)
         g2(
-          "let {" ::: tyX1 ::: ", " ::: x ::: "} =" :/: ptmTerm(false, ctx, t1) :/: "in " ::: ptmTerm(
+          "let {" ::: tyX1 ::: ", " ::: x ::: "} =" :/: ptmTerm(
+            false,
+            ctx,
+            t1,
+          ) :/: "in " ::: ptmTerm(
             outer,
             ctx2,
             t2,
@@ -499,7 +503,9 @@ object PrettyPrinter {
           .reduceLeftOption(_ ::: "," :/: _)
           .getOrElse(empty) ::: "}"
       case TmTag(l, t, ty) =>
-        g2("<" ::: l ::: "=" ::: ptmTerm(false, ctx, t) ::: ">" :/: "as " ::: ptyType(outer, ctx, ty))
+        g2(
+          "<" ::: l ::: "=" ::: ptmTerm(false, ctx, t) ::: ">" :/: "as " ::: ptyType(outer, ctx, ty)
+        )
       case TmString(s) =>
         "\"" ::: s ::: "\""
       case TmUnit =>

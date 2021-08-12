@@ -208,12 +208,11 @@ object Typer {
       case (TyBool, TyBool) => true
       case (TyNat, TyNat)   => true
       case (TyRecord(fields1), TyRecord(fields2)) =>
-        fields1.length == fields2.length && fields2.forall {
-          case (li2, tyTi2) =>
-            fields1.find { _._1 == li2 } match {
-              case Some((li1, tyTi1)) => tyEqv(ctx, tyTi1, tyTi2)
-              case None               => false
-            }
+        fields1.length == fields2.length && fields2.forall { case (li2, tyTi2) =>
+          fields1.find { _._1 == li2 } match {
+            case Some((li1, tyTi1)) => tyEqv(ctx, tyTi1, tyTi2)
+            case None               => false
+          }
         }
       case (TySome(tyX1, tyS1, tyS2), TySome(_, tyT1, tyT2)) =>
         tyEqv(ctx.addName(tyX1), tyS1, tyT1) && tyEqv(ctx.addName(tyX1), tyS2, tyT2)
@@ -232,7 +231,7 @@ object Typer {
       case TyVarBind(tyT)          => kindof(ctx, tyT)
       case TyAbbBind(_, Some(knK)) => knK
       case TyAbbBind(_, None)      => sys.error("No kind recorded for var " + ctx.index2Name(i))
-      case _                       => sys.error("Wrong kind of binding for var " + ctx.index2Name(i))
+      case _ => sys.error("Wrong kind of binding for var " + ctx.index2Name(i))
     }
 
   def kindof(ctx: Context, tyT: Ty): Kind =
@@ -289,12 +288,11 @@ object Typer {
       case (TyArr(tyS1, tyS2), TyArr(tyT1, tyT2)) =>
         subtype(ctx, tyT1, tyS1) && subtype(ctx, tyS2, tyT2)
       case (TyRecord(fS), TyRecord(fT)) =>
-        fT.forall {
-          case (li, tyTi) =>
-            fS.find { _._1 == li } match {
-              case Some((_, tySi)) => subtype(ctx, tySi, tyTi)
-              case None            => false
-            }
+        fT.forall { case (li, tyTi) =>
+          fS.find { _._1 == li } match {
+            case Some((_, tySi)) => subtype(ctx, tySi, tyTi)
+            case None            => false
+          }
         }
       case (TyVar(_, _), _) =>
         subtype(ctx, promote(ctx, tyS), tyT)

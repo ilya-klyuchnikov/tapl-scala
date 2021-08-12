@@ -348,7 +348,9 @@ object PrettyPrinter {
       case TmFalse =>
         "false"
       case TmTag(l, t, ty) =>
-        g2("<" ::: l ::: "=" ::: ptmTerm(false, ctx, t) ::: ">" :/: "as " ::: ptyType(outer, ctx, ty))
+        g2(
+          "<" ::: l ::: "=" ::: ptmTerm(false, ctx, t) ::: ">" :/: "as " ::: ptyType(outer, ctx, ty)
+        )
       case TmVar(x, n) =>
         if (ctx.length == n) ctx.index2Name(x)
         else text("[bad index: " + x + "/" + n + " in {" + ctx.l.mkString(", ") + "}]")

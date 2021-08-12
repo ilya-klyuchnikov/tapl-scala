@@ -39,9 +39,8 @@ sealed abstract class Document {
   def :/:(hd: Document): Document = hd ::: DocBreak ::: this
   def :/:(hd: String): Document = hd ::: DocBreak ::: this
 
-  /**
-    * Format this document on `writer` and try to set line
-    * breaks so that the result fits in `width` columns.
+  /** Format this document on `writer` and try to set line breaks so that the result fits in `width`
+    * columns.
     */
   def format(width: Int, writer: Writer): Unit = {
     type FmtState = (Int, Boolean, Document)
@@ -118,9 +117,8 @@ object Document {
   /** A document consisting of some text literal */
   def text(s: String): Document = DocText(s)
 
-  /**
-    * A group, whose components will either be printed with all breaks
-    * rendered as spaces, or with all breaks rendered as line breaks.
+  /** A group, whose components will either be printed with all breaks rendered as spaces, or with
+    * all breaks rendered as line breaks.
     */
   def group(d: Document): Document = DocGroup(d)
 

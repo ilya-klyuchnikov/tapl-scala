@@ -97,15 +97,15 @@ object Syntax {
   private def tyMap(onVar: (Int, TyVar) => Ty, c: Int, ty: Ty): Ty = {
     def walk(c: Int, ty: Ty): Ty =
       ty match {
-        case tv: TyVar               => onVar(c, tv)
-        case id: TyId                => id
-        case TyString                => TyString
-        case TyUnit                  => TyUnit
-        case TyRecord(fieldTys)      => TyRecord(fieldTys.map { case (li, tyi) => (li, walk(c, tyi)) })
-        case TyBool                  => TyBool
-        case TyNat                   => TyNat
-        case TyTop                   => TyTop
-        case TyArr(ty1, ty2)         => TyArr(walk(c, ty1), walk(c, ty2))
+        case tv: TyVar          => onVar(c, tv)
+        case id: TyId           => id
+        case TyString           => TyString
+        case TyUnit             => TyUnit
+        case TyRecord(fieldTys) => TyRecord(fieldTys.map { case (li, tyi) => (li, walk(c, tyi)) })
+        case TyBool             => TyBool
+        case TyNat              => TyNat
+        case TyTop              => TyTop
+        case TyArr(ty1, ty2)    => TyArr(walk(c, ty1), walk(c, ty2))
         case TySome(tyX, tyT1, tyT2) => TySome(tyX, walk(c, tyT1), walk(c + 1, tyT2))
         case TyAll(tyX, tyT1, tyT2)  => TyAll(tyX, walk(c, tyT1), walk(c + 1, tyT2))
       }
@@ -305,7 +305,11 @@ object PrettyPrinter {
         val (ctx1, tyX1) = ctx.pickFreshName(tyX)
         val (ctx2, x1) = ctx1.pickFreshName(x)
         g2(
-          "let {" ::: tyX1 ::: ", " ::: x ::: "} =" :/: ptmTerm(false, ctx, t1) :/: "in " ::: ptmTerm(
+          "let {" ::: tyX1 ::: ", " ::: x ::: "} =" :/: ptmTerm(
+            false,
+            ctx,
+            t1,
+          ) :/: "in " ::: ptmTerm(
             outer,
             ctx2,
             t2,
