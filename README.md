@@ -1,39 +1,28 @@
 # TAPL in Scala
 
-This project is an attempt to port very nice companion code (written by Pierce in OCaml) 
-for the book "Types and Programming Languages" by Benjamin C. Pierce into Scala.
-
 ## Roadmap
 
-01. `tapl.arith` - (chapters 3, 4)
-02. `tapl.untyped` (chapters 5 - 7)
-03. `tapl.fulluntyped` (chapters 5 - 7)
-04. `tapl.tyarith` (chapter 8)
-05. `tapl.simplebool` (chapter 10)
-06. `tapl.fullsimple` (chapter 9 and 11)
-07. `tapl.fullref` (chapter 13, 18, based on `tapl.fullsimple`)
-08. `tapl.fullerror` (chapter 14, based on `tapl.simplebool`)
-09. `tapl.rcdsubbot` (chapter 15, rcd=record)
-10. `tapl.fullsub` (chapters 15 - 17, based on `tapl.fullsimple`) (The only addition is Top type)
-11. `tapl.joinsub` (chapter 16) - Not yet done. This is a subset of `tapl.bot`.
-12. `tapl.bot` (chapter 16) - simplification of `tapl.rcdsubbot`.
-13. `tapl.fullequirec` (chapter 20).
-14. `tapl.fullisorec` (chapter 20).
-15. `tapl.equirec` (chapter 21). The subtyping was not implemented in original code. But there is a code in the Book.
-16. `tapl.recon` (chapter 22).
-17. `tapl.fullrecon` (chapter 22).
-18. `tapl.fullpoly` (chapters 23, 24).
-19. `tapl.fullomega` (chapters 23, 29, 30).
-20. `tapl.fullfsub` (chapters 26, 28) - based on `tapl.fullsimple` (additions: Top type and subtyping).
-21. `tapl.fullfomsub` (chapters 26, 31).
-22. `tapl.fullfsubref` (chapter 27) - original (a bit wrong) implementation. Not yet ported.
-23. `tapl.fullfomsubref` (chapter 27) combination of all systems from the book.
-24. `tapl.purefsub` (chapter 28) - a subset of `tapl.fullfsub`. Not yet ported.
-25. `tapl.fomsub` (chapter  31) - simplification of `tapl.fullfomsub`. Not yet ported.
-26. `tapl.fullupdate` (chapter 32) - simplification of `tapl.fullfomsub`. Not yet ported.
-27. `tapl.fomega` (solution to 30.3.20) - not yet ported.
-28. `tapl.letexercise` - not yet ported.
-29. `tapl.joinexercise` - not yet ported.
+1. `tapl.arith` - (chapters 3, 4).
+2. `tapl.untyped` (chapters 5-7).
+3. `tapl.fulluntyped` (chapters 5-7).
+4. `tapl.tyarith` (chapter 8).
+5. `tapl.simplebool` (chapter 10).
+6. `tapl.fullsimple` (chapter 9 and 11).
+7. `tapl.fullref` (chapter 13, 18)
+8. `tapl.fullerror` (chapter 14)
+9. `tapl.rcdsubbot` (chapter 15)
+10. `tapl.fullsub` (chapters 15-17)
+11. `tapl.bot` (chapter 16)
+12. `tapl.fullequirec` (chapter 20).
+13. `tapl.fullisorec` (chapter 20).
+14. `tapl.equirec` (chapter 21).
+15. `tapl.recon` (chapter 22).
+16. `tapl.fullrecon` (chapter 22).
+17. `tapl.fullpoly` (chapters 23, 24).
+18. `tapl.fullomega` (chapters 23, 29, 30).
+19. `tapl.fullfsub` (chapters 26, 28).
+20. `tapl.fullfomsub` (chapters 26, 31).
+21. `tapl.fullfomsubref` (chapter 27) combination of all systems from the book.
 
 ## Code structure.
 
@@ -48,9 +37,9 @@ The code structure for each implementation follows original code structure and c
 
 	sbt
 	> run
-	
+
 	Multiple main classes detected, select one to run:
-	
+
 	 [1] tapl.fullisorec.FullIsorecDemo
 	 [2] tapl.rcdsubbot.RcdSubBotDemo
 	 [3] tapl.arith.ArithDemo
@@ -72,10 +61,10 @@ The code structure for each implementation follows original code structure and c
 	 [19] tapl.fullsimple.FullSimpleDemo
 	 [20] tapl.fullfomsubref.FullFomSubRefDemo
 	 [21] tapl.bot.BotDemo
-	 
+
 	Enter number: 21
-	
-	[info] Running tapl.bot.BotDemo 
+
+	[info] Running tapl.bot.BotDemo
 	====================
 	(lambda x: Top. x): Top -> Top;
 	||
@@ -101,7 +90,7 @@ The code structure for each implementation follows original code structure and c
 	||
 	\/
 	(lambda x: Bot. x x): Bot -> Bot;
-	
+
 	> run-main tapl.fulluntyped.UntypedDemo progs/fulluntyped.tapl
 	[info] Running tapl.fulluntyped.UntypedDemo progs/fulluntyped.tapl
 	====================
@@ -130,15 +119,3 @@ The code structure for each implementation follows original code structure and c
 	\/
 	((lambda m. lambda n. (lambda t. lambda f. t) m n) v w);
 	...
-
-
-## Notes.
-
-There was some incompleteness in the original OCaml code that *was* ported into Scala code:
-
-1. `tapl.equirec` - subtyping was not implemented 
-2. For subtyping for References, Sources and Sinks (scattered across many implementations) there is a comment in the original code that implementation is incomplete. 
-See code for calculation of `meet` and `join` of two references. 
-3. It will be interesting to add implementation of dependent types from the sequel book "Advanced Topics in Types and Programming Languages". 
-The book mentions OCaml implementation `deptypes` but I did not find this implementation on the web.
-4. I have noticed that some cases (in typers and evaluators) were omitted in the original code.
