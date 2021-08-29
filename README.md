@@ -24,16 +24,16 @@
 20. `tapl.fullfomsub` (chapters 26, 31).
 21. `tapl.fullfomsubref` (chapter 27) combination of all systems from the book.
 
-## Code structure.
+## Code structure
 
-The code structure for each implementation follows original code structure and consists of 4 files:
+The code structure for each implementation follows the original code structure and consists of 4 files:
 
 * `syntax.scala` - AST, contexts, commands, pretty-printing.
 * `parser.scala` - parsing.
 * `core.scala` - evaluator and typer.
 * `demo.scala` - the main application for processing input files.
 
-## Start playing with me
+## Running
 
 	sbt
 	> run
